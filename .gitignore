@@ -1,0 +1,38 @@
+# SBT
+boot/
+lib_managed/
+src_managed/
+test-output/
+target/
+.history
+.sbtserver
+.sbtserver/
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Eclipse
+.cache
+.classpath
+.project
+.scala_dependencies
+.settings
+.target/
+
+# Mac
+.DS_Store
+
+# Vim
+tags
+
+# Other
+*.pyc
+output.json
+*.log
+
+# Play Framework
+RUNNING_PID
