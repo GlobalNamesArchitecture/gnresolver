@@ -1,3 +1,5 @@
+package org.globalnames.resolver
+
 import java.io._
 
 import slick.driver.MySQLDriver.api._
