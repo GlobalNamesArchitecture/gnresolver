@@ -1,48 +1,54 @@
 package org.globalnames.resolver
 
-import java.io._
-
 import slick.driver.MySQLDriver.api._
 
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
 object Main {
-  final val pattern = "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"
+  final private val pattern =
+    "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"
+  final private val step = 1000
+  final private val timeout: Duration = 10.seconds
+
+  private def uuidConvert(uuidStr: String) = {
+    var uuidParts = ArrayBuffer(BigInt(uuidStr).toByteArray: _*)
+    if (uuidParts.size > 16) {
+      uuidParts = uuidParts.takeRight(16)
+    } else if (uuidParts.size < 16) {
+      uuidParts.prependAll(Array.fill(16 - uuidParts.size)(0.toByte))
+    }
+    pattern.format(uuidParts: _*)
+  }
 
   def main(args: Array[String]): Unit = {
-    val db = Database.forConfig("mysql")
-    val bw = new BufferedWriter(new OutputStreamWriter(
-      new FileOutputStream("name_strings.cql"), "UTF-8"))
+    val mysqlDb = Database.forConfig("mysql")
     try {
-      bw.write("USE gni_keyspace;\n")
-      val r =
-        sql"""SELECT id, `name`, normalized, uuid
-              FROM gni.name_strings;""".as[(Int, String, String, String)]
-      val v = db.stream(r).foreach { case (id, name, normalized, uuidStr) =>
-        if (id % 10000 == 0) {
-          println(s"processed: $id")
-        }
-
-        var uuidParts = ArrayBuffer(BigInt(uuidStr).toByteArray: _*)
-        if (uuidParts.size > 16) {
-          uuidParts = uuidParts.takeRight(16)
-        } else if (uuidParts.size < 16) {
-          uuidParts.prependAll(Array.fill(16 - uuidParts.size)(0.toByte))
-        }
-        val uuid = pattern.format(uuidParts: _*)
-        val nameEscaped = name.replaceAll("'", "''")
-        val normalizedNameEscaped = normalized.replaceAll("'", "''")
-        val res = "INSERT INTO normalized_strings (id,name,normalized,uuid) " +
-          s"""VALUES ($id,'$nameEscaped','$normalizedNameEscaped',$uuid);"""
-        bw.write(res + "\n")
+      val count = {
+        val request = sql"SELECT count(*) FROM name_strings;".as[Int].head
+        Await.result(mysqlDb.run(request), timeout)
       }
-      Await.result(v, Duration.Inf)
+      for (i <- 0 to count / step) {
+        println(s"processed: ${i * step}")
+
+        val data = {
+          val request =
+            sql"""SELECT id, `name`, normalized, uuid
+                  FROM name_strings
+                  LIMIT ${i * step}, $step;""".as[(Int, String, String, String)]
+          Await.result(mysqlDb.run(request), timeout)
+        }
+        data.foreach { case (id, name, normalized, uuidStr) =>
+          val insertStmnt = s"""
+            |INSERT INTO normalized_strings (id,name,normalized,uuid)
+            |VALUES($id, '$name', '$normalized', ${uuidConvert(uuidStr)})
+            |""".stripMargin
+          println(insertStmnt)
+        }
+      }
     } finally {
-      db.close
-      bw.close
+      mysqlDb.close
     }
   }
 }
