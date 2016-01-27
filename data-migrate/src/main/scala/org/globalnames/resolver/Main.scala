@@ -1,5 +1,7 @@
 package org.globalnames.resolver
 
+import java.util.UUID
+
 import org.globalnames.parser.ScientificNameParser.{instance => snp}
 import slick.driver.MySQLDriver.api._
 
@@ -7,7 +9,8 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object Main {
+object Main extends UUIDPlainImplicits {
+
   final private val pattern =
     "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"
   final private val step = 1000
@@ -20,37 +23,45 @@ object Main {
     } else if (uuidParts.size < 16) {
       uuidParts.prependAll(Array.fill(16 - uuidParts.size)(0.toByte))
     }
-    pattern.format(uuidParts: _*)
+    UUID.fromString(pattern.format(uuidParts: _*))
   }
 
   def main(args: Array[String]): Unit = {
-    val mysqlDb = Database.forConfig("mysql")
+    val postgresqlDb = Database.forConfig("postgresql")
+    val mysqlDb      = Database.forConfig("mysql")
+
     try {
       val count = {
-        val request = sql"SELECT count(*) FROM name_strings;".as[Int].head
-        Await.result(mysqlDb.run(request), timeout)
+        val query = sql"SELECT count(*) FROM name_strings;".as[Int].head
+        Await.result(mysqlDb.run(query), timeout)
       }
       for (i <- 0 to count / step) {
         println(s"processed: ${i * step}")
 
         val data = {
-          val request =
+          val query =
             sql"""SELECT id, `name`, uuid
                   FROM name_strings
                   LIMIT ${i * step}, $step;""".as[(Int, String, String)]
-          Await.result(mysqlDb.run(request), timeout)
+          Await.result(mysqlDb.run(query), timeout)
         }
         data.foreach { case (id, name, uuidStr) =>
-          val normalized = snp.fromString(name).normalized.getOrElse("")
-          val insertStmnt = s"""
-            |INSERT INTO normalized_strings (id,name,normalized,uuid)
-            |VALUES($id, '$name', '$normalized', ${uuidConvert(uuidStr)})
-            |""".stripMargin
-          println(insertStmnt)
+          try {
+            val normalized = snp.fromString(name).normalized.getOrElse("")
+            val query = sqlu"""
+            INSERT INTO gni.name_strings (id, name, normalized)
+            VALUES (${uuidConvert(uuidStr)}, $name, $normalized);"""
+            Await.result(postgresqlDb.run(query), timeout)
+            println(s"Added: ($id, $name, $normalized)")
+          } catch {
+            case e: Exception => System.err.println(e.toString)
+          }
+
         }
       }
     } finally {
-      mysqlDb.close
+      mysqlDb.close()
+      postgresqlDb.close()
     }
   }
 }
