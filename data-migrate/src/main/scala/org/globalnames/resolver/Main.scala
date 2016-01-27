@@ -1,5 +1,6 @@
 package org.globalnames.resolver
 
+import org.globalnames.parser.ScientificNameParser.{instance => snp}
 import slick.driver.MySQLDriver.api._
 
 import scala.collection.mutable.ArrayBuffer
@@ -34,12 +35,13 @@ object Main {
 
         val data = {
           val request =
-            sql"""SELECT id, `name`, normalized, uuid
+            sql"""SELECT id, `name`, uuid
                   FROM name_strings
-                  LIMIT ${i * step}, $step;""".as[(Int, String, String, String)]
+                  LIMIT ${i * step}, $step;""".as[(Int, String, String)]
           Await.result(mysqlDb.run(request), timeout)
         }
-        data.foreach { case (id, name, normalized, uuidStr) =>
+        data.foreach { case (id, name, uuidStr) =>
+          val normalized = snp.fromString(name).normalized.getOrElse("")
           val insertStmnt = s"""
             |INSERT INTO normalized_strings (id,name,normalized,uuid)
             |VALUES($id, '$name', '$normalized', ${uuidConvert(uuidStr)})
