@@ -47,10 +47,12 @@ object Main extends UUIDPlainImplicits {
         }
         data.foreach { case (id, name, uuidStr) =>
           try {
-            val normalized = snp.fromString(name).normalized.getOrElse("")
+            val canonical =
+              snp.fromString(name).canonized(showRanks = false).getOrElse("")
+            val dbUuid = uuidConvert(uuidStr)
             val query = sqlu"""
-            INSERT INTO gni.name_strings (id, name, normalized)
-            VALUES (${uuidConvert(uuidStr)}, $name, $normalized);"""
+              INSERT INTO gni.name_strings (id, name, canonical)
+              VALUES ($dbUuid, $name, $canonical);"""
             Await.result(postgresqlDb.run(query), timeout)
             println(s"Added: ($id, $name, $normalized)")
           } catch {
