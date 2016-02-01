@@ -3,6 +3,7 @@ package org.globalnames.resolver
 import java.util.UUID
 
 import org.globalnames.parser.ScientificNameParser.{instance => snp}
+import org.slf4j.LoggerFactory
 import slick.driver.MySQLDriver.api._
 
 import scala.collection.mutable.ArrayBuffer
@@ -10,6 +11,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 
 object Main extends UUIDPlainImplicits {
+
+  val logger = LoggerFactory.getLogger("org.globalnames.resolver.Main")
 
   final private val pattern =
     "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"
@@ -36,7 +39,7 @@ object Main extends UUIDPlainImplicits {
         Await.result(mysqlDb.run(query), timeout)
       }
       for (i <- 0 to count / step) {
-        println(s"processed: ${i * step}")
+        logger.info(s"processed: ${i * step}")
 
         val data = {
           val query =
@@ -54,11 +57,13 @@ object Main extends UUIDPlainImplicits {
               INSERT INTO gni.name_strings (id, name, canonical)
               VALUES ($dbUuid, $name, $canonical);"""
             Await.result(postgresqlDb.run(query), timeout)
-            println(s"Added: ($id, $name, $normalized)")
+            if (dbUuid != UUID.fromString(snp.fromString(name).input.id)) {
+              logger.error(s"Unmatched UUIDs: $id | $name | $canonical")
+            }
           } catch {
-            case e: Exception => System.err.println(e.toString)
+            case e: Exception =>
+              logger.error(s"Exception: ${e.toString}")
           }
-
         }
       }
     } finally {

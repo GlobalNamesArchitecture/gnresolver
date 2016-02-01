@@ -61,9 +61,9 @@ val noPublishingSettings = Seq(
 /////////////////////// DEPENDENCIES /////////////////////////
 
 val slick          = "com.typesafe.slick" %% "slick"                 % "3.0.0"
-val slf4jnop       = "org.slf4j"          %  "slf4j-nop"             % "1.6.4"
+val logback        = "ch.qos.logback"     %  "logback-classic"       % "1.1.3"
 val mysql          = "mysql"              %  "mysql-connector-java"  % "5.1.35"
-val postgresql     = "postgresql"         % "postgresql"             % "9.1-901-1.jdbc4"
+val postgresql     = "postgresql"         %  "postgresql"            % "9.1-901-1.jdbc4"
 val hikariCP       = "com.zaxxer"         %  "HikariCP"              % "2.4.1"
 val gnparser       = "org.globalnames"    %% "gnparser"              % "0.2.0"
 val specs2core     = "org.specs2"         %% "specs2-core"           % "3.6.3" % Test
@@ -110,6 +110,6 @@ lazy val dataMigrate = (project in file("./data-migrate"))
   .settings(
     name := "gnresolver-data-migrate",
 
-    libraryDependencies ++= Seq(slick, slf4jnop, mysql, postgresql, hikariCP,
+    libraryDependencies ++= Seq(slick, logback, mysql, postgresql, hikariCP,
                                 gnparser)
   )
