@@ -50,7 +50,7 @@ val publishingSettings = Seq(
         <developer>
           <id>alexander-myltsev</id>
           <name>Alexander Myltsev</name>
-          <url>http://myltsev.name</url>
+          <url>http://myltsev.com</url>
         </developer>
       </developers>)
 
