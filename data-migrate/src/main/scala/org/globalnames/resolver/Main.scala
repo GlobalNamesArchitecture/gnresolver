@@ -17,7 +17,7 @@ object Main extends UUIDPlainImplicits {
   final private val pattern =
     "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"
   final private val step = 1000
-  final private val timeout: Duration = 10.seconds
+  final private val timeout: Duration = 30.seconds
 
   private def uuidConvert(uuidStr: String) = {
     var uuidParts = ArrayBuffer(BigInt(uuidStr).toByteArray: _*)
@@ -30,6 +30,10 @@ object Main extends UUIDPlainImplicits {
   }
 
   def main(args: Array[String]): Unit = {
+    var idx = args(0).toInt
+
+    logger.info(s"Started at index: $idx")
+
     val postgresqlDb = Database.forConfig("postgresql")
     val mysqlDb      = Database.forConfig("mysql")
 
@@ -38,14 +42,14 @@ object Main extends UUIDPlainImplicits {
         val query = sql"SELECT count(*) FROM name_strings;".as[Int].head
         Await.result(mysqlDb.run(query), timeout)
       }
-      for (i <- 0 to count / step) {
-        logger.info(s"processed: ${i * step}")
+      while (idx < count / step) {
+        logger.info(s"processed: ${idx * step}")
 
         val data = {
           val query =
             sql"""SELECT id, `name`, uuid
                   FROM name_strings
-                  LIMIT ${i * step}, $step;""".as[(Int, String, String)]
+                  LIMIT ${idx * step}, $step;""".as[(Int, String, String)]
           Await.result(mysqlDb.run(query), timeout)
         }
         data.foreach { case (id, name, uuidStr) =>
@@ -65,6 +69,7 @@ object Main extends UUIDPlainImplicits {
               logger.error(s"Exception: ${e.toString}")
           }
         }
+        idx += 1
       }
     } finally {
       mysqlDb.close()
