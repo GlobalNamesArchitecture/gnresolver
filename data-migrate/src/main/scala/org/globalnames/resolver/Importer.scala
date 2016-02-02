@@ -10,9 +10,9 @@ import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object Main extends UUIDPlainImplicits {
+object Importer extends UUIDPlainImplicits {
 
-  val logger = LoggerFactory.getLogger("org.globalnames.resolver.Main")
+  val logger = LoggerFactory.getLogger("org.globalnames.resolver.Importer")
 
   final private val pattern =
     "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"

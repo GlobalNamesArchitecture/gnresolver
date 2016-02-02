@@ -37,7 +37,7 @@
     </appender>
 
     <!-- additivity=false ensures log data only goes to the access log -->
-    <logger name="org.globalnames.resolver.Main" level="INFO" additivity="false">
+    <logger name="org.globalnames.resolver.Importer" level="INFO" additivity="false">
         <!--<appender-ref ref="IMPORT_FILE" />-->
         <appender-ref ref="IMPORT_FILE" />
     </logger>
