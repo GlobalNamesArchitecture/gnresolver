@@ -52,14 +52,14 @@ object Importer extends UUIDPlainImplicits {
         }
         data.foreach { case (id, name, uuidStr) =>
           try {
-            val canonical =
-              snp.fromString(name).canonized(showRanks = false).getOrElse("")
+            val parsed = snp.fromString(name)
+            val canonical = parsed.canonized(showRanks = false).getOrElse("")
             val dbUuid = uuidConvert(uuidStr)
             val query = sqlu"""
               INSERT INTO gni.name_strings (id, name, canonical)
               VALUES ($dbUuid, $name, $canonical);"""
             Await.result(postgresqlDb.run(query), timeout)
-            if (dbUuid != UUID.fromString(snp.fromString(name).input.id)) {
+            if (dbUuid != UUID.fromString(parsed.input.id)) {
               logger.error(s"Unmatched UUIDs: $id | $name | $canonical")
             }
           } catch {
