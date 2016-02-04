@@ -22,9 +22,9 @@
             <maxHistory>7</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} %message%n</pattern>
+            <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} [%level] from %logger in %thread - %message%n%xException</pattern>
             <!-- this quadruples logging throughput -->
-            <immediateFlush>false</immediateFlush>
+            <immediateFlush>true</immediateFlush>
         </encoder>
     </appender>
 
