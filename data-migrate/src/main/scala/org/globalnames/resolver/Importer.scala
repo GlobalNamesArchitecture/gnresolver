@@ -36,7 +36,68 @@ object Importer extends UUIDPlainImplicits {
   }
 
   def importNameStringsIndicies(): Unit = {
-    logger.info(s"""Started `name_strings_indicies`""")
+    var idx               = sys.props("startIndex").toInt
+    val step              = sys.props("step").toInt
+    val timeout: Duration = sys.props("timeout").toInt.seconds
+
+    logger.info(s"""Started `name_strings_indicies` with parameters:
+                   |index: $idx
+                   |step: $step
+                   |timeout: $timeout sec""".stripMargin)
+
+    val postgresqlDb = Database.forConfig("postgresql")
+    val mysqlDb      = Database.forConfig("mysql")
+
+    try {
+      val count = {
+        val query = sql"SELECT count(*) FROM name_string_indices;".as[Int].head
+        Await.result(mysqlDb.run(query), timeout)
+      }
+      while (idx < count / step) {
+        val data = {
+          val query =
+            sql"""SELECT data_source_id, name_string_id, taxon_id, rank,
+                         accepted_taxon_id, synonym, classification_path,
+                         classification_path_ids, created_at, updated_at,
+                         classification_path_ranks
+                  FROM name_string_indices
+                  LIMIT ${idx * step}, $step;""".as[(Int, Int, Int, String,
+                                                     Int, String, String,
+                                                     String, String, String,
+                                                     String)]
+          Await.result(mysqlDb.run(query), timeout)
+        }
+
+        // TODO: Add created_at, updated_at, synonym to INSERT query
+        data.foreach { case (data_source_id, name_string_id, taxon_id, rank,
+                             accepted_taxon_id, synonym, classification_path,
+                             classification_path_ids, created_at, updated_at,
+                             classification_path_ranks) =>
+          try {
+            val query = sqlu"""
+              INSERT INTO gni.name_string_indices (
+                data_source_id, name_string_id, taxon_id, rank,
+                accepted_taxon_id, classification_path,
+                classification_path_ids,
+                classification_path_ranks)
+              VALUES ($data_source_id, $name_string_id, $taxon_id, $rank,
+                $accepted_taxon_id, $classification_path,
+                $classification_path_ids,
+                $classification_path_ranks);"""
+            Await.result(postgresqlDb.run(query), timeout)
+          } catch {
+            case e: Exception =>
+              logger.error(s"Exception: ${e.toString}")
+          }
+        }
+        idx += 1
+        logger.info(s"processed: ${idx * step}")
+      }
+    } finally {
+      postgresqlDb.close()
+      mysqlDb.close()
+    }
+
     logger.info(s"""Completed import `name_strings_indicies`""")
   }
 
