@@ -28,11 +28,28 @@ object Importer extends UUIDPlainImplicits {
   }
 
   def main(args: Array[String]): Unit = {
-    var idx               = args(0).toInt
-    val step              = args(1).toInt
-    val timeout: Duration = args(2).toInt.seconds
+    sys.props("importType") match {
+      case "name_strings" => importNameStrings()
+      case "name_strings_indicies" => importNameStringsIndicies()
+      case _ => logger.error("No appropriate `importType` is provided")
+    }
+  }
 
-    logger.info(s"Started at index: $idx | step: $step | timeout: $timeout sec")
+  def importNameStringsIndicies(): Unit = {
+    logger.info(s"""Started `name_strings_indicies`""")
+    logger.info(s"""Completed import `name_strings_indicies`""")
+  }
+
+  def importNameStrings(): Unit = {
+    var idx               = sys.props("startIndex").toInt
+    val step              = sys.props("step").toInt
+    val timeout: Duration = sys.props("timeout").toInt.seconds
+
+    logger.info(
+      s"""Started import `name_strings` with parameters:
+         |index: $idx
+         |step: $step
+         |timeout: $timeout sec""".stripMargin)
 
     val postgresqlDb = Database.forConfig("postgresql")
     val mysqlDb      = Database.forConfig("mysql")
@@ -74,6 +91,6 @@ object Importer extends UUIDPlainImplicits {
       mysqlDb.close()
       postgresqlDb.close()
     }
-    logger.info("Completed")
+    logger.info("Completed import `name_strings`")
   }
 }
