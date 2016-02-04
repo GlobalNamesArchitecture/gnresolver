@@ -16,8 +16,6 @@ object Importer extends UUIDPlainImplicits {
 
   final private val pattern =
     "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x"
-  final private val step = 1000
-  final private val timeout: Duration = 30.seconds
 
   private def uuidConvert(uuidStr: String) = {
     var uuidParts = ArrayBuffer(BigInt(uuidStr).toByteArray: _*)
@@ -30,9 +28,11 @@ object Importer extends UUIDPlainImplicits {
   }
 
   def main(args: Array[String]): Unit = {
-    var idx = args(0).toInt
+    var idx               = args(0).toInt
+    val step              = args(1).toInt
+    val timeout: Duration = args(2).toInt.seconds
 
-    logger.info(s"Started at index: $idx")
+    logger.info(s"Started at index: $idx | step: $step | timeout: $timeout sec")
 
     val postgresqlDb = Database.forConfig("postgresql")
     val mysqlDb      = Database.forConfig("mysql")
@@ -43,8 +43,6 @@ object Importer extends UUIDPlainImplicits {
         Await.result(mysqlDb.run(query), timeout)
       }
       while (idx < count / step) {
-        logger.info(s"processed: ${idx * step}")
-
         val data = {
           val query =
             sql"""SELECT id, `name`, uuid
@@ -70,10 +68,12 @@ object Importer extends UUIDPlainImplicits {
           }
         }
         idx += 1
+        logger.info(s"processed: ${idx * step}")
       }
     } finally {
       mysqlDb.close()
       postgresqlDb.close()
     }
+    logger.info("Completed")
   }
 }
