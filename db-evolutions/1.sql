@@ -1,12 +1,14 @@
-# --- !Ups
+--- !Ups
 
-CREATE TABLE gni.name_strings
+CREATE TABLE name_strings
 (
-   id uuid primary key UNIQUE,
-   name character varying(255) NOT NULL,
-   canonical character varying(255) NOT NULL
+  id uuid primary key UNIQUE,
+  id_mysql uuid UNIQUE,
+  name character varying(255) NOT NULL,
+  canonical_uuid uuid DEFAULT NULL,
+  canonical character varying(255) NOT NULL
 );
 
-# --- !Downs
+--- !Downs
 
-DROP TABLE gni.name_strings;
+DROP TABLE name_strings;

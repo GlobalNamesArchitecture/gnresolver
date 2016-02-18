@@ -1,17 +1,15 @@
-package org.globalnames.resolver
+package org.globalnames
+package resolver
 
 import java.util.UUID
 
 import org.globalnames.parser.ScientificNameParser.{instance => snp}
 import org.slf4j.LoggerFactory
-import slick.driver.MySQLDriver.api._
 
 import scala.collection.mutable.ArrayBuffer
-import scala.concurrent.Await
 import scala.concurrent.duration._
 
-object Importer extends UUIDPlainImplicits {
-
+object Importer {
   val logger = LoggerFactory.getLogger("org.globalnames.resolver.Importer")
 
   final private val pattern =
@@ -29,10 +27,24 @@ object Importer extends UUIDPlainImplicits {
 
   def main(args: Array[String]): Unit = {
     sys.props("importType") match {
+      case "test_connection" => testConnection()
       case "name_strings" => importNameStrings()
       case "name_strings_indicies" => importNameStringsIndicies()
-      case _ => logger.error("No appropriate `importType` is provided")
+      case _ => System.err.println("No appropriate `importType` is provided")
     }
+  }
+
+  def testConnection(): Unit = {
+    val timeout: Duration = sys.props("timeout").toInt.seconds
+    val step              = sys.props("step").toInt
+    logger.info(s"""Started `test_connection` with parameters:
+                    |step: $step
+                    |timeout: $timeout
+                    |""".stripMargin)
+    val mysqlDAL      = new MySqlDAL(timeout, step)
+    logger.info(s"mysql version: ${mysqlDAL.version}")
+    val postgresqlDAL = new PostgreSqlDAL(timeout, step)
+    logger.info(s"postgresql version: ${postgresqlDAL.version}")
   }
 
   def importNameStringsIndicies(): Unit = {
@@ -45,57 +57,34 @@ object Importer extends UUIDPlainImplicits {
                    |step: $step
                    |timeout: $timeout sec""".stripMargin)
 
-    val postgresqlDb = Database.forConfig("postgresql")
-    val mysqlDb      = Database.forConfig("mysql")
+    val mysqlDal     = new MySqlDAL(timeout, step)
+    val postgesqlDal = new PostgreSqlDAL(timeout, step)
 
     try {
-      val count = {
-        val query = sql"SELECT count(*) FROM name_string_indices;".as[Int].head
-        Await.result(mysqlDb.run(query), timeout)
-      }
-      while (idx < count / step) {
-        val data = {
-          val query =
-            sql"""SELECT data_source_id, name_string_id, taxon_id, rank,
-                         accepted_taxon_id, synonym, classification_path,
-                         classification_path_ids, created_at, updated_at,
-                         classification_path_ranks
-                  FROM name_string_indices
-                  LIMIT ${idx * step}, $step;""".as[(Int, Int, Int, String,
-                                                     Int, String, String,
-                                                     String, String, String,
-                                                     String)]
-          Await.result(mysqlDb.run(query), timeout)
-        }
+      while (idx < mysqlDal.nameStringIndicesCount / step) {
+        try {
+          val data = mysqlDal.nameStringsIndiciesData(idx)
 
-        // TODO: Add created_at, updated_at, synonym to INSERT query
-        data.foreach { case (data_source_id, name_string_id, taxon_id, rank,
-                             accepted_taxon_id, synonym, classification_path,
-                             classification_path_ids, created_at, updated_at,
-                             classification_path_ranks) =>
-          try {
-            val query = sqlu"""
-              INSERT INTO gni.name_string_indices (
-                data_source_id, name_string_id, taxon_id, rank,
-                accepted_taxon_id, classification_path,
-                classification_path_ids,
-                classification_path_ranks)
-              VALUES ($data_source_id, $name_string_id, $taxon_id, $rank,
-                $accepted_taxon_id, $classification_path,
-                $classification_path_ids,
-                $classification_path_ranks);"""
-            Await.result(postgresqlDb.run(query), timeout)
-          } catch {
-            case e: Exception =>
-              logger.error(s"Exception: ${e.toString}")
+          // TODO: Add created_at, updated_at, synonym to INSERT query
+          data.foreach { case nameStringIndexData =>
+            try {
+              postgesqlDal.insertNameStringIndicies(nameStringIndexData)
+            } catch {
+              case e: Exception =>
+                logger.error(s"""Exception for: $nameStringIndexData
+                                |${e.toString}""".stripMargin)
+            }
           }
+          idx += 1
+          logger.info(s"processed: ${idx * step}")
+        } catch {
+          case e: Exception =>
+            logger.error(s"Exception: ${e.toString}")
         }
-        idx += 1
-        logger.info(s"processed: ${idx * step}")
       }
     } finally {
-      postgresqlDb.close()
-      mysqlDb.close()
+      mysqlDal.close()
+      postgesqlDal.close()
     }
 
     logger.info(s"""Completed import `name_strings_indicies`""")
@@ -110,34 +99,24 @@ object Importer extends UUIDPlainImplicits {
       s"""Started import `name_strings` with parameters:
          |index: $idx
          |step: $step
-         |timeout: $timeout sec""".stripMargin)
+         |timeout: $timeout""".stripMargin)
 
-    val postgresqlDb = Database.forConfig("postgresql")
-    val mysqlDb      = Database.forConfig("mysql")
+    val mysqlDal     = new MySqlDAL(timeout, step)
+    val postgesqlDal = new PostgreSqlDAL(timeout, step)
 
     try {
-      val count = {
-        val query = sql"SELECT count(*) FROM name_strings;".as[Int].head
-        Await.result(mysqlDb.run(query), timeout)
-      }
-      while (idx < count / step) {
-        val data = {
-          val query =
-            sql"""SELECT id, `name`, uuid
-                  FROM name_strings
-                  LIMIT ${idx * step}, $step;""".as[(Int, String, String)]
-          Await.result(mysqlDb.run(query), timeout)
-        }
-        data.foreach { case (id, name, uuidStr) =>
+      val gen = UuidGenerator()
+      while (idx < mysqlDal.nameStringsCount / step) {
+        mysqlDal.nameStringsData(idx).foreach { case (id, name, uuidStr) =>
           try {
             val parsed = snp.fromString(name)
             val canonical = parsed.canonized(showRanks = false).getOrElse("")
-            val dbUuid = uuidConvert(uuidStr)
-            val query = sqlu"""
-              INSERT INTO gni.name_strings (id, name, canonical)
-              VALUES ($dbUuid, $name, $canonical);"""
-            Await.result(postgresqlDb.run(query), timeout)
-            if (dbUuid != UUID.fromString(parsed.input.id)) {
+            val nameUuid = uuidConvert(uuidStr)
+            val parsedUuid = UUID.fromString(parsed.input.id)
+            val canonicalUuid = gen.generate(canonical)
+            postgesqlDal.writeNameString(parsedUuid, nameUuid, name,
+                                         canonicalUuid, canonical)
+            if (nameUuid != parsedUuid) {
               logger.error(s"Unmatched UUIDs: $id | $name | $canonical")
             }
           } catch {
@@ -149,8 +128,8 @@ object Importer extends UUIDPlainImplicits {
         logger.info(s"processed: ${idx * step}")
       }
     } finally {
-      mysqlDb.close()
-      postgresqlDb.close()
+      mysqlDal.close()
+      postgesqlDal.close()
     }
     logger.info("Completed import `name_strings`")
   }

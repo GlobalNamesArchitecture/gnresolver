@@ -1,6 +1,6 @@
-# --- !Ups
+--- !Ups
 
-CREATE TABLE gni.data_sources (
+CREATE TABLE data_sources (
   id SERIAL,
   title varchar(255) DEFAULT NULL,
   description text,
@@ -16,7 +16,7 @@ CREATE TABLE gni.data_sources (
 );
 
 -- todo: synonym should be not null
-CREATE TABLE gni.name_string_indices (
+CREATE TABLE name_string_indices (
   data_source_id integer NOT NULL,
   name_string_id integer NOT NULL,
   taxon_id varchar(255) NOT NULL DEFAULT '',
@@ -35,8 +35,8 @@ CREATE TABLE gni.name_string_indices (
   classification_path_ranks text
 );
 
-# --- !Downs
+--- !Downs
 
-DROP TABLE gni.data_sources;
+DROP TABLE data_sources;
 
-DROP TABLE gni.name_string_indices;
+DROP TABLE name_string_indices;

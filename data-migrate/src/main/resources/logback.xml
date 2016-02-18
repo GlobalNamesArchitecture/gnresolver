@@ -3,11 +3,12 @@
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${user.dir}/logs/application.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- Daily rollover with compression -->
             <fileNamePattern>application-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
-            <!-- keep 30 days worth of history -->
-            <maxHistory>30</maxHistory>
+            <maxHistory>1</maxHistory>
         </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>5MB</maxFileSize>
+        </triggeringPolicy>
         <encoder>
             <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} [%level] from %logger in %thread - %message%n%xException</pattern>
         </encoder>
@@ -16,14 +17,14 @@
     <appender name="IMPORT_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${user.dir}/logs/import.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- daily rollover with compression -->
             <fileNamePattern>access-log-%d{yyyy-MM-dd}.gz</fileNamePattern>
-            <!-- keep 1 week worth of history -->
-            <maxHistory>7</maxHistory>
+            <maxHistory>1</maxHistory>
         </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>5MB</maxFileSize>
+        </triggeringPolicy>
         <encoder>
             <pattern>%date{yyyy-MM-dd HH:mm:ss ZZZZ} [%level] from %logger in %thread - %message%n%xException</pattern>
-            <!-- this quadruples logging throughput -->
             <immediateFlush>true</immediateFlush>
         </encoder>
     </appender>
@@ -36,9 +37,7 @@
         </encoder>
     </appender>
 
-    <!-- additivity=false ensures log data only goes to the access log -->
     <logger name="org.globalnames.resolver.Importer" level="INFO" additivity="false">
-        <!--<appender-ref ref="IMPORT_FILE" />-->
         <appender-ref ref="IMPORT_FILE" />
     </logger>
 

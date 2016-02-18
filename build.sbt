@@ -60,14 +60,14 @@ val noPublishingSettings = Seq(
 
 /////////////////////// DEPENDENCIES /////////////////////////
 
-val slick          = "com.typesafe.slick" %% "slick"                 % "3.0.0"
+val slick          = "com.typesafe.slick" %% "slick"                 % "3.1.0"
 val logback        = "ch.qos.logback"     %  "logback-classic"       % "1.1.3"
 val mysql          = "mysql"              %  "mysql-connector-java"  % "5.1.35"
 val postgresql     = "postgresql"         %  "postgresql"            % "9.1-901-1.jdbc4"
 val hikariCP       = "com.zaxxer"         %  "HikariCP"              % "2.4.1"
-val gnparser       = "org.globalnames"    %% "gnparser"              % "0.2.0"
-val specs2core     = "org.specs2"         %% "specs2-core"           % "3.6.3" % Test
-val specs2extra    = "org.specs2"         %% "specs2-matcher-extra"  % "3.6.3" % Test
+val hikariSlick    = "com.typesafe.slick" %% "slick-hikaricp"        % "3.1.0"
+val gnparser       = "org.globalnames"    %% "gnparser"              % "0.3.0-SNAPSHOT"
+val scalatest      = "org.scalatest"      %% "scalatest"             % "2.2.6"   % Test
 
 /////////////////////// PROJECTS /////////////////////////
 
@@ -89,7 +89,8 @@ lazy val resolver = (project in file("./resolver"))
     buildInfoPackage := "org.globalnames.resolver",
     test in assembly := {},
 
-    libraryDependencies ++= Seq(specs2core, specs2extra),
+    libraryDependencies ++= Seq(slick, logback, postgresql, hikariSlick,
+                                gnparser, scalatest),
 
     scalacOptions in Test ++= Seq("-Yrangepos")
   )
@@ -104,12 +105,11 @@ lazy val benchmark = (project in file("./benchmark"))
   )
 
 lazy val dataMigrate = (project in file("./data-migrate"))
-  .dependsOn(resolver)
   .settings(commonSettings: _*)
   .settings(noPublishingSettings: _*)
   .settings(
     name := "gnresolver-data-migrate",
 
-    libraryDependencies ++= Seq(slick, logback, mysql, postgresql, hikariCP,
+    libraryDependencies ++= Seq(slick, logback, mysql, postgresql, hikariSlick,
                                 gnparser)
   )
