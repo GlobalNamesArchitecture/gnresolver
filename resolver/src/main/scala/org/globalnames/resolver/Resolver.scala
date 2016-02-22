@@ -3,17 +3,19 @@ package resolver
 
 import java.util.UUID
 
-import org.globalnames.parser.ScientificNameParser.{instance => snp}
-import org.globalnames.resolver.model.NameStrings
+import parser.ScientificNameParser.{instance => snp}
+import model.{NameString, NameStrings}
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class Resolver(db: Database) {
+class Resolver(db: Database, matcher: Matcher) {
+  import Resolver.Match
+
   val nameStrings = TableQuery[NameStrings]
 
-  def resolve(name: String): Future[Seq[(UUID, String, UUID, String)]] = {
+  def resolve(name: String): Future[Resolver.Match] = {
     val gen = UuidGenerator()
 
     val cleanedName = name.replaceAll("\\s+", " ")
@@ -26,9 +28,17 @@ class Resolver(db: Database) {
       x.canonicalUuid ===
         gen.generate(parsed.canonized(showRanks = false).toString)
     }
-    db.run(queryByNameId.result).flatMap {
-      case Seq() => db.run(queryByCanonicalNameId.result)
-      case names => Future.successful(names)
+    val fuzzyMatches = matcher.transduce(name).map { _.term }
+    for {
+      namesMatch <- db.run(queryByNameId.result)
+      canonicalNamesMatch <- db.run(queryByCanonicalNameId.result)
+    } yield {
+      Match(namesMatch, canonicalNamesMatch, fuzzyMatches)
     }
   }
+}
+
+object Resolver {
+  case class Match(byName: Seq[NameString], byCanonicalName: Seq[NameString],
+                   byCanonicalNameFuzzy: Seq[String])
 }
