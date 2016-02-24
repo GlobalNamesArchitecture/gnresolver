@@ -67,6 +67,7 @@ val postgresql     = "postgresql"         %  "postgresql"            % "9.1-901-
 val hikariCP       = "com.zaxxer"         %  "HikariCP"              % "2.4.1"
 val hikariSlick    = "com.typesafe.slick" %% "slick-hikaricp"        % "3.1.0"
 val gnparser       = "org.globalnames"    %% "gnparser"              % "0.3.0-SNAPSHOT"
+val gnmatcher      = "org.globalnames"    %% "gnmatcher"             % "0.1.0"
 val scalatest      = "org.scalatest"      %% "scalatest"             % "2.2.6"   % Test
 
 /////////////////////// PROJECTS /////////////////////////
@@ -90,7 +91,7 @@ lazy val resolver = (project in file("./resolver"))
     test in assembly := {},
 
     libraryDependencies ++= Seq(slick, logback, postgresql, hikariSlick,
-                                gnparser, scalatest),
+                                gnparser, gnmatcher, scalatest),
 
     scalacOptions in Test ++= Seq("-Yrangepos")
   )
