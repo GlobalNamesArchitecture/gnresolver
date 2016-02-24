@@ -38,8 +38,10 @@ class MySqlDAL(timeout: Duration, step: Int)
                    classification_path_ranks
             FROM name_string_indices
             LIMIT ${idx * step}, $step;"""
-        .as[(Int, Int, Int, String, Int, String, String,
-        String, String, String, String)]
+        .as[(Int, Int, String, String,
+             String, String, String,
+             String, String, String,
+             String)]
     Await.result(mysqlDb.run(query), timeout)
       .map(x => (NameStringIndexData.apply _).tupled(x))
   }

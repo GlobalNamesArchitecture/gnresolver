@@ -1,8 +1,8 @@
 package org.globalnames.resolver
 
 case class NameStringIndexData(dataSourceId: Int, nameStringId: Int,
-                               taxonId: Int, rank: String,
-                               acceptedTaxonId: Int, synonym: String,
+                               taxonId: String, rank: String,
+                               acceptedTaxonId: String, synonym: String,
                                classificationPath: String,
                                classificationPathIds: String,
                                createdAt: String, updatedAt: String,
