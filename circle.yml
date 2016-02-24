@@ -1,0 +1,20 @@
+machine:
+  timezone: UTC
+  java:
+    version: oraclejdk8
+
+dependencies:
+  # Cache the resolution-cache and build streams to speed things up
+  cache_directories:
+    - "~/.sbt"
+    - "target/resolution-cache"
+    - "target/streams"
+    - "project/target/resolution-cache"
+    - "project/target/streams"
+  # Compile all sources
+  override:
+    - sbt test:compile
+
+test:
+  override:
+    - sbt test
