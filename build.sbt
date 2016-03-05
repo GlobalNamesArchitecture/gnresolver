@@ -73,7 +73,7 @@ val scalatest      = "org.scalatest"      %% "scalatest"             % "2.2.6"  
 /////////////////////// PROJECTS /////////////////////////
 
 lazy val root = project.in(file("."))
-  .aggregate(resolver, dataMigrate, benchmark)
+  .aggregate(resolver, benchmark)
   .settings(noPublishingSettings: _*)
   .settings(
     crossScalaVersions := Seq("2.10.3", "2.11.7")
@@ -103,14 +103,4 @@ lazy val benchmark = (project in file("./benchmark"))
   .settings(noPublishingSettings: _*)
   .settings(
     name := "gnresolver-benchmark"
-  )
-
-lazy val dataMigrate = (project in file("./data-migrate"))
-  .settings(commonSettings: _*)
-  .settings(noPublishingSettings: _*)
-  .settings(
-    name := "gnresolver-data-migrate",
-
-    libraryDependencies ++= Seq(slick, logback, mysql, postgresql, hikariSlick,
-                                gnparser)
   )
