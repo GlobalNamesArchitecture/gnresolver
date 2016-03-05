@@ -21,17 +21,19 @@ class Resolver(db: Database, matcher: Matcher) {
     val cleanedName = name.replaceAll("\\s+", " ")
     val parsed = snp.fromString(cleanedName)
 
-    val queryByNameId = nameStrings.filter { x =>
+    val names = db.run(nameStrings.filter { x =>
       x.id === UUID.fromString(parsed.input.id)
-    }
-    val queryByCanonicalNameId = nameStrings.filter { x =>
-      x.canonicalUuid ===
-        gen.generate(parsed.canonized(showRanks = false).toString)
-    }
+    }.result)
+    val canonicalNames = parsed.canonized(showRanks = false).map { canonical =>
+      val queryByCanonicalNameId = nameStrings.filter { x =>
+        x.canonicalUuid === gen.generate(canonical)
+      }
+      db.run(queryByCanonicalNameId.result)
+    }.getOrElse(Future.successful(Seq()))
     val fuzzyMatches = matcher.transduce(name).map { _.term }
     for {
-      namesMatch <- db.run(queryByNameId.result)
-      canonicalNamesMatch <- db.run(queryByCanonicalNameId.result)
+      namesMatch <- names
+      canonicalNamesMatch <- canonicalNames
     } yield {
       Match(namesMatch, canonicalNamesMatch, fuzzyMatches)
     }
