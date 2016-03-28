@@ -18,12 +18,12 @@ class ResolverSpec extends FunSuite with BeforeAndAfterEach
   val names = Seq(
     NameString(Name(UUID.fromString("b0f8459f-8b73-514c-b6f3-568d54d99ded"),
                     "Salinator solida (Martens, 1878)"),
-               Name(UUID.fromString("0e77a809-3c28-5bc7-9f0f-7045f4ae9f42"),
-                    "SALINATOR SOLIDA (MARTENS, 1878)")),
+               Name(UUID.fromString("da1a79e5-c16f-5ff7-a925-14c5c7ecdec5"),
+                    "Salinator solida")),
     NameString(Name(UUID.fromString("f9638b29-b48f-5130-b469-ed0fa50ba5a8"),
                     "Tasmaphena sinclairi (Pfeiffer, 1846)"),
-               Name(UUID.fromString("8cf8696e-6ca6-5ec7-b441-e04a37ea751c"),
-                    "TASMAPHENA SINCLAIRI (PFEIFFER, 1846)"))
+               Name(UUID.fromString("c9ca846e-3821-560c-9021-0849c77ed565"),
+                    "Tasmaphena sinclairi"))
   )
   val canonicalNames = names.map { _.canonicalName }
   val matcher = Matcher(canonicalNames.map { _.value }, maxDistance = 2)
@@ -62,7 +62,7 @@ class ResolverSpec extends FunSuite with BeforeAndAfterEach
 
   test("must resolve by canonical name UUID") {
     val resolver = new Resolver(conn, matcher)
-    whenReady(resolver.resolve("TASMAPHENA SINCLAIRI (PFEIFFER, 1846)")) { r =>
+    whenReady(resolver.resolve("Tasmaphena sinclairi")) { r =>
       assert(r.byCanonicalName.head.name.id ===
         UUID.fromString("f9638b29-b48f-5130-b469-ed0fa50ba5a8"))
     }
@@ -70,9 +70,8 @@ class ResolverSpec extends FunSuite with BeforeAndAfterEach
 
   test("must resolve fuzzy by canonical name UUID") {
     val resolver = new Resolver(conn, matcher)
-    whenReady(resolver.resolve("TASMAPHENA SINCLAIRI (PFEIFFxx, 1846)")) { r =>
-      assert(r.byCanonicalNameFuzzy.head ===
-        "TASMAPHENA SINCLAIRI (PFEIFFER, 1846)")
+    whenReady(resolver.resolve("Tasmaphena sinclaiXX")) { r =>
+      assert(r.byCanonicalNameFuzzy.head === "Tasmaphena sinclairi")
     }
   }
 }
