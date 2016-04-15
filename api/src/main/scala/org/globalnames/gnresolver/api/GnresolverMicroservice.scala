@@ -7,7 +7,7 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import org.globalnames.gnresolver.api.QueryParser.{Modifier, SearchPart}
 import org.globalnames.resolver.Resolver
-import org.globalnames.resolver.Resolver.{Match, Kind}
+import org.globalnames.resolver.Resolver.{Match, Kind, Matches}
 import org.globalnames.resolver.model.{Name, NameString}
 import slick.driver.PostgresDriver.api._
 import spray.json._
@@ -46,6 +46,7 @@ trait Protocols extends DefaultJsonProtocol {
   implicit val nameFormat       = jsonFormat2(Name.apply)
   implicit val nameStringFormat = jsonFormat2(NameString.apply)
   implicit val matchFormat      = jsonFormat2(Match.apply)
+  implicit val matchesFormat    = jsonFormat2(Matches.apply)
   implicit val requestFormat    = jsonFormat1(Request.apply)
   implicit val queryNamesFormat = jsonFormat1(QueryNames.apply)
 }
@@ -64,7 +65,7 @@ trait Service extends Protocols {
   val matcher: Matcher
   lazy val resolver = new Resolver(database, matcher)
 
-  def resolve(search: SearchPart, take: Int, drop: Int): Future[Seq[Match]] = {
+  def resolve(search: SearchPart, take: Int, drop: Int): Future[Matches] = {
     search.modifier match {
       case Modifier(QueryParser.noModifier) =>
         resolver.resolve(search.contents, take, drop)

@@ -12,7 +12,7 @@ import scalaz._
 
 class Resolver(db: Database, matcher: Matcher) {
   import Resolver.Kind._
-  import Resolver.Match
+  import Resolver.{Matches, Match}
 
   val gen             = UuidGenerator()
   val nameStrings     = TableQuery[NameStrings]
@@ -24,7 +24,7 @@ class Resolver(db: Database, matcher: Matcher) {
   val yearWords       = TableQuery[YearWords]
 
   def resolve(name: String,
-              take: Int = 0, drop: Int = 0): Future[Seq[Match]] = {
+              take: Int = 0, drop: Int = 0): Future[Matches] = {
     val nameUuid = gen.generate(name)
     val exactMatches = nameStrings.filter { ns =>
       ns.id === nameUuid || ns.canonicalUuid === nameUuid
@@ -33,9 +33,9 @@ class Resolver(db: Database, matcher: Matcher) {
     db.run(exactMatches.result)
       .flatMap { ns =>
         if (ns.isEmpty) {
-          def handle(canonicalNameParts: Seq[String]): Future[Seq[Match]] = {
+          def handle(canonicalNameParts: Seq[String]): Future[Matches] = {
             if (canonicalNameParts.isEmpty) {
-              Future.successful(Seq())
+              Future.successful(Matches(0, Seq()))
             } else {
               val canonicalName = canonicalNameParts.mkString(" ")
               val canonicalNameUuid = gen.generate(canonicalName)
@@ -56,98 +56,127 @@ class Resolver(db: Database, matcher: Matcher) {
                     val query2 =
                       nameStrings.filter { ns => ns.canonicalUuid.inSetBind(fuzzyMatchMap.keys) }
                     val fuzzyMatch =
-                      db.run(query2.result)
+                      db.run(query2.drop(drop).take(take).result)
                       .map { ns => ns.map { n => Match(n, Fuzzy(fuzzyMatchMap(n.canonicalName.id).distance)) } }
-                    fuzzyMatch
+                    for {
+                      count <- db.run(query2.countDistinct.result)
+                      fm <- fuzzyMatch
+                    } yield Matches(count, fm)
                   }
-                } else Future.successful(ns2.map { n => Match(n) })
+                } else Future.successful(Matches(42, ns2.map { n => Match(n) })) // TODO: Not 42, stub
               }
             }
           }
           val canonicalName =
             snp.fromString(name).canonized(showRanks = false).orZero
           handle(canonicalName.split(' '))
-        } else Future.successful(ns.map { n => Match(n) })
+        } else Future.successful(Matches(42, ns.map { n => Match(n) })) // TODO: Not 42, stub
       }
   }
 
   def resolveCanonical(canonicalName: String,
-                       take: Int, drop: Int): Future[Seq[Match]] = {
+                       take: Int, drop: Int): Future[Matches] = {
     val canonicalNameUuid = gen.generate(canonicalName)
     val queryByCanonicalName = nameStrings.filter { x =>
       x.canonicalUuid === canonicalNameUuid
-    }.drop(drop).take(take)
-    db.run(queryByCanonicalName.result)
-      .map { ns => ns.map { n => Match(n, CanonicalName) } }
+    }
+    val queryByCanonicalNamePortion = queryByCanonicalName.drop(drop).take(take)
+    val queryByCanonicalNameCount = queryByCanonicalName.countDistinct
+    for {
+      portion <- db.run(queryByCanonicalNamePortion.result)
+      count <- db.run(queryByCanonicalNameCount.result)
+    } yield Matches(count, portion.map { n => Match(n, CanonicalName) })
   }
 
   def resolveCanonicalLike(canonicalName: String,
-                           take: Int, drop: Int): Future[Seq[Match]] = {
+                           take: Int, drop: Int): Future[Matches] = {
     val queryByCanonicalName = nameStrings.filter { x =>
       x.canonical.like(canonicalName)
-    }.drop(drop).take(take)
-    db.run(queryByCanonicalName.result)
-      .map { ns => ns.map { n => Match(n, CanonicalName) }}
+    }
+    val queryByCanonicalNamePortion = queryByCanonicalName.drop(drop).take(take)
+    val queryByCanonicalNameCount = queryByCanonicalName.countDistinct
+    for {
+      portion <- db.run(queryByCanonicalNamePortion.result)
+      count <- db.run(queryByCanonicalNameCount.result)
+    } yield Matches(count, portion.map { n => Match(n, CanonicalName) })
   }
 
   def resolveAuthor(authorName: String,
-                    take: Int, drop: Int): Future[Seq[Match]] = {
+                    take: Int, drop: Int): Future[Matches] = {
     val query = authorWords.filter { x => x.authorWord === authorName }
                            .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
-                            .drop(drop).take(take)
-    db.run(query2.result)
-      .map { ns => ns.map { n => Match(n, Author) }}
+    val query2count = query2.countDistinct
+    val query2portion = query2.drop(drop).take(take)
+    for {
+      portion <- db.run(query2portion.result)
+      count <- db.run(query2count.result)
+    } yield Matches(count, portion.map { n => Match(n, Author) })
   }
 
   def resolveYear(year: String,
-                  take: Int, drop: Int): Future[Seq[Match]] = {
+                  take: Int, drop: Int): Future[Matches] = {
     val query = yearWords.filter { x => x.yearWord === year }
                          .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
-                            .drop(drop).take(take)
-    db.run(query2.result)
-      .map {ns => ns.map { n => Match(n) }}
+    val query2count = query2.countDistinct
+    val query2portion = query2.drop(drop).take(take)
+    for {
+      portion <- db.run(query2portion.result)
+      count <- db.run(query2count.result)
+    } yield Matches(count, portion.map { n => Match(n) })
   }
 
   def resolveUninomial(uninomial: String,
-                       take: Int, drop: Int): Future[Seq[Match]] = {
+                       take: Int, drop: Int): Future[Matches] = {
     val query = uninomialWords.filter { x => x.uninomialWord === uninomial }
                               .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
-                            .drop(drop).take(take)
-    db.run(query2.result)
-      .map { ns => ns.map { n => Match(n) } }
+    val query2count = query2.countDistinct
+    val query2portion = query2.drop(drop).take(take)
+    for {
+      portion <- db.run(query2portion.result)
+      count <- db.run(query2count.result)
+    } yield Matches(count, portion.map { n => Match(n) })
   }
 
   def resolveGenus(genus: String,
-                   take: Int, drop: Int): Future[Seq[Match]] = {
+                   take: Int, drop: Int): Future[Matches] = {
     val query = genusWords.filter { x => x.genusWord === genus }
                           .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
-      .drop(drop).take(take)
-    db.run(query2.result)
-      .map { ns => ns.map { n => Match(n) } }
+    val query2count = query2.countDistinct
+    val query2portion = query2.drop(drop).take(take)
+    for {
+      portion <- db.run(query2portion.result)
+      count <- db.run(query2count.result)
+    } yield Matches(count, portion.map { n => Match(n) })
   }
 
   def resolveSpecies(species: String,
-                     take: Int, drop: Int): Future[Seq[Match]] = {
+                     take: Int, drop: Int): Future[Matches] = {
     val query = speciesWords.filter { x => x.speciesWord === species }
                             .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
-                            .drop(drop).take(take)
-    db.run(query2.result)
-      .map { ns => ns.map { n => Match(n) } }
+    val query2count = query2.countDistinct
+    val query2portion = query2.drop(drop).take(take)
+    for {
+      portion <- db.run(query2portion.result)
+      count <- db.run(query2count.result)
+    } yield Matches(count, portion.map { n => Match(n) })
   }
 
   def resolveSubspecies(subspecies: String,
-                        take: Int, drop: Int): Future[Seq[Match]] = {
+                        take: Int, drop: Int): Future[Matches] = {
     val query = subspeciesWords.filter { x => x.subspeciesWord === subspecies }
                                .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
-                            .drop(drop).take(take)
-    db.run(query2.result)
-      .map { ns => ns.map { n => Match(n) } }
+    val query2count = query2.countDistinct
+    val query2portion = query2.drop(drop).take(take)
+    for {
+      portion <- db.run(query2portion.result)
+      count <- db.run(query2count.result)
+    } yield Matches(count, portion.map { n => Match(n) })
   }
 }
 
@@ -166,4 +195,5 @@ object Resolver {
   }
 
   case class Match(nameString: NameString, kind: Kind = Kind.Stub)
+  case class Matches(total: Long, matches: Seq[Match])
 }
