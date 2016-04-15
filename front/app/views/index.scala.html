@@ -1,0 +1,37 @@
+@import helper._
+
+@(requestedNames: String = "",
+  response: Option[Response] = None)
+
+@layout(title = "GNParser") {
+  <section class="parser">
+    <div class="grid">
+      <div class="unit whole">
+        @form(action = routes.Application.parsePost()) {
+          <input type="text" name="name_query"
+            placeholder="Place names here one per line"
+            autofocus
+            value="@requestedNames"/>
+          <button type="submit">Parse</button>
+        }
+      </div>
+    </div>
+  </section>
+  @if(response.isDefined) {
+    <section class="parser results">
+      <div class="grid">
+        <div class="unit whole">
+          <h3>Results (total: @response.get.total)</h3>
+          @for(mtch <- response.get.matches) {
+            <h4>@mtch.nameString.name.value</h4>
+            <div>UUID: @mtch.nameString.name.id</div>
+            <div>Canonical Name: @mtch.nameString.canonicalName.value</div>
+            <div>UUID: @mtch.nameString.canonicalName.id</div>
+            <br />
+          }
+        </div>
+      </div>
+    </section>
+  }
+
+}
