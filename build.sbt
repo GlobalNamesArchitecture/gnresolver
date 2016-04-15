@@ -63,29 +63,30 @@ val noPublishingSettings = Seq(
 val akkaV           = "2.4.2"
 val akkaStreamV     = "2.0.3"
 
-val akkaActor       = "com.typesafe.akka"  %% "akka-actor"                           % akkaV
-val akkaStream      = "com.typesafe.akka"  %% "akka-stream-experimental"             % akkaStreamV
-val akkaHttpCore    = "com.typesafe.akka"  %% "akka-http-core-experimental"          % akkaStreamV
-val akkaHttp        = "com.typesafe.akka"  %% "akka-http-experimental"               % akkaStreamV
-val sprayJson       = "com.typesafe.akka"  %% "akka-http-spray-json-experimental"    % akkaStreamV
-val akkaHttpTestkit = "com.typesafe.akka"  %% "akka-http-testkit-experimental"       % akkaStreamV % Test
-val slick           = "com.typesafe.slick" %% "slick"                                % "3.1.0"
-val logback         = "ch.qos.logback"     %  "logback-classic"                      % "1.1.3"
-val mysql           = "mysql"              %  "mysql-connector-java"                 % "5.1.35"
-val postgresql      = "postgresql"         %  "postgresql"                           % "9.1-901-1.jdbc4"
-val hikariCP        = "com.zaxxer"         %  "HikariCP"                             % "2.4.1"
-val hikariSlick     = "com.typesafe.slick" %% "slick-hikaricp"                       % "3.1.0"
-val gnparser        = "org.globalnames"    %% "gnparser"                             % "0.3.0-SNAPSHOT"
-val gnmatcher       = "org.globalnames"    %% "gnmatcher"                            % "0.1.0"
-val scalatest       = "org.scalatest"      %% "scalatest"                            % "2.2.6"   % Test
+val akkaActor       = "com.typesafe.akka"  %% "akka-actor"                          % akkaV
+val akkaStream      = "com.typesafe.akka"  %% "akka-stream-experimental"            % akkaStreamV
+val akkaHttpCore    = "com.typesafe.akka"  %% "akka-http-core-experimental"         % akkaStreamV
+val akkaHttp        = "com.typesafe.akka"  %% "akka-http-experimental"              % akkaStreamV
+val sprayJson       = "com.typesafe.akka"  %% "akka-http-spray-json-experimental"   % akkaStreamV
+val slick           = "com.typesafe.slick" %% "slick"                               % "3.1.0"
+val logback         = "ch.qos.logback"     %  "logback-classic"                     % "1.1.3"
+val mysql           = "mysql"              %  "mysql-connector-java"                % "5.1.35"
+val postgresql      = "postgresql"         %  "postgresql"                          % "9.1-901-1.jdbc4"
+val hikariCP        = "com.zaxxer"         %  "HikariCP"                            % "2.4.1"
+val hikariSlick     = "com.typesafe.slick" %% "slick-hikaricp"                      % "3.1.0"
+val gnparser        = "org.globalnames"    %% "gnparser"                            % "0.3.0-SNAPSHOT"
+val gnmatcher       = "org.globalnames"    %% "gnmatcher"                           % "0.1.0"
+val scalatest       = "org.scalatest"      %% "scalatest"                           % "2.2.6"     % Test
+val scalaz          = "org.scalaz"         %% "scalaz-core"                         % "7.1.7"
+val akkaHttpTestkit = "com.typesafe.akka"  %% "akka-http-testkit-experimental"      % akkaStreamV % Test
 
 /////////////////////// PROJECTS /////////////////////////
 
 lazy val root = project.in(file("."))
-  .aggregate(resolver, benchmark, api)
+  .aggregate(resolver, benchmark, api, front)
   .settings(noPublishingSettings: _*)
   .settings(
-    crossScalaVersions := Seq("2.10.3", "2.11.7")
+    crossScalaVersions := Seq("2.10.6", "2.11.7")
   )
 
 lazy val resolver = (project in file("./resolver"))
@@ -120,8 +121,23 @@ lazy val api = (project in file("./api"))
   .settings(
     name := "gnresolver-api",
 
+    mainClass in reStart := Some("org.globalnames.gnresolver.api.GnresolverMicroservice"),
     libraryDependencies ++= Seq(akkaActor, akkaStream, akkaHttpCore, akkaHttp,
                                 sprayJson, akkaHttpTestkit, scalatest)
   )
 
-mainClass in reStart := Some("org.globalnames.gnresolver.api.GnresolverMicroservice")
+lazy val front = (project in file("./front"))
+  .enablePlugins(PlayScala)
+  .settings(commonSettings: _*)
+  .settings(noPublishingSettings: _*)
+  .settings(
+    name := "gnresolver-front",
+    packageName := "gnresolver-front",
+    pipelineStages := Seq(digest, gzip),
+    libraryDependencies ++= Seq(
+      filters, cache, ws, gnparser
+    ),
+    // because Play and Vagrant: https://groups.google.com/forum/#!msg/play-framework/uUlcDeMO1Ag/iUlfdZ8zWQoJ
+    PlayKeys.fileWatchService := play.runsupport.FileWatchService.sbt(2000)
+  )
+

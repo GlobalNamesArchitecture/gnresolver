@@ -35,8 +35,61 @@ CREATE TABLE name_string_indices (
   classification_path_ranks text
 );
 
+CREATE TABLE name_strings_author_words (
+  author_word VARCHAR(100),
+  name_uuid UUID
+);
+
+CREATE TABLE name_strings_year (
+  year VARCHAR(8),
+  name_uuid UUID
+);
+
+CREATE TABLE name_strings_genus (
+  genus VARCHAR(50),
+  name_uuid UUID
+);
+
+CREATE TABLE name_strings_uninomial (
+  uninomial VARCHAR(50),
+  name_uuid UUID
+);
+
+CREATE TABLE name_strings_species (
+  species VARCHAR(50),
+  name_uuid UUID
+);
+
+CREATE TABLE name_strings_subspecies (
+  subspecies VARCHAR(50),
+  name_uuid UUID
+);
+
+CREATE INDEX name_strings_author_words_index ON
+  name_strings_author_words USING BTREE (author_word);
+CREATE INDEX name_strings_year_index ON
+  name_strings_year USING BTREE (year);
+CREATE INDEX name_strings_genus_index ON
+  name_strings_genus USING BTREE (genus);
+CREATE INDEX name_strings_uninomial_index ON
+  name_strings_uninomial USING BTREE (uninomial);
+CREATE INDEX name_strings_species_index ON
+  name_strings_species USING BTREE (species);
+CREATE INDEX name_strings_subspecies_index ON
+  name_strings_subspecies USING BTREE (subspecies);
+
 --- !Downs
 
 DROP TABLE data_sources;
 
 DROP TABLE name_string_indices;
+
+DROP TABLE name_strings_author_words;
+
+DROP TABLE name_strings_year;
+
+DROP TABLE name_strings_genus;
+
+DROP TABLE name_strings_uninomial;
+
+DROP TABLE name_strings_subspecies;
