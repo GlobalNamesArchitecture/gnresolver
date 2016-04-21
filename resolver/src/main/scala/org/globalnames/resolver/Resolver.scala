@@ -9,6 +9,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scalaz.Scalaz._
 import scalaz._
+import org.apache.commons.lang3.StringUtils.capitalize
 
 class Resolver(db: Database, matcher: Matcher) {
   import Resolver.Kind._
@@ -25,7 +26,7 @@ class Resolver(db: Database, matcher: Matcher) {
 
   def resolve(name: String,
               take: Int = 0, drop: Int = 0): Future[Matches] = {
-    val nameUuid = gen.generate(name)
+    val nameUuid = gen.generate(capitalize(name))
     val exactMatches = nameStrings.filter { ns =>
       ns.id === nameUuid || ns.canonicalUuid === nameUuid
     }
