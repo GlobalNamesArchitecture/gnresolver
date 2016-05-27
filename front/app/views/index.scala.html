@@ -1,6 +1,7 @@
 @import helper._
 
 @(requestedNames: String = "",
+  page: Option[Int] = None, pageUrls: Map[Int, String] = Map.empty,
   response: Option[Response] = None)
 
 @layout(title = "GNParser") {
@@ -30,6 +31,14 @@
             <br />
           }
         </div>
+
+        @for(p <- 1 until pageUrls.size) {
+          @page match {
+            case Some(x) if x == p => { <a href="@{pageUrls(p)}"><b>@p</b></a> }
+            case None if p == 1 => { <a href="@{pageUrls(p)}"><b>@p</b></a> }
+            case _ => { <a href="@{pageUrls(p)}">@p</a> }
+          }
+        }
       </div>
     </section>
   }

@@ -27,12 +27,16 @@ class Application @Inject() (wsClient: WSClient) extends Controller {
     val drop = page.map { _ * 10 }.orZero
     wsClient
       .url(s"http://gnresolver.globalnames.org/api/search?v=${query.get}&take=10&drop=$drop")
-      .withRequestTimeout(3.seconds)
+      .withRequestTimeout(15.seconds)
       .get
       .map { resp =>
         resp.json.validate[Response] match {
           case JsSuccess(ns, _) =>
-            Ok(views.html.index(query.orZero, ns.some))
+            val totalPagesCount = ns.total / 10 + 1
+            val pageUrls = (1 until totalPagesCount).map { page =>
+              (page, "?q=" + query.orZero + "&page=" + page)
+            }.toMap
+            Ok(views.html.index(query.orZero, page, pageUrls, ns.some))
           case e: JsError => BadRequest(e.toString)
         }
       }
