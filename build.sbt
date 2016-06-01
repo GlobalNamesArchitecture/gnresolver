@@ -136,8 +136,6 @@ lazy val front = (project in file("./front"))
     pipelineStages := Seq(digest, gzip),
     libraryDependencies ++= Seq(
       filters, cache, ws, gnparser
-    ),
-    // because Play and Vagrant: https://groups.google.com/forum/#!msg/play-framework/uUlcDeMO1Ag/iUlfdZ8zWQoJ
-    PlayKeys.fileWatchService := play.runsupport.FileWatchService.sbt(2000)
+    )
   )
 
