@@ -7,12 +7,12 @@ import java.util.UUID
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import org.globalnames.gnresolver.api.QueryParser.{Modifier, SearchPart}
 import org.globalnames.resolver.Resolver
-import org.globalnames.resolver.Resolver.{Match, Kind, Matches}
-import org.globalnames.resolver.model.{Name, NameString}
+import org.globalnames.resolver.Resolver.{Kind, Match, Matches}
+import org.globalnames.resolver.model.{DataSource, Name, NameString, NameStringIndex}
 import slick.driver.PostgresDriver.api._
 import spray.json._
 import akka.actor.ActorSystem
-import akka.event.{LoggingAdapter, Logging}
+import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.stream.{ActorMaterializer, Materializer}
@@ -43,11 +43,13 @@ trait Protocols extends DefaultJsonProtocol {
         deserializationError("Expected Kind as JsString, but got " + x)
     }
   }
-  implicit val nameFormat       = jsonFormat2(Name.apply)
+  implicit val nameFormat = jsonFormat2(Name.apply)
   implicit val nameStringFormat = jsonFormat2(NameString.apply)
-  implicit val matchFormat      = jsonFormat2(Match.apply)
-  implicit val matchesFormat    = jsonFormat2(Matches.apply)
-  implicit val requestFormat    = jsonFormat1(Request.apply)
+  implicit val nameStringIndexFormat = jsonFormat3(NameStringIndex.apply)
+  implicit val dataSourceFormat = jsonFormat3(DataSource.apply)
+  implicit val matchFormat = jsonFormat2(Match.apply)
+  implicit val matchesFormat = jsonFormat2(Matches.apply)
+  implicit val requestFormat = jsonFormat1(Request.apply)
   implicit val queryNamesFormat = jsonFormat1(QueryNames.apply)
 }
 
@@ -129,6 +131,12 @@ trait Service extends Protocols {
                   logger.debug(s"$search")
                   resolve(search, take, drop)
                 }
+            }
+          }
+        } ~ path("names" / JavaUUID / "dataSources") { uuid =>
+          get {
+            complete {
+              resolver.resolveDataSources(uuid)
             }
           }
         }

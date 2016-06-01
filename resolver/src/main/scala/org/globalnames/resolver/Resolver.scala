@@ -1,6 +1,8 @@
 package org.globalnames
 package resolver
 
+import java.util.UUID
+
 import org.globalnames.parser.ScientificNameParser.{instance => snp}
 import org.globalnames.resolver.model._
 import slick.driver.PostgresDriver.api._
@@ -15,14 +17,16 @@ class Resolver(db: Database, matcher: Matcher) {
   import Resolver.Kind._
   import Resolver.{Matches, Match}
 
-  val gen             = UuidGenerator()
-  val nameStrings     = TableQuery[NameStrings]
-  val authorWords     = TableQuery[AuthorWords]
-  val uninomialWords  = TableQuery[UninomialWords]
-  val genusWords      = TableQuery[GenusWords]
-  val speciesWords    = TableQuery[SpeciesWords]
+  val gen = UuidGenerator()
+  val nameStrings = TableQuery[NameStrings]
+  val authorWords = TableQuery[AuthorWords]
+  val uninomialWords = TableQuery[UninomialWords]
+  val genusWords = TableQuery[GenusWords]
+  val speciesWords = TableQuery[SpeciesWords]
   val subspeciesWords = TableQuery[SubspeciesWords]
-  val yearWords       = TableQuery[YearWords]
+  val yearWords = TableQuery[YearWords]
+  val dataSources = TableQuery[DataSources]
+  val nameStringIndicies = TableQuery[NameStringIndices]
 
   def resolve(name: String,
               take: Int = 0, drop: Int = 0): Future[Matches] = {
@@ -178,6 +182,16 @@ class Resolver(db: Database, matcher: Matcher) {
       portion <- db.run(query2portion.result)
       count <- db.run(query2count.result)
     } yield Matches(count, portion.map { n => Match(n) })
+  }
+
+  def resolveDataSources(uuid: UUID) = {
+    val query = for {
+      nsi <- nameStringIndicies
+      ds <- dataSources
+      if nsi.nameStringId === uuid && nsi.dataSourceId === ds.id
+    } yield (nsi, ds)
+
+    db.run(query.result)
   }
 }
 
