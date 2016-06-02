@@ -1,5 +1,3 @@
-@import helper._
-
 @(requestedNames: String = "",
   page: Option[Int] = None, pageUrls: Map[Int, String] = Map.empty,
   response: Option[Response] = None)
@@ -8,15 +6,13 @@
   <section class="parser">
     <div class="grid">
       <div class="unit whole">
-      @form(action = routes.Application.parsePost(), 'id -> "parse-form") {
         <div data-role="controlgroup" data-type="horizontal">
-          <input type="text" id="parse-input"
+          <input type="text" id="resolve-input"
                  data-wrapper-class="controlgroup-textinput ui-btn"
                  placeholder="Place name here"
                  value="@requestedNames"/>
-          <button type="submit">Parse</button>
+          <button id="resolve-submit">Resolve</button>
         </div>
-      }
       </div>
     </div>
   </section>
@@ -64,6 +60,13 @@
   }
 
   <script>
+    $('button#resolve-submit').click(function () {
+      var nameToParse = $('input#resolve-input').val();
+      if (typeof nameToParse !== 'undefined' && nameToParse.length > 0) {
+        window.location.href = '/search?q=' + nameToParse;
+      }
+    });
+
     $('a.dataSource').click(function () {
       var id = this.id;
       console.log('clicked: ' + id);
@@ -71,9 +74,8 @@
       var panelContent = $('div#content-' + id);
 
       if (panelContent.attr('processed') !== 'true') {
-        panelContent.attr('processed', true)
-
         $.get('/api/names/' + id + '/dataSources', function (data, status) {
+          panelContent.attr('processed', true);
           console.log(status + ': ' + id);
 
           var content = data.map(function (elem) {

@@ -3,7 +3,6 @@ package controllers
 import play.api.data.Form
 import play.api.data.Forms._
 import play.api.mvc._
-import org.globalnames.parser.ScientificNameParser.{instance => snp}
 import javax.inject._
 
 import models._
@@ -18,10 +17,6 @@ import models.Formatters.responseFormat
 
 class Application @Inject() (wsClient: WSClient) extends Controller {
   val searchForm = Form("name_query" -> text)
-
-  def parsePost() = Action(parse.form(searchForm)) { implicit rs =>
-    Redirect(routes.Application.search(rs.body.some, None))
-  }
 
   def search(query: Option[String], page: Option[Int]) = Action.async { implicit req =>
     val drop = page.map { _ * 10 }.orZero
