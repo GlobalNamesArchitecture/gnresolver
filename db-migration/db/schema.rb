@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160609145003) do
+ActiveRecord::Schema.define(version: 20160609164952) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -29,6 +29,15 @@ ActiveRecord::Schema.define(version: 20160609145003) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "name_string_indices", id: false, force: :cascade do |t|
+    t.integer "data_source_id",             null: false
+    t.uuid    "name_string_id",             null: false
+    t.string  "url",            limit: 255
+  end
+
+  add_index "name_string_indices", ["data_source_id"], name: "index_name_string_indices_on_data_source_id", using: :btree
+  add_index "name_string_indices", ["name_string_id"], name: "index_name_string_indices_on_name_string_id", using: :btree
 
   create_table "name_strings", id: :uuid, default: nil, force: :cascade do |t|
     t.uuid     "id_mysql",                   null: false
