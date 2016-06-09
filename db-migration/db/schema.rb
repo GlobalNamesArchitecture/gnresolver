@@ -11,10 +11,24 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160608180550) do
+ActiveRecord::Schema.define(version: 20160609145003) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "data_sources", force: :cascade do |t|
+    t.string   "title",               limit: 255,              null: false
+    t.text     "description"
+    t.string   "logo_url",            limit: 255
+    t.string   "web_site_url",        limit: 255
+    t.string   "data_url",            limit: 255
+    t.integer  "refresh_period_days",             default: 14
+    t.integer  "name_strings_count",              default: 0
+    t.string   "data_hash",           limit: 40
+    t.integer  "unique_names_count",              default: 0
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "name_strings", id: :uuid, default: nil, force: :cascade do |t|
     t.uuid     "id_mysql",                   null: false
