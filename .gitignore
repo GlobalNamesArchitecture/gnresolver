@@ -37,3 +37,6 @@ logs/
 
 # Play Framework
 RUNNING_PID
+
+# Ruby
+.byebug_history
