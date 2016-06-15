@@ -34,10 +34,10 @@ class Seeder
   private
 
   def add_seeds(file)
-    table = file.gsub(/\.csv/, "")
+    table = file.gsub(/\.csv/, '')
     @db.execute('truncate table %s' % table)
     data_slice_for table, file do |data|
-      @db.execute('insert into %s values %s' % [table, data]) if data
+      @db.execute('insert into %s values %s on conflict do nothing;' % [table, data]) if data
     end
   end
 
