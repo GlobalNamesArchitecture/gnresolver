@@ -184,7 +184,7 @@ class Resolver(db: Database, matcher: Matcher) {
     } yield Matches(count, portion.map { n => Match(n) })
   }
 
-  def resolveDataSources(uuid: UUID) = {
+  def resolveDataSources(uuid: UUID): Future[Seq[(NameStringIndex, DataSource)]] = {
     val query = for {
       nsi <- nameStringIndicies
       ds <- dataSources
