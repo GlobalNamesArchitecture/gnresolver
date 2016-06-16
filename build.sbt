@@ -2,7 +2,7 @@ import sbt.Keys._
 
 val commonSettings = Seq(
   version := "0.1.0",
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   organization := "org.globalnames",
   homepage := Some(new URL("http://globalnames.org/")),
   description := "Global scientific names resolver",
@@ -60,25 +60,21 @@ val noPublishingSettings = Seq(
 
 /////////////////////// DEPENDENCIES /////////////////////////
 
-val akkaV           = "2.4.2"
-val akkaStreamV     = "2.0.3"
+val akkaV           = "2.4.7"
 
 val akkaActor       = "com.typesafe.akka"  %% "akka-actor"                          % akkaV
-val akkaStream      = "com.typesafe.akka"  %% "akka-stream-experimental"            % akkaStreamV
-val akkaHttpCore    = "com.typesafe.akka"  %% "akka-http-core-experimental"         % akkaStreamV
-val akkaHttp        = "com.typesafe.akka"  %% "akka-http-experimental"              % akkaStreamV
-val sprayJson       = "com.typesafe.akka"  %% "akka-http-spray-json-experimental"   % akkaStreamV
-val slick           = "com.typesafe.slick" %% "slick"                               % "3.1.0"
-val logback         = "ch.qos.logback"     %  "logback-classic"                     % "1.1.3"
-val mysql           = "mysql"              %  "mysql-connector-java"                % "5.1.35"
-val postgresql      = "postgresql"         %  "postgresql"                          % "9.1-901-1.jdbc4"
-val hikariCP        = "com.zaxxer"         %  "HikariCP"                            % "2.4.1"
-val hikariSlick     = "com.typesafe.slick" %% "slick-hikaricp"                      % "3.1.0"
-val gnparser        = "org.globalnames"    %% "gnparser"                            % "0.3.0"
+val akkaHttp        = "com.typesafe.akka"  %% "akka-http-core"                      % akkaV
+val akkaHttpCore    = "com.typesafe.akka"  %% "akka-http-experimental"              % akkaV
+val sprayJson       = "com.typesafe.akka"  %% "akka-http-spray-json-experimental"   % akkaV
+val slick           = "com.typesafe.slick" %% "slick"                               % "3.1.1"
+val logback         = "ch.qos.logback"     %  "logback-classic"                     % "1.1.7"
+val postgresql      = "postgresql"         %  "postgresql"                          % "9.1-901.jdbc4"
+val hikariSlick     = "com.typesafe.slick" %% "slick-hikaricp"                      % "3.1.1"
+val gnparser        = "org.globalnames"    %% "gnparser"                            % "0.3.1"
 val gnmatcher       = "org.globalnames"    %% "gnmatcher"                           % "0.1.0"
-val scalatest       = "org.scalatest"      %% "scalatest"                           % "2.2.6"     % Test
 val scalaz          = "org.scalaz"         %% "scalaz-core"                         % "7.1.7"
-val akkaHttpTestkit = "com.typesafe.akka"  %% "akka-http-testkit-experimental"      % akkaStreamV % Test
+val scalatest       = "org.scalatest"      %% "scalatest"                           % "2.2.6"     % Test
+val akkaHttpTestkit = "com.typesafe.akka"  %% "akka-http-testkit"                   % akkaV       % Test
 
 /////////////////////// PROJECTS /////////////////////////
 
@@ -100,8 +96,8 @@ lazy val resolver = (project in file("./resolver"))
     buildInfoPackage := "org.globalnames.resolver",
     test in assembly := {},
 
-    libraryDependencies ++= Seq(slick, logback, postgresql, hikariSlick,
-                                gnparser, gnmatcher, scalatest),
+    libraryDependencies ++= Seq(slick, logback, postgresql, hikariSlick, gnparser, gnmatcher,
+                                scalatest),
 
     scalacOptions in Test ++= Seq("-Yrangepos")
   )
@@ -122,8 +118,8 @@ lazy val api = (project in file("./api"))
     name := "gnresolver-api",
 
     mainClass in reStart := Some("org.globalnames.gnresolver.api.GnresolverMicroservice"),
-    libraryDependencies ++= Seq(akkaActor, akkaStream, akkaHttpCore, akkaHttp,
-                                sprayJson, akkaHttpTestkit, scalatest)
+    libraryDependencies ++= Seq(akkaActor, akkaHttpCore, akkaHttp, sprayJson, akkaHttpTestkit,
+                                scalatest)
   )
 
 lazy val front = (project in file("./front"))
