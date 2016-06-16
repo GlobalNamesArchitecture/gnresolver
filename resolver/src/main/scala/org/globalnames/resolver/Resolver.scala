@@ -9,8 +9,8 @@ import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scalaz.Scalaz._
 import scalaz._
+import Scalaz._
 import org.apache.commons.lang3.StringUtils.capitalize
 
 class Resolver(db: Database, matcher: Matcher) {
@@ -35,7 +35,7 @@ class Resolver(db: Database, matcher: Matcher) {
       ns.id === nameUuid || ns.canonicalUuid === nameUuid
     }
 
-    db.run(exactMatches.result)
+    db.run(exactMatches.drop(drop).take(take).result)
       .flatMap { ns =>
         if (ns.isEmpty) {
           def handle(canonicalNameParts: Seq[String]): Future[Matches] = {
@@ -52,9 +52,8 @@ class Resolver(db: Database, matcher: Matcher) {
                 if (ns2.isEmpty) {
                   val fuzzyMatchMap =
                     matcher.transduce(canonicalName)
-                      .map { cand =>
-                        gen.generate(cand.term) -> cand
-                      }.toMap
+                           .map { cand => gen.generate(cand.term) -> cand }
+                           .toMap
                   if (fuzzyMatchMap.isEmpty) {
                     handle(canonicalNameParts.dropRight(1))
                   } else {
@@ -62,7 +61,9 @@ class Resolver(db: Database, matcher: Matcher) {
                       nameStrings.filter { ns => ns.canonicalUuid.inSetBind(fuzzyMatchMap.keys) }
                     val fuzzyMatch =
                       db.run(query2.drop(drop).take(take).result)
-                      .map { ns => ns.map { n => Match(n, Fuzzy(fuzzyMatchMap(n.canonicalName.id).distance)) } }
+                        .map { ns => ns.map { n =>
+                          Match(n, Fuzzy(fuzzyMatchMap(n.canonicalName.get.id).distance))
+                        }}
                     for {
                       count <- db.run(query2.countDistinct.result)
                       fm <- fuzzyMatch
@@ -72,8 +73,7 @@ class Resolver(db: Database, matcher: Matcher) {
               }
             }
           }
-          val canonicalName =
-            snp.fromString(name).canonized(showRanks = false).orZero
+          val canonicalName = snp.fromString(name).canonized().orZero
           handle(canonicalName.split(' '))
         } else Future.successful(Matches(42, ns.map { n => Match(n) })) // TODO: Not 42, stub
       }
