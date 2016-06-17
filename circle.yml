@@ -2,18 +2,30 @@ machine:
   timezone: UTC
   java:
     version: oraclejdk8
+  ruby:
+    version: 2.2.3
 
 dependencies:
-  # Cache the resolution-cache and build streams to speed things up
+  pre:
+    - gem install bundler
   cache_directories:
     - "~/.sbt"
     - "target/resolution-cache"
     - "target/streams"
     - "project/target/resolution-cache"
     - "project/target/streams"
-  # Compile all sources
   override:
+    - bundle install:
+        timeout: 180
+        pwd:
+          db-migration
     - sbt test:compile
+
+database:
+  override:
+    - bundle exec rake db:migrate db:seed --trace:
+        pwd:
+          db-migration
 
 test:
   override:

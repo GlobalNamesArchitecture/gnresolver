@@ -1,6 +1,4 @@
 require 'csv'
-# require_relative "../config/environment"
-require 'byebug'
 
 ENV['APP_ENV'] ||= 'development'
 
@@ -51,12 +49,12 @@ class Seeder
 
   def collect_data(file, table)
     @columns = @db.columns(table).map(&:name)
-    csv_args = {col_sep: "\t", quote_char: 'щ'}
+    csv_args = { col_sep: "\t", quote_char: 'щ', encoding: 'utf-8' }
     puts '*' * 80
     puts file
     CSV.open(File.join(@path, file), csv_args).map do |row|
       row = get_row(row, table)
-      (@columns.size - row.size).times { row << "null" }
+      (@columns.size - row.size).times { row << 'null' }
       row.join(',')
     end
   end
