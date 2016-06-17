@@ -1,12 +1,11 @@
 package org.globalnames
-package gnresolver
+package resolver
 package api
 
 import java.util.UUID
 
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
-import org.globalnames.gnresolver.api.QueryParser.{Modifier, SearchPart}
-import org.globalnames.resolver.Resolver
+import QueryParser.{Modifier, SearchPart}
 import org.globalnames.resolver.Resolver.{Kind, Match, Matches}
 import org.globalnames.resolver.model.{DataSource, Name, NameString, NameStringIndex}
 import slick.driver.PostgresDriver.api._

@@ -1,4 +1,4 @@
-package org.globalnames.gnresolver.api
+package org.globalnames.resolver.api
 
 import scala.util.parsing.combinator.RegexParsers
 
