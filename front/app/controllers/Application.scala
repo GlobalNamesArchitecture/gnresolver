@@ -15,13 +15,15 @@ import scala.concurrent.duration._
 import play.api.libs.concurrent.Execution.Implicits.defaultContext
 import models.Formatters.responseFormat
 
-class Application @Inject() (wsClient: WSClient) extends Controller {
+class Application @Inject() (wsClient: WSClient,
+                             config: play.api.Configuration) extends Controller {
   val searchForm = Form("name_query" -> text)
+  val apiHostname = config.getString("resolver.api.hostname").get
 
   def search(query: Option[String], page: Option[Int]) = Action.async { implicit req =>
     val drop = page.map { _ * 10 }.orZero
     wsClient
-      .url(s"http://gnresolver.globalnames.org/api/search?v=${query.get}&take=10&drop=$drop")
+      .url(s"http://$apiHostname/api/search?v=${query.get}&take=10&drop=$drop")
       .withRequestTimeout(15.seconds)
       .get
       .map { resp =>
