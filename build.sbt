@@ -117,6 +117,9 @@ lazy val api = (project in file("./api"))
   .settings(
     name := "gnresolver-api",
 
+    buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion),
+    buildInfoPackage := "org.globalnames.resolver.api",
+
     mainClass in reStart := Some("org.globalnames.resolver.api.GnresolverMicroservice"),
     libraryDependencies ++= Seq(akkaActor, akkaHttpCore, akkaHttp, sprayJson, akkaHttpTestkit,
                                 scalatest)
