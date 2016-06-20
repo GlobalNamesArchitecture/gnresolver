@@ -29,54 +29,57 @@ class Resolver(db: Database, matcher: Matcher) {
   val nameStringIndicies = TableQuery[NameStringIndices]
 
   def resolve(name: String,
-              take: Int = 0, drop: Int = 0): Future[Matches] = {
+              take: Int = 1000, drop: Int = 0): Future[Matches] = {
     val nameUuid = gen.generate(capitalize(name))
     val exactMatches = nameStrings.filter { ns =>
       ns.id === nameUuid || ns.canonicalUuid === nameUuid
     }
 
-    db.run(exactMatches.drop(drop).take(take).result)
-      .flatMap { ns =>
-        if (ns.isEmpty) {
-          def handle(canonicalNameParts: Seq[String]): Future[Matches] = {
-            if (canonicalNameParts.isEmpty) {
-              Future.successful(Matches(0, Seq()))
+    def handle(canonicalNameParts: Seq[String]): Future[Matches] = {
+      if (canonicalNameParts.isEmpty) {
+        Future.successful(Matches(0, Seq()))
+      } else {
+        val canonicalName = canonicalNameParts.mkString(" ")
+        val canonicalNameUuid = gen.generate(canonicalName)
+        val exactNameString1 = nameStrings.filter { ns1 =>
+          ns1.id === canonicalNameUuid || ns1.canonicalUuid === canonicalNameUuid
+        }
+        db.run(exactNameString1.result).flatMap { ns2 =>
+          if (ns2.isEmpty) {
+            val fuzzyMatchMap =
+              matcher.transduce(canonicalName)
+                     .map { cand => gen.generate(cand.term) -> cand }
+                     .toMap
+            if (fuzzyMatchMap.isEmpty) {
+              handle(canonicalNameParts.dropRight(1))
             } else {
-              val canonicalName = canonicalNameParts.mkString(" ")
-              val canonicalNameUuid = gen.generate(canonicalName)
-              val exactNameString1 = nameStrings.filter { ns1 =>
-                ns1.id === canonicalNameUuid ||
-                  ns1.canonicalUuid === canonicalNameUuid
-              }
-              db.run(exactNameString1.result).flatMap { ns2 =>
-                if (ns2.isEmpty) {
-                  val fuzzyMatchMap =
-                    matcher.transduce(canonicalName)
-                           .map { cand => gen.generate(cand.term) -> cand }
-                           .toMap
-                  if (fuzzyMatchMap.isEmpty) {
-                    handle(canonicalNameParts.dropRight(1))
-                  } else {
-                    val query2 =
-                      nameStrings.filter { ns => ns.canonicalUuid.inSetBind(fuzzyMatchMap.keys) }
-                    val fuzzyMatch =
-                      db.run(query2.drop(drop).take(take).result)
-                        .map { ns => ns.map { n =>
-                          Match(n, Fuzzy(fuzzyMatchMap(n.canonicalName.get.id).distance))
-                        }}
-                    for {
-                      count <- db.run(query2.countDistinct.result)
-                      fm <- fuzzyMatch
-                    } yield Matches(count, fm)
-                  }
-                } else Future.successful(Matches(42, ns2.map { n => Match(n) })) // TODO: Not 42, stub
-              }
+              val query2 =
+                nameStrings.filter { ns => ns.canonicalUuid.inSetBind(fuzzyMatchMap.keys) }
+              val fuzzyMatch =
+                db.run(query2.drop(drop).take(take).result)
+                  .map { ns => ns.map { n =>
+                    Match(n, Fuzzy(fuzzyMatchMap(n.canonicalName.get.id).distance))
+                  }}
+              for {
+                count <- db.run(query2.countDistinct.result)
+                fm <- fuzzyMatch
+              } yield Matches(count, fm)
             }
-          }
-          val canonicalName = snp.fromString(name).canonized().orZero
-          handle(canonicalName.split(' '))
-        } else Future.successful(Matches(42, ns.map { n => Match(n) })) // TODO: Not 42, stub
+          } else Future.successful(Matches(42, ns2.map { n => Match(n) })) // TODO: Not 42, stub
+        }
       }
+    }
+
+    db.run(exactMatches.size.result).flatMap { exactMatchesCount =>
+      if (exactMatchesCount == 0) {
+        val canonicalName = snp.fromString(name).canonized().orZero
+        handle(canonicalName.split(' '))
+      } else {
+        db.run(exactMatches.drop(drop).take(take).result).map { ns =>
+          Matches(exactMatchesCount, ns.map { n => Match(n) })
+        }
+      }
+    }
   }
 
   def resolveCanonical(canonicalName: String,
@@ -90,7 +93,7 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(queryByCanonicalNamePortion.result)
       count <- db.run(queryByCanonicalNameCount.result)
-    } yield Matches(count, portion.map { n => Match(n, CanonicalName) })
+    } yield Matches(count, portion.map { n => Match(n) })
   }
 
   def resolveCanonicalLike(canonicalName: String,
@@ -103,7 +106,7 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(queryByCanonicalNamePortion.result)
       count <- db.run(queryByCanonicalNameCount.result)
-    } yield Matches(count, portion.map { n => Match(n, CanonicalName) })
+    } yield Matches(count, portion.map { n => Match(n) })
   }
 
   def resolveAuthor(authorName: String,
@@ -116,7 +119,7 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(query2portion.result)
       count <- db.run(query2count.result)
-    } yield Matches(count, portion.map { n => Match(n, Author) })
+    } yield Matches(count, portion.map { n => Match(n) })
   }
 
   def resolveYear(year: String,
@@ -198,17 +201,11 @@ class Resolver(db: Database, matcher: Matcher) {
 object Resolver {
   sealed trait Kind
   object Kind {
-    case object Stub extends Kind
-
-    case object Name extends Kind
-
-    case object CanonicalName extends Kind
-
-    case object Author extends Kind
+    case object None extends Kind
 
     case class Fuzzy(score: Int) extends Kind
   }
 
-  case class Match(nameString: NameString, kind: Kind = Kind.Stub)
+  case class Match(nameString: NameString, kind: Kind = Kind.None)
   case class Matches(total: Long, matches: Seq[Match])
 }

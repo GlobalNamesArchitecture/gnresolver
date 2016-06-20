@@ -37,9 +37,8 @@ trait Protocols extends DefaultJsonProtocol {
   implicit object KindJsonFormat extends RootJsonFormat[Kind] {
     def write(x: Kind) = JsString(x.toString)
     def read(value: JsValue) = value match {
-      case JsString("") => ???
-      case x =>
-        deserializationError("Expected Kind as JsString, but got " + x)
+      case JsString("None") => Kind.None
+      case x => deserializationError("Expected Kind as JsString, but got " + x)
     }
   }
   implicit val nameFormat = jsonFormat2(Name.apply)
@@ -98,24 +97,24 @@ trait Service extends Protocols {
       pathPrefix("api") {
         path("version") {
           complete {
-            "0.1.0-SNAPSHOT"
+            BuildInfo.version
           }
         } ~ path("names") {
           get {
             parameter('v) { values =>
               complete {
                 val res =
-                  values.split("\\|")
+                  values.split('|')
                     .take(1000)
                     .map { n => resolver.resolve(n) }
                     .toSeq
                 Future.sequence(res)
               }
             }
-          } ~ (post & entity(as[Request])) { request =>
+          } ~ (post & entity(as[Seq[String]])) { request =>
             complete {
               val res =
-                request.names
+                request
                   .take(1000)
                   .map { n => resolver.resolve(n) }
               Future.sequence(res)
