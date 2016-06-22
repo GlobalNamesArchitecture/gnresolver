@@ -41,31 +41,35 @@ class Resolver(db: Database, matcher: Matcher) {
       } else {
         val canonicalName = canonicalNameParts.mkString(" ")
         val canonicalNameUuid = gen.generate(canonicalName)
-        val exactNameString1 = nameStrings.filter { ns1 =>
-          ns1.id === canonicalNameUuid || ns1.canonicalUuid === canonicalNameUuid
+        val exactNameStringsByCanonical = nameStrings.filter { ns =>
+          ns.id === canonicalNameUuid || ns.canonicalUuid === canonicalNameUuid
         }
-        db.run(exactNameString1.result).flatMap { ns2 =>
-          if (ns2.isEmpty) {
+        db.run(exactNameStringsByCanonical.result).flatMap { exactNameStrings =>
+          if (exactNameStrings.isEmpty) {
             val fuzzyMatchMap =
               matcher.transduce(canonicalName)
-                     .map { cand => gen.generate(cand.term) -> cand }
+                     .map { candidate => gen.generate(candidate.term) -> candidate }
                      .toMap
             if (fuzzyMatchMap.isEmpty) {
               handle(canonicalNameParts.dropRight(1))
             } else {
-              val query2 =
+              val fuzzyNameStringsQuery =
                 nameStrings.filter { ns => ns.canonicalUuid.inSetBind(fuzzyMatchMap.keys) }
-              val fuzzyMatch =
-                db.run(query2.drop(drop).take(take).result)
+              val fuzzyNameStrings =
+                db.run(fuzzyNameStringsQuery.drop(drop).take(take).result)
                   .map { ns => ns.map { n =>
                     Match(n, Fuzzy(fuzzyMatchMap(n.canonicalName.get.id).distance))
                   }}
               for {
-                count <- db.run(query2.countDistinct.result)
-                fm <- fuzzyMatch
-              } yield Matches(count, fm)
+                count <- db.run(fuzzyNameStringsQuery.size.result)
+                fns <- fuzzyNameStrings
+              } yield Matches(count, fns)
             }
-          } else Future.successful(Matches(42, ns2.map { n => Match(n) })) // TODO: Not 42, stub
+          } else {
+            db.run(exactNameStringsByCanonical.size.result).map { canonicalsCount =>
+              Matches(canonicalsCount, exactNameStrings.map { n => Match(n) })
+            }
+          }
         }
       }
     }

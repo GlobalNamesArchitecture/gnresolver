@@ -31,7 +31,9 @@ class ResolverSpec extends WordSpec with Matchers with OptionValues with BeforeA
   "Resolver" should {
     "resolve exact match by name UUID" in {
       val resolver = new Resolver(conn, matcher)
-      whenReady(resolver.resolve("Stelletta cyathoides Burton 1926", take = 1)) { r =>
+      whenReady(resolver.resolve("Stelletta cyathoides Burton 1926")) { r =>
+        r.matches.size shouldBe 1
+
         r.matches.head.nameString.name.id shouldBe
           UUID.fromString("5477686c-260f-5762-82f5-1737d850f943")
       }
@@ -39,7 +41,9 @@ class ResolverSpec extends WordSpec with Matchers with OptionValues with BeforeA
 
     "resolve exact match by canonical name UUID" in {
       val resolver = new Resolver(conn, matcher)
-      whenReady(resolver.resolve("Pteroplatus arrogans", take = 1)) { r =>
+      whenReady(resolver.resolve("Pteroplatus arrogans")) { r =>
+        r.matches.size shouldBe 1
+
         r.matches.head.nameString.canonicalName.value.id shouldBe
           UUID.fromString("9669d573-ff19-59fa-87c3-258a9058d6d2")
       }
@@ -47,7 +51,9 @@ class ResolverSpec extends WordSpec with Matchers with OptionValues with BeforeA
 
     "resolve fuzzy by canonical name UUID" in {
       val resolver = new Resolver(conn, matcher)
-      whenReady(resolver.resolve("Storeus scutellarxx", take = 1)) { r =>
+      whenReady(resolver.resolve("Storeus scutellarxx")) { r =>
+        r.matches.size shouldBe 1
+
         r.matches.head.nameString.canonicalName.value.value shouldBe "Storeus scutellaris"
       }
     }
