@@ -3,9 +3,11 @@ require 'yaml'
 require 'rake'
 require 'sinatra/activerecord/rake'
 
+ENV['APP_ENV'] ||= 'development'
+
 include ActiveRecord::Tasks
 ActiveRecord::Base.configurations = YAML.load(File.read('config.yml'))
-ActiveRecord::Base.establish_connection(:development)
+ActiveRecord::Base.establish_connection(ENV['APP_ENV'].to_sym)
 
 namespace :db do
   desc 'create all the databases'

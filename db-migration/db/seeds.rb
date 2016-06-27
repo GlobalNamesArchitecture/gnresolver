@@ -1,9 +1,10 @@
 require 'csv'
 
 ENV['APP_ENV'] ||= 'development'
+ENV['SPEC_NAME'] ||= '.'
 
-unless [:development, :test, :production].include? ENV['APP_ENV'].to_sym
-  puts 'Use: bundle exec rake db:seed APP_ENV=[test|development|production]'
+unless [:development, :test_api, :test_resolver, :production].include? ENV['APP_ENV'].to_sym
+  puts 'Use: bundle exec rake db:seed APP_ENV=[test_api|test_resolver|development|production]'
   exit
 end
 
@@ -13,8 +14,17 @@ class Seeder
   def initialize
     @db = ActiveRecord::Base.connection
     @common_dir = File.join(__dir__, 'seed')
-    @env_dir = File.join(@common_dir, ENV['APP_ENV'])
+    @env_dir = File.join(@common_dir, ENV['APP_ENV'], ENV['SPEC_NAME'])
     @path = @columns = nil
+  end
+
+  def truncate_all
+    @db.tables.each do |table_name|
+      if table_name != 'schema_migrations'
+        puts 'truncate table %s' % table_name
+        @db.execute('truncate table %s;' % table_name)
+      end
+    end
   end
 
   def walk_path(path)
@@ -33,7 +43,6 @@ class Seeder
 
   def add_seeds(file)
     table = file.gsub(/\.csv/, '')
-    @db.execute('truncate table %s' % table)
     data_slice_for table, file do |data|
       @db.execute('insert into %s values %s on conflict do nothing;' % [table, data]) if data
     end
@@ -68,6 +77,7 @@ class Seeder
 end
 
 s = Seeder.new
+s.truncate_all
 s.walk_path(s.common_dir)
 s.walk_path(s.env_dir)
 puts 'You added seeds data to %s tables' % ENV['APP_ENV'].upcase

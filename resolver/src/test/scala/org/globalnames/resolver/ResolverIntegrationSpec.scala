@@ -14,6 +14,8 @@ class ResolverIntegrationSpec extends SpecConfig {
   val nameStrings = TableQuery[NameStrings]
   var matcher: Matcher = _
 
+  seed("test_resolver", "ResolverIntegrationSpec")
+
   override def beforeAll(): Unit = {
     super.beforeAll()
 

@@ -19,6 +19,8 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with Service
   override val database = Database.forConfig("postgresql-test")
   override val matcher  = Matcher(Seq(), maxDistance = 2)
 
+  seed("test_api", "GnresolverMicroserviceIntegrationSpec")
+
   "GnresolverMicroservice" should {
     "handle version request" in {
       Get("/api/version") ~> routes ~> check {
