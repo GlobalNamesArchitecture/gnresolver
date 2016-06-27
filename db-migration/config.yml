@@ -1,9 +1,19 @@
-development:
+test_api:
   host: localhost
   adapter: postgresql
   encoding: unicode
   pool: 5
   timeout: 5000
-  database: postgres
+  database: test_api
+  username: postgres
+  password:
+
+test_resolver:
+  host: localhost
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  timeout: 5000
+  database: test_resolver
   username: postgres
   password:
