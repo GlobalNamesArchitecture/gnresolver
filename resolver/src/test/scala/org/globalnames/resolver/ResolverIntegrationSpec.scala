@@ -4,20 +4,19 @@ package resolver
 import java.util.UUID
 
 import model.NameStrings
-import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-class ResolverSpec extends WordSpec with Matchers with OptionValues with BeforeAndAfterEach
-                   with BeforeAndAfterAll with ScalaFutures with SpecConfig {
+class ResolverIntegrationSpec extends SpecConfig {
   val conn = Database.forConfig("postgresql-test")
   val nameStrings = TableQuery[NameStrings]
   var matcher: Matcher = _
 
   override def beforeAll(): Unit = {
+    super.beforeAll()
+
     val canonicalNamesQuery =
       nameStrings.filter { _.canonical.isDefined }.map { _.canonical.get }
     val canonicalNames = Await.result(conn.run(canonicalNamesQuery.result), 5.seconds)
@@ -51,10 +50,10 @@ class ResolverSpec extends WordSpec with Matchers with OptionValues with BeforeA
 
     "resolve fuzzy by canonical name UUID" in {
       val resolver = new Resolver(conn, matcher)
-      whenReady(resolver.resolve("Storeus scutellarxx")) { r =>
+      whenReady(resolver.resolve("Pteroplatus arrogaxx")) { r =>
         r.matches.size shouldBe 1
 
-        r.matches.head.nameString.canonicalName.value.value shouldBe "Storeus scutellaris"
+        r.matches.head.nameString.canonicalName.value.value shouldBe "Pteroplatus arrogans"
       }
     }
   }

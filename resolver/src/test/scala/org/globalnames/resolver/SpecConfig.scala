@@ -1,9 +1,12 @@
 package org.globalnames.resolver
 
-import org.scalatest.concurrent.PatienceConfiguration
+import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.time.{Millis, Seconds, Span}
+import org.scalatest._
 
-trait SpecConfig extends PatienceConfiguration {
+trait SpecConfig extends WordSpec with Matchers with OptionValues
+                    with BeforeAndAfterEach with BeforeAndAfterAll with ScalaFutures
+                    with PatienceConfiguration {
   implicit val defaultPatience: PatienceConfig =
-    PatienceConfig(timeout = Span(2, Seconds), interval = Span(5, Millis))
+    PatienceConfig(timeout = Span(4, Seconds), interval = Span(5, Millis))
 }

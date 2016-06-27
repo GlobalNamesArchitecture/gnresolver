@@ -1,5 +1,32 @@
 import sbt.Keys._
 
+lazy val UnitTest   = config("unit").extend(Test)
+
+lazy val ItTest     = config("it").extend(Test)
+
+/////////////////////// DEPENDENCIES /////////////////////////
+
+val akkaV           = "2.4.7"
+
+val akkaActor       = "com.typesafe.akka"  %% "akka-actor"                          % akkaV
+val akkaHttp        = "com.typesafe.akka"  %% "akka-http-core"                      % akkaV
+val akkaHttpCore    = "com.typesafe.akka"  %% "akka-http-experimental"              % akkaV
+val sprayJson       = "com.typesafe.akka"  %% "akka-http-spray-json-experimental"   % akkaV
+val slick           = "com.typesafe.slick" %% "slick"                               % "3.1.1"
+val logback         = "ch.qos.logback"     %  "logback-classic"                     % "1.1.7"
+val postgresql      = "postgresql"         %  "postgresql"                          % "9.1-901.jdbc4"
+val hikariSlick     = "com.typesafe.slick" %% "slick-hikaricp"                      % "3.1.1"
+val gnparser        = "org.globalnames"    %% "gnparser"                            % "0.3.1"
+val gnmatcher       = "org.globalnames"    %% "gnmatcher"                           % "0.1.0"
+val scalaz          = "org.scalaz"         %% "scalaz-core"                         % "7.1.7"
+val jodaTime        = "joda-time"          %  "joda-time"                           % "2.5"       % Test
+val jodaConvert     = "org.joda"           %  "joda-convert"                        % "1.7"       % Test
+val scalatest       = "org.scalatest"      %% "scalatest"                           % "2.2.6"     % Test
+val akkaHttpTestkit = "com.typesafe.akka"  %% "akka-http-testkit"                   % akkaV       % Test
+val pegdown         = "org.pegdown"        %  "pegdown"                             % "1.0.2"     % Test
+
+//////////////////////////////////////////////////////////////
+
 val commonSettings = Seq(
   version := "0.1.0",
   scalaVersion := "2.11.8",
@@ -26,7 +53,36 @@ val commonSettings = Seq(
     "-Xlint",
     "-language:_",
     "-target:jvm-1.6",
-    "-Xlog-reflective-calls"))
+    "-Xlog-reflective-calls"),
+  javaOptions += "-Dlog.level=" + sys.env.getOrElse("LOG_LEVEL", "OFF")
+)
+
+val testSettings = Seq(
+  fork in Test := true,
+  javaOptions in test += "-Xms512M -Xmx512M -XX:+UseConcMarkSweepGC -XX:+UseParNewGC",
+  libraryDependencies += pegdown,
+  parallelExecution in ItTest := false,
+
+  test in Test <<= (test in ItTest).dependsOn(test in UnitTest),
+
+  testOptions in UnitTest := Seq(
+    Tests.Argument("-h", "target/test-html"),
+    Tests.Argument("-u", "target/test-xml"),
+    Tests.Argument("-C", "org.globalnames.resolver.TestReporter"),
+    Tests.Argument("-oD"), // Configuring summaries has no effect when running with SBT
+    Tests.Argument("-eTNCXEHLOPQRM"), // T = full backtraces, NCXEHLOPQRM = Ignore all events that are already sent to out (SBT)
+    Tests.Filter { testName => !testName.contains("Integration") }
+  ),
+  testOptions in ItTest := Seq(
+    Tests.Argument("-h", "target/test-html"),
+    Tests.Argument("-u", "target/test-xml"),
+    Tests.Argument("-C", "org.globalnames.resolver.TestReporter"),
+    Tests.Argument("-W", "2", "2"), // warn on slow tests (over 2 seconds) every 2 seconds
+    Tests.Argument("-oD"), // Configuring summaries has no effect when running with SBT
+    Tests.Argument("-eTNCXEHLOPQRM"), // T = full backtraces, NCXEHLOPQRM = Ignore all events that are already sent to out (SBT)
+    Tests.Filter { testName => testName.contains("Integration") }
+  )
+)
 
 val publishingSettings = Seq(
   publishMavenStyle := true,
@@ -58,24 +114,6 @@ val noPublishingSettings = Seq(
   publishArtifact := false,
   publishTo := Some(Resolver.file("Unused transient repository", file("target/unusedrepo"))))
 
-/////////////////////// DEPENDENCIES /////////////////////////
-
-val akkaV           = "2.4.7"
-
-val akkaActor       = "com.typesafe.akka"  %% "akka-actor"                          % akkaV
-val akkaHttp        = "com.typesafe.akka"  %% "akka-http-core"                      % akkaV
-val akkaHttpCore    = "com.typesafe.akka"  %% "akka-http-experimental"              % akkaV
-val sprayJson       = "com.typesafe.akka"  %% "akka-http-spray-json-experimental"   % akkaV
-val slick           = "com.typesafe.slick" %% "slick"                               % "3.1.1"
-val logback         = "ch.qos.logback"     %  "logback-classic"                     % "1.1.7"
-val postgresql      = "postgresql"         %  "postgresql"                          % "9.1-901.jdbc4"
-val hikariSlick     = "com.typesafe.slick" %% "slick-hikaricp"                      % "3.1.1"
-val gnparser        = "org.globalnames"    %% "gnparser"                            % "0.3.1"
-val gnmatcher       = "org.globalnames"    %% "gnmatcher"                           % "0.1.0"
-val scalaz          = "org.scalaz"         %% "scalaz-core"                         % "7.1.7"
-val scalatest       = "org.scalatest"      %% "scalatest"                           % "2.2.6"     % Test
-val akkaHttpTestkit = "com.typesafe.akka"  %% "akka-http-testkit"                   % akkaV       % Test
-
 /////////////////////// PROJECTS /////////////////////////
 
 lazy val root = project.in(file("."))
@@ -86,9 +124,11 @@ lazy val root = project.in(file("."))
   )
 
 lazy val resolver = (project in file("./resolver"))
+  .configs(UnitTest, ItTest)
+  .settings(inConfig(UnitTest)(Defaults.testTasks))
+  .settings(inConfig(ItTest)(Defaults.testTasks))
   .enablePlugins(BuildInfoPlugin)
-  .settings(commonSettings: _*)
-  .settings(publishingSettings: _*)
+  .settings(commonSettings ++ publishingSettings ++ testSettings: _*)
   .settings(
     name := "gnresolver",
 
@@ -97,7 +137,7 @@ lazy val resolver = (project in file("./resolver"))
     test in assembly := {},
 
     libraryDependencies ++= Seq(slick, logback, postgresql, hikariSlick, gnparser, gnmatcher,
-                                scalatest),
+                                scalatest, jodaTime, jodaConvert),
 
     scalacOptions in Test ++= Seq("-Yrangepos")
   )
@@ -113,7 +153,10 @@ lazy val benchmark = (project in file("./benchmark"))
 
 lazy val api = (project in file("./api"))
   .dependsOn(resolver)
-  .settings(commonSettings: _*)
+  .configs(UnitTest, ItTest)
+  .settings(inConfig(UnitTest)(Defaults.testTasks))
+  .settings(inConfig(ItTest)(Defaults.testTasks))
+  .settings(commonSettings ++ testSettings: _*)
   .settings(
     name := "gnresolver-api",
 
@@ -122,7 +165,7 @@ lazy val api = (project in file("./api"))
 
     mainClass in reStart := Some("org.globalnames.resolver.api.GnresolverMicroservice"),
     libraryDependencies ++= Seq(akkaActor, akkaHttpCore, akkaHttp, sprayJson, akkaHttpTestkit,
-                                scalatest)
+                                scalatest, jodaTime, jodaConvert)
   )
 
 lazy val front = (project in file("./front"))
