@@ -11,10 +11,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160609173359) do
+ActiveRecord::Schema.define(version: 20160609175652) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "cross_maps", id: false, force: :cascade do |t|
+    t.integer "data_source_id",            null: false
+    t.uuid    "name_string_id",            null: false
+    t.string  "local_id",       limit: 50, null: false
+  end
+
+  add_index "cross_maps", ["data_source_id"], name: "index_cross_maps_on_data_source_id", using: :btree
+  add_index "cross_maps", ["name_string_id"], name: "index_cross_maps_on_name_string_id", using: :btree
 
   create_table "data_sources", force: :cascade do |t|
     t.string   "title",               limit: 255,              null: false

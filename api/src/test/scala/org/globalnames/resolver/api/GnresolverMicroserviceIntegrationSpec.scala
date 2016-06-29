@@ -60,5 +60,19 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with Service
         }
       }
     }
+
+    "handle `cross_map` request" in {
+      seed("test_api", "GnresolverMicroserviceIntegrationSpec_CrossMap")
+
+      Post("/api/crossmap?dbSourceId=8&dbTargetId=178",
+        HttpEntity(`application/json`, """["1", "1005101"]""")) ~> routes ~> check {
+        status shouldBe OK
+        val response = responseAs[Seq[(String, String)]]
+        response.size shouldBe 2
+
+        response should contain (("1", ""))
+        response should contain (("1005101", "AF468436/#6"))
+      }
+    }
   }
 }
