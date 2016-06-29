@@ -16,7 +16,7 @@ dependencies:
     - "project/target/streams"
   override:
     - bundle install:
-        timeout: 180
+        timeout: 360
         pwd:
           db-migration
     - sbt test:compile
