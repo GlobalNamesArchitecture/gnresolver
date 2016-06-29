@@ -4,6 +4,10 @@ machine:
     version: oraclejdk8
   ruby:
     version: 2.2.3
+  environment:
+    DB_HOST: localhost
+    DB_USER: postgres
+    DB_USER_PASS: ""
 
 dependencies:
   pre:
@@ -25,10 +29,10 @@ database:
   override:
     - psql -U postgres -c "create database test_api encoding 'utf8';"
     - psql -U postgres -c "create database test_resolver encoding 'utf8';"
-    - bundle exec rake db:migrate APP_ENV=test_api --trace:
+    - bundle exec rake db:migrate RACK_ENV=test_api --trace:
         pwd:
           db-migration
-    - bundle exec rake db:migrate APP_ENV=test_resolver --trace:
+    - bundle exec rake db:migrate RACK_ENV=test_resolver --trace:
         pwd:
           db-migration
 

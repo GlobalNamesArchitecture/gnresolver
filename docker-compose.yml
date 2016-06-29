@@ -1,0 +1,17 @@
+version: '2'
+services:
+  app:
+    build: .
+    ports:
+      - "0.0.0.0:9001:9001"
+    environment:
+      DB_HOST: pg
+      DB_USER: postgres
+      DB_USER_PASS: ""
+    volumes:
+      - .:/app
+    depends_on:
+      - pg
+    command: bin/docker-startup.sh
+  pg:
+    image: postgres

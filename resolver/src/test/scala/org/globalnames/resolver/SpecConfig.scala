@@ -18,7 +18,7 @@ trait SpecConfig extends WordSpec with Matchers with OptionValues
     PatienceConfig(timeout = Span(4, Seconds), interval = Span(5, Millis))
 
   def seed(appEnv: String, specName: String) = {
-    println(Process(command = s"rake db:seed APP_ENV=$appEnv SPEC_NAME=$specName",
+    println(Process(command = s"rake db:seed RACK_ENV=$appEnv SPEC_NAME=$specName",
                     cwd = new File("../db-migration")).!!)
   }
 }
