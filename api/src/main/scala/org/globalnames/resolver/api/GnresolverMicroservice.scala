@@ -137,7 +137,14 @@ trait Service extends Protocols {
               resolver.resolveDataSources(uuid)
             }
           }
-        }
+        } ~ pathPrefix("crossmap") {
+          (post & entity(as[Seq[String]]) &
+            parameters('dbSourceId.as[Int], 'dbTargetId.as[Int])) {
+              (localIds, dbSourceId, dbTargetId) => complete {
+                resolver.crossMap(dbSourceId, dbTargetId, localIds)
+              }
+            }
+          }
       }
     }
   }
