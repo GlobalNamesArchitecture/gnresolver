@@ -9,12 +9,13 @@ unless [:development, :test_api, :test_resolver, :production].include? ENV['APP_
 end
 
 class Seeder
-  attr :env_dir, :common_dir
+  attr :spec_dir, :env_dir, :common_dir
 
   def initialize
     @db = ActiveRecord::Base.connection
     @common_dir = File.join(__dir__, 'seed')
-    @env_dir = File.join(@common_dir, ENV['APP_ENV'], ENV['SPEC_NAME'])
+    @env_dir = File.join(@common_dir, ENV['APP_ENV'])
+    @spec_dir = File.join(@env_dir, ENV['SPEC_NAME'])
     @path = @columns = nil
   end
 
@@ -80,4 +81,5 @@ s = Seeder.new
 s.truncate_all
 s.walk_path(s.common_dir)
 s.walk_path(s.env_dir)
+s.walk_path(s.spec_dir)
 puts 'You added seeds data to %s tables' % ENV['APP_ENV'].upcase
