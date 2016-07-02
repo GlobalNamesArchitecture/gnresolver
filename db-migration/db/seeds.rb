@@ -1,10 +1,9 @@
 require 'csv'
 
-ENV['APP_ENV'] ||= 'development'
 ENV['SPEC_NAME'] ||= '.'
 
-unless [:development, :test_api, :test_resolver, :production].include? ENV['APP_ENV'].to_sym
-  puts 'Use: bundle exec rake db:seed APP_ENV=[test_api|test_resolver|development|production]'
+unless [:development, :test_api, :test_resolver, :production].include? ENV['RACK_ENV'].to_sym
+  puts 'Use: bundle exec rake db:seed RACK_ENV=[test_api|test_resolver|development|production]'
   exit
 end
 
@@ -14,7 +13,7 @@ class Seeder
   def initialize
     @db = ActiveRecord::Base.connection
     @common_dir = File.join(__dir__, 'seed')
-    @env_dir = File.join(@common_dir, ENV['APP_ENV'])
+    @env_dir = File.join(@common_dir, ENV['RACK_ENV'])
     @spec_dir = File.join(@env_dir, ENV['SPEC_NAME'])
     @path = @columns = nil
   end
@@ -37,7 +36,7 @@ class Seeder
     end
   rescue ActiveRecord::StatementInvalid
     fail "\nBefore adding seeds run:\n" \
-           "bundle exec rake db:migrate APP_ENV=...\n\n"
+           "bundle exec rake db:migrate RACK_ENV=...\n\n"
   end
 
   private
@@ -82,4 +81,4 @@ s.truncate_all
 s.walk_path(s.common_dir)
 s.walk_path(s.env_dir)
 s.walk_path(s.spec_dir)
-puts 'You added seeds data to %s tables' % ENV['APP_ENV'].upcase
+puts 'You added seeds data to %s tables' % ENV['RACK_ENV'].upcase

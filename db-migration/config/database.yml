@@ -1,0 +1,29 @@
+development:
+  host: <%= ENV["DB_HOST"] %>
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  timeout: 5000
+  database: development
+  username: <%= ENV["DB_USER"] %>
+  password: <%= ENV["DB_USER_PASS"] %>
+
+test_api:
+  host: <%= ENV["DB_HOST"] %>
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  timeout: 5000
+  database: test_api
+  username: <%= ENV["DB_USER"] %>
+  password: <%= ENV["DB_USER_PASS"] %>
+
+test_resolver:
+  host: <%= ENV["DB_HOST"] %>
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  timeout: 5000
+  database: test_resolver
+  username: <%= ENV["DB_USER"] %>
+  password: <%= ENV["DB_USER_PASS"] %>
