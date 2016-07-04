@@ -39,3 +39,7 @@ database:
 test:
   override:
     - sbt test
+  post:
+    - sbt ";resolver/assembly;api/assembly"
+    - mv resolver/target/scala-2.11/*.jar $CIRCLE_ARTIFACTS/
+    - mv api/target/scala-2.11/*.jar $CIRCLE_ARTIFACTS/

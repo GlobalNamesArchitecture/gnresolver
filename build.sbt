@@ -54,7 +54,8 @@ val commonSettings = Seq(
     "-language:_",
     "-target:jvm-1.6",
     "-Xlog-reflective-calls"),
-  javaOptions += "-Dlog.level=" + sys.env.getOrElse("LOG_LEVEL", "OFF")
+  javaOptions += "-Dlog.level=" + sys.env.getOrElse("LOG_LEVEL", "OFF"),
+  scalacOptions in Test ++= Seq("-Yrangepos")
 )
 
 val testSettings = Seq(
@@ -138,8 +139,7 @@ lazy val resolver = (project in file("./resolver"))
 
     libraryDependencies ++= Seq(slick, logback, postgresql, hikariSlick, gnparser, gnmatcher,
                                 scalatest, jodaTime, jodaConvert),
-
-    scalacOptions in Test ++= Seq("-Yrangepos")
+    test in assembly := {}
   )
 
 lazy val benchmark = (project in file("./benchmark"))
@@ -165,7 +165,14 @@ lazy val api = (project in file("./api"))
 
     mainClass in reStart := Some("org.globalnames.resolver.api.GnresolverMicroservice"),
     libraryDependencies ++= Seq(akkaActor, akkaHttpCore, akkaHttp, sprayJson, akkaHttpTestkit,
-                                scalatest, jodaTime, jodaConvert)
+                                scalatest, jodaTime, jodaConvert),
+    test in assembly := {},
+    assemblyMergeStrategy in assembly := {
+      case "logback.xml" => MergeStrategy.last
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    }
   )
 
 lazy val front = (project in file("./front"))
