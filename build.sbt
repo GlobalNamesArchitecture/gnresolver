@@ -138,8 +138,7 @@ lazy val resolver = (project in file("./resolver"))
     test in assembly := {},
 
     libraryDependencies ++= Seq(slick, logback, postgresql, hikariSlick, gnparser, gnmatcher,
-                                scalatest, jodaTime, jodaConvert),
-    test in assembly := {}
+                                scalatest, jodaTime, jodaConvert)
   )
 
 lazy val benchmark = (project in file("./benchmark"))
@@ -166,6 +165,8 @@ lazy val api = (project in file("./api"))
     mainClass in reStart := Some("org.globalnames.resolver.api.GnresolverMicroservice"),
     libraryDependencies ++= Seq(akkaActor, akkaHttpCore, akkaHttp, sprayJson, akkaHttpTestkit,
                                 scalatest, jodaTime, jodaConvert),
+
+    mainClass in assembly := Some("org.globalnames.resolver.api.GnresolverMicroservice"),
     test in assembly := {},
     assemblyMergeStrategy in assembly := {
       case "logback.xml" => MergeStrategy.last
@@ -187,4 +188,3 @@ lazy val front = (project in file("./front"))
       filters, cache, ws, gnparser
     )
   )
-

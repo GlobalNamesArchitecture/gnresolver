@@ -158,9 +158,10 @@ object GnresolverMicroservice extends App with Service {
   override val config   = ConfigFactory.load()
   override val logger   = Logging(system, getClass)
   override val database = Database.forConfig("postgresql")
-  override val matcher  =
-    Matcher(Source.fromFile("./name_strings_canonical.tsv").getLines.toList,
-            maxDistance = 2)
+  override val matcher  = {
+    val canonicalsStream = getClass.getResourceAsStream("/name_strings_canonical.tsv")
+    Matcher(Source.fromInputStream(canonicalsStream).getLines.toList, maxDistance = 2)
+  }
 
   Http().bindAndHandle(routes,
                        config.getString("http.interface"),
