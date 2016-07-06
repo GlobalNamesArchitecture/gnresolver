@@ -11,6 +11,7 @@ machine:
 
 dependencies:
   pre:
+    - go get github.com/aktau/github-release
     - gem install bundler
   cache_directories:
     - "~/.sbt"
@@ -41,5 +42,19 @@ test:
     - sbt test
   post:
     - sbt ";resolver/assembly;api/assembly"
-    - mv resolver/target/scala-2.11/*.jar $CIRCLE_ARTIFACTS/
-    - mv api/target/scala-2.11/*.jar $CIRCLE_ARTIFACTS/
+    - cp resolver/target/scala-2.11/*.jar api/target/scala-2.11/*.jar $CIRCLE_ARTIFACTS/
+
+deployment:
+  release:
+    tag: snapshot
+    commands:
+      - github-release delete --user GlobalNamesArchitecture --repo gnresolver --tag snapshot ||
+        echo ''
+      - github-release release --user GlobalNamesArchitecture --repo gnresolver
+        --name Snapshot --tag snapshot
+      - github-release upload --user GlobalNamesArchitecture --repo gnresolver
+        --tag snapshot --name gnresolver-assembly-0.1.0-SNAPSHOT.jar
+        --file resolver/target/scala-2.11/gnresolver-assembly-0.1.0-SNAPSHOT.jar
+      - github-release upload --user GlobalNamesArchitecture --repo gnresolver
+        --tag snapshot --name gnresolver-api-assembly-0.1.0-SNAPSHOT.jar
+        --file api/target/scala-2.11/gnresolver-api-assembly-0.1.0-SNAPSHOT.jar
