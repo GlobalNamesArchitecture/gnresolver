@@ -1,0 +1,17 @@
+version: '2'
+services:
+  app:
+    build: .
+    ports:
+      - "0.0.0.0:9001:9001"
+    environment:
+      DB_HOST: pg
+      DB_USER: postgres
+      DB_USER_PASS: ""
+      RACK_ENV: production
+    depends_on:
+      - pg
+    command: curl --retry 10000 --retry-delay 10000 http://something.com
+  pg:
+    image: postgres
+    volumes: /opt/gna/data/gnresolver/postgresql:/var/lib/posgresql
