@@ -28,7 +28,7 @@ val pegdown         = "org.pegdown"        %  "pegdown"                         
 //////////////////////////////////////////////////////////////
 
 val commonSettings = Seq(
-  version := "0.1.0",
+  version := "0.1.0-SNAPSHOT",
   scalaVersion := "2.11.8",
   organization := "org.globalnames",
   homepage := Some(new URL("http://globalnames.org/")),
