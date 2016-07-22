@@ -1,3 +1,13 @@
+production:
+  host: <%= ENV["DB_HOST"] %>
+  adapter: postgresql
+  encoding: unicode
+  pool: 5
+  timeout: 5000
+  database: gnresolver
+  username: <%= ENV["DB_USER"] %>
+  password: <%= ENV["DB_USER_PASS"] %>
+
 development:
   host: <%= ENV["DB_HOST"] %>
   adapter: postgresql
