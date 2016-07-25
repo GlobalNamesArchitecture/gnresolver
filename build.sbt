@@ -6,7 +6,7 @@ lazy val ItTest     = config("it").extend(Test)
 
 /////////////////////// DEPENDENCIES /////////////////////////
 
-val akkaV           = "2.4.7"
+val akkaV           = "2.4.8"
 
 val akkaActor       = "com.typesafe.akka"  %% "akka-actor"                          % akkaV
 val akkaHttp        = "com.typesafe.akka"  %% "akka-http-core"                      % akkaV
@@ -16,14 +16,14 @@ val slick           = "com.typesafe.slick" %% "slick"                           
 val logback         = "ch.qos.logback"     %  "logback-classic"                     % "1.1.7"
 val postgresql      = "postgresql"         %  "postgresql"                          % "9.1-901.jdbc4"
 val hikariSlick     = "com.typesafe.slick" %% "slick-hikaricp"                      % "3.1.1"
-val gnparser        = "org.globalnames"    %% "gnparser"                            % "0.3.1"
+val gnparser        = "org.globalnames"    %% "gnparser"                            % "0.3.2"
 val gnmatcher       = "org.globalnames"    %% "gnmatcher"                           % "0.1.0"
 val scalaz          = "org.scalaz"         %% "scalaz-core"                         % "7.1.7"
-val jodaTime        = "joda-time"          %  "joda-time"                           % "2.5"       % Test
-val jodaConvert     = "org.joda"           %  "joda-convert"                        % "1.7"       % Test
+val jodaTime        = "joda-time"          %  "joda-time"                           % "2.9.4"     % Test
+val jodaConvert     = "org.joda"           %  "joda-convert"                        % "1.8.1"     % Test
 val scalatest       = "org.scalatest"      %% "scalatest"                           % "2.2.6"     % Test
 val akkaHttpTestkit = "com.typesafe.akka"  %% "akka-http-testkit"                   % akkaV       % Test
-val pegdown         = "org.pegdown"        %  "pegdown"                             % "1.0.2"     % Test
+val pegdown         = "org.pegdown"        %  "pegdown"                             % "1.6.0"     % Test
 
 //////////////////////////////////////////////////////////////
 
