@@ -4,7 +4,7 @@ production:
   encoding: unicode
   pool: 5
   timeout: 5000
-  database: gnresolver
+  database: <%= ENV["DB_DATABASE"] %>
   username: <%= ENV["DB_USER"] %>
   password: <%= ENV["DB_USER_PASS"] %>
 
