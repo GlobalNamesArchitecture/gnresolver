@@ -3,6 +3,7 @@ package resolver
 
 import java.util.UUID
 
+import org.apache.commons.lang3.StringUtils.capitalize
 import org.globalnames.parser.ScientificNameParser.{instance => snp}
 import org.globalnames.resolver.model._
 import slick.driver.PostgresDriver.api._
@@ -11,11 +12,9 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scalaz._
 import Scalaz._
-import org.apache.commons.lang3.StringUtils.capitalize
 
 class Resolver(db: Database, matcher: Matcher) {
-  import Resolver.Kind._
-  import Resolver.{Matches, Match}
+  import Resolver.{Match, Matches}
 
   val gen = UuidGenerator()
   val nameStrings = TableQuery[NameStrings]
@@ -29,60 +28,97 @@ class Resolver(db: Database, matcher: Matcher) {
   val nameStringIndicies = TableQuery[NameStringIndices]
   val crossMaps = TableQuery[CrossMaps]
 
-  def resolve(name: String,
-              take: Int = 1000, drop: Int = 0): Future[Matches] = {
-    val nameUuid = gen.generate(capitalize(name))
-    val exactMatches = nameStrings.filter { ns =>
-      ns.id === nameUuid || ns.canonicalUuid === nameUuid
-    }
+  private def exactNamesQuery(nameUuid: Rep[UUID], canonicalNameUuid: Rep[UUID]) =
+    nameStrings.filter { nameString =>
+      nameString.id === nameUuid || nameString.canonicalUuid === canonicalNameUuid
+    }.take(50)
 
-    def handle(canonicalNameParts: Seq[String]): Future[Matches] = {
-      if (canonicalNameParts.isEmpty) {
-        Future.successful(Matches(0, Seq()))
-      } else {
-        val canonicalName = canonicalNameParts.mkString(" ")
-        val canonicalNameUuid = gen.generate(canonicalName)
-        val exactNameStringsByCanonical = nameStrings.filter { ns =>
-          ns.id === canonicalNameUuid || ns.canonicalUuid === canonicalNameUuid
+  private val exactNamesQueryCompiled = Compiled(exactNamesQuery _)
+
+  private def fuzzyMatch(canonicalNameParts: Seq[(String, Array[String])]): Future[Seq[Matches]] = {
+    val canonicalNamePartsNonEmpty = canonicalNameParts.filter {
+      case (_, parts) => parts.nonEmpty
+    }
+    if (canonicalNamePartsNonEmpty.isEmpty) {
+      Future.successful(Seq())
+    } else {
+      val canonicalNamesFuzzy = canonicalNamePartsNonEmpty.map { case (name, parts) =>
+        val candsUuids: Seq[UUID] = if (parts.length > 1) {
+          val can = parts.mkString(" ")
+          matcher.transduce(can).map { c => gen.generate(c.term) }
+        } else {
+          parts.map { p => gen.generate(p) }
         }
-        db.run(exactNameStringsByCanonical.result).flatMap { exactNameStrings =>
-          if (exactNameStrings.isEmpty) {
-            val fuzzyMatchMap =
-              matcher.transduce(canonicalName)
-                     .map { candidate => gen.generate(candidate.term) -> candidate }
-                     .toMap
-            if (fuzzyMatchMap.isEmpty) {
-              handle(canonicalNameParts.dropRight(1))
-            } else {
-              val fuzzyNameStringsQuery =
-                nameStrings.filter { ns => ns.canonicalUuid.inSetBind(fuzzyMatchMap.keys) }
-              val fuzzyNameStrings =
-                db.run(fuzzyNameStringsQuery.drop(drop).take(take).result)
-                  .map { ns => ns.map { n =>
-                    Match(n, Fuzzy(fuzzyMatchMap(n.canonicalName.get.id).distance))
-                  }}
-              for {
-                count <- db.run(fuzzyNameStringsQuery.size.result)
-                fns <- fuzzyNameStrings
-              } yield Matches(count, fns)
-            }
-          } else {
-            db.run(exactNameStringsByCanonical.size.result).map { canonicalsCount =>
-              Matches(canonicalsCount, exactNameStrings.map { n => Match(n) })
-            }
-          }
-        }
+        (name, parts, candsUuids)
       }
-    }
-
-    db.run(exactMatches.size.result).flatMap { exactMatchesCount =>
-      if (exactMatchesCount == 0) {
-        val canonicalName = snp.fromString(name).canonized().orZero
-        handle(canonicalName.split(' '))
-      } else {
-        db.run(exactMatches.drop(drop).take(take).result).map { ns =>
-          Matches(exactMatchesCount, ns.map { n => Match(n) })
+      val fuzzyMatchLimit = 5
+      val (foundFuzzyMatches, unfoundFuzzyMatches) =
+        canonicalNamesFuzzy.partition { case (_, _, cands) =>
+          cands.nonEmpty && cands.size <= fuzzyMatchLimit
         }
+
+      val unfoundFuzzyResult =
+        fuzzyMatch(unfoundFuzzyMatches.map { case (name, parts, _) => (name, parts.dropRight(1)) })
+
+      val queryFoundFuzzy = DBIO.sequence(foundFuzzyMatches.map { case (_, _, candUuids) =>
+        nameStrings.filter { ns => ns.canonicalUuid.inSetBind(candUuids) }
+                   .take(50)
+                   .result
+      })
+
+      val foundFuzzyResult = db.run(queryFoundFuzzy).flatMap { fuzzyMatches =>
+        val (matched, unmatched) =
+          foundFuzzyMatches.zip(fuzzyMatches).partition { case (_, matches) => matches.nonEmpty }
+        val matchedResult = matched.map { case ((name, _, _), matches) =>
+          Matches(matches.size, matches.map { m => Match(m) }, name)
+        }
+        val matchedFuzzyResult =
+          fuzzyMatch(unmatched.map { case ((name, parts, _), _) => (name, parts.dropRight(1)) })
+        matchedFuzzyResult.map { mfr => matchedResult ++ mfr }
+      }
+
+      for {
+        ufr <- unfoundFuzzyResult
+        ffr <- foundFuzzyResult
+      } yield ufr ++ ffr
+    }
+  }
+
+  def resolve(names: Seq[String]): Future[Seq[Matches]] = {
+    val namesCapital = names.map { n => capitalize(n) }
+
+    val scientificNamesFuture = Future.sequence(namesCapital.grouped(200).map { namesGp =>
+      Future { namesGp.map { name => snp.fromString(name) } }
+    }).map { x => x.flatten.toList }
+
+    scientificNamesFuture.flatMap { scientificNames =>
+      val exactMatches = scientificNames.grouped(scientificNames.size / 50 + 1).map { sns =>
+        val qry =
+          DBIO.sequence(sns.map { sn =>
+            val canUuid: UUID = sn.canonizedUuid().map { _.id }.getOrElse(gen.generate(""))
+            exactNamesQueryCompiled((sn.input.id, canUuid)).result
+          })
+        db.run(qry)
+      }
+
+      Future.sequence(exactMatches).flatMap { exactMatchesChunks =>
+        val exactMatches = exactMatchesChunks.flatten.toList
+
+        val (matched, unmatched) = exactMatches.zip(scientificNames).partition {
+          case (matchedNameStrings, _) => matchedNameStrings.nonEmpty
+        }
+
+        val parts = unmatched.map { case (_, sn) =>
+          (sn.input.verbatim, sn.canonized().orZero.split(' '))
+        }
+        val fuzzyMatches = fuzzyMatch(parts)
+
+        val matchesResult = matched.map { case (matchedNameStrings, sn) =>
+          val matches = matchedNameStrings.map { x => Match(x) }
+          Matches(matches.size, matches, sn.input.verbatim)
+        }
+
+        fuzzyMatches.map { fm => fm ++ matchesResult }
       }
     }
   }
@@ -236,5 +272,5 @@ object Resolver {
   }
 
   case class Match(nameString: NameString, kind: Kind = Kind.None)
-  case class Matches(total: Long, matches: Seq[Match])
+  case class Matches(total: Long, matches: Seq[Match], name: String = "")
 }

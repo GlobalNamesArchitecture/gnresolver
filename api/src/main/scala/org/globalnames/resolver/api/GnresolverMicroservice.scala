@@ -46,7 +46,7 @@ trait Protocols extends DefaultJsonProtocol {
   implicit val nameStringIndexFormat = jsonFormat3(NameStringIndex.apply)
   implicit val dataSourceFormat = jsonFormat3(DataSource.apply)
   implicit val matchFormat = jsonFormat2(Match.apply)
-  implicit val matchesFormat = jsonFormat2(Matches.apply)
+  implicit val matchesFormat = jsonFormat3(Matches.apply)
   implicit val requestFormat = jsonFormat1(Request.apply)
   implicit val queryNamesFormat = jsonFormat1(QueryNames.apply)
 }
@@ -68,7 +68,7 @@ trait Service extends Protocols {
   def resolve(search: SearchPart, take: Int, drop: Int): Future[Matches] = {
     search.modifier match {
       case Modifier(QueryParser.noModifier) =>
-        resolver.resolve(search.contents, take, drop)
+        resolver.resolve(Seq(search.contents)).map { _.head }
       case Modifier(QueryParser.canonicalModifier) =>
         if (search.wildcard) {
           resolver.resolveCanonicalLike(search.contents + '%', take, drop)
@@ -103,21 +103,12 @@ trait Service extends Protocols {
           get {
             parameter('v) { values =>
               complete {
-                val res =
-                  values.split('|')
-                    .take(1000)
-                    .map { n => resolver.resolve(n) }
-                    .toSeq
-                Future.sequence(res)
+                resolver.resolve(values.split('|'))
               }
             }
           } ~ (post & entity(as[Seq[String]])) { request =>
             complete {
-              val res =
-                request
-                  .take(1000)
-                  .map { n => resolver.resolve(n) }
-              Future.sequence(res)
+              resolver.resolve(request.take(1000))
             }
           }
         } ~ path("search") {

@@ -2,9 +2,9 @@ package org.globalnames.resolver
 
 import java.io.File
 
+import org.scalatest._
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.time.{Millis, Seconds, Span}
-import org.scalatest._
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.sys.process.Process

@@ -3,7 +3,7 @@ package resolver
 
 import java.util.UUID
 
-import model.NameStrings
+import org.globalnames.resolver.model.NameStrings
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Await
@@ -30,32 +30,34 @@ class ResolverIntegrationSpec extends SpecConfig {
   }
 
   "Resolver" should {
-    "resolve exact match by name UUID" in {
-      val resolver = new Resolver(conn, matcher)
-      whenReady(resolver.resolve("Stelletta cyathoides Burton 1926")) { r =>
-        r.matches.size shouldBe 1
+    "support general resolve" when {
+      "exact match by name UUID" in {
+        val resolver = new Resolver(conn, matcher)
+        whenReady(resolver.resolve(Seq("Stelletta cyathoides Burton 1926"))) { res =>
+          res.size shouldBe 1
 
-        r.matches.head.nameString.name.id shouldBe
-          UUID.fromString("5477686c-260f-5762-82f5-1737d850f943")
+          res.head.matches.head.nameString.name.id shouldBe
+            UUID.fromString("5477686c-260f-5762-82f5-1737d850f943")
+        }
       }
-    }
 
-    "resolve exact match by canonical name UUID" in {
-      val resolver = new Resolver(conn, matcher)
-      whenReady(resolver.resolve("Pteroplatus arrogans")) { r =>
-        r.matches.size shouldBe 1
+      "exact match by canonical name UUID" in {
+        val resolver = new Resolver(conn, matcher)
+        whenReady(resolver.resolve(Seq("Pteroplatus arrogans"))) { res =>
+          res.size shouldBe 1
 
-        r.matches.head.nameString.canonicalName.value.id shouldBe
-          UUID.fromString("9669d573-ff19-59fa-87c3-258a9058d6d2")
+          res.head.matches.head.nameString.canonicalName.value.id shouldBe
+            UUID.fromString("9669d573-ff19-59fa-87c3-258a9058d6d2")
+        }
       }
-    }
 
-    "resolve fuzzy by canonical name UUID" in {
-      val resolver = new Resolver(conn, matcher)
-      whenReady(resolver.resolve("Pteroplatus arrogaxx")) { r =>
-        r.matches.size shouldBe 1
+      "fuzzy match by canonical name UUID" in {
+        val resolver = new Resolver(conn, matcher)
+        whenReady(resolver.resolve(Seq("Pteroplatus arrogaxx"))) { res =>
+          res.size shouldBe 1
 
-        r.matches.head.nameString.canonicalName.value.value shouldBe "Pteroplatus arrogans"
+          res.head.matches.head.nameString.canonicalName.value.value shouldBe "Pteroplatus arrogans"
+        }
       }
     }
   }
