@@ -12,8 +12,9 @@ import com.typesafe.config.ConfigFactory
 import org.globalnames.resolver.Resolver.Matches
 import slick.driver.PostgresDriver.api._
 
-class GnresolverMicroserviceIntegrationSpec extends SpecConfig with Service
-                                               with ScalatestRouteTest {
+class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfig
+                                               with Service with ScalatestRouteTest {
+
   override val config   = ConfigFactory.load()
   override val logger   = Logging(system, getClass)
   override val database = Database.forConfig("postgresql-test")
