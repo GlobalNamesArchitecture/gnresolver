@@ -34,9 +34,16 @@ tags
 output.json
 logs/
 *.log
+tmp/
 
 # Play Framework
 RUNNING_PID
 
 # Ruby
 .byebug_history
+.bundle
+tags
+.sass-cache
+.sass-cache/*
+.sass-cache/**/*
+coverage/

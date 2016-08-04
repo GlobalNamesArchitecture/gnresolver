@@ -1,0 +1,34 @@
+require "rake"
+require "bundler/setup"
+require "rspec/core/rake_task"
+require "rubocop/rake_task"
+require_relative "lib/gnresolver"
+
+RSpec::Core::RakeTask.new(:spec) { |t| t.pattern = "spec/**/*.rb" }
+RuboCop::RakeTask.new
+
+task default: [:rubocop, :spec]
+
+task :environment do
+  require_relative "environment"
+end
+
+desc "create release on github"
+task(:release) do
+  require "git"
+  begin
+    g = Git.open(File.dirname(__FILE__))
+    new_tag = "v" + Gnrd.version
+    g.add_tag(new_tag, f: true)
+    g.add(all: true)
+    g.commit("Releasing #{new_tag}")
+    g.push("origin", "refs/tags/#{new_tag}", f: true)
+  rescue Git::GitExecuteError
+    puts "'#{new_tag}' already exists, update your version."
+  end
+end
+
+desc "open an irb session preloaded with this library"
+task :console do
+  sh "irb -I lib -I #{__dir__} -r application.rb"
+end

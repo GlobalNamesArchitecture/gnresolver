@@ -15,3 +15,15 @@ services:
     command: bin/docker-startup.sh
   pg:
     image: postgres
+  front:
+    build: front-sinatra
+    ports:
+      - "0.0.0.0:4567:4567"
+    environment:
+      RACK_ENV: development
+    volumes:
+      - "./front-sinatra:/app"
+    depends_on:
+      - app
+
+
