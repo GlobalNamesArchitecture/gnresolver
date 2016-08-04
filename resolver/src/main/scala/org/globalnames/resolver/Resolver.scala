@@ -123,8 +123,7 @@ class Resolver(db: Database, matcher: Matcher) {
     }
   }
 
-  def resolveCanonical(canonicalName: String,
-                       take: Int, drop: Int): Future[Matches] = {
+  def resolveCanonical(canonicalName: String, take: Int, drop: Int): Future[Matches] = {
     val canonicalNameUuid = gen.generate(canonicalName)
     val queryByCanonicalName = nameStrings.filter { x =>
       x.canonicalUuid === canonicalNameUuid
@@ -134,11 +133,10 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(queryByCanonicalNamePortion.result)
       count <- db.run(queryByCanonicalNameCount.result)
-    } yield Matches(count, portion.map { n => Match(n) })
+    } yield Matches(count, portion.map { n => Match(n) }, canonicalName)
   }
 
-  def resolveCanonicalLike(canonicalName: String,
-                           take: Int, drop: Int): Future[Matches] = {
+  def resolveCanonicalLike(canonicalName: String, take: Int, drop: Int): Future[Matches] = {
     val queryByCanonicalName = nameStrings.filter { x =>
       x.canonical.like(canonicalName)
     }
@@ -147,11 +145,10 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(queryByCanonicalNamePortion.result)
       count <- db.run(queryByCanonicalNameCount.result)
-    } yield Matches(count, portion.map { n => Match(n) })
+    } yield Matches(count, portion.map { n => Match(n) }, canonicalName)
   }
 
-  def resolveAuthor(authorName: String,
-                    take: Int, drop: Int): Future[Matches] = {
+  def resolveAuthor(authorName: String, take: Int, drop: Int): Future[Matches] = {
     val query = authorWords.filter { x => x.authorWord === authorName }
                            .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -160,11 +157,10 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(query2portion.result)
       count <- db.run(query2count.result)
-    } yield Matches(count, portion.map { n => Match(n) })
+    } yield Matches(count, portion.map { n => Match(n) }, authorName)
   }
 
-  def resolveYear(year: String,
-                  take: Int, drop: Int): Future[Matches] = {
+  def resolveYear(year: String, take: Int, drop: Int): Future[Matches] = {
     val query = yearWords.filter { x => x.yearWord === year }
                          .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -173,11 +169,10 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(query2portion.result)
       count <- db.run(query2count.result)
-    } yield Matches(count, portion.map { n => Match(n) })
+    } yield Matches(count, portion.map { n => Match(n) }, year)
   }
 
-  def resolveUninomial(uninomial: String,
-                       take: Int, drop: Int): Future[Matches] = {
+  def resolveUninomial(uninomial: String, take: Int, drop: Int): Future[Matches] = {
     val query = uninomialWords.filter { x => x.uninomialWord === uninomial }
                               .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -186,11 +181,10 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(query2portion.result)
       count <- db.run(query2count.result)
-    } yield Matches(count, portion.map { n => Match(n) })
+    } yield Matches(count, portion.map { n => Match(n) }, uninomial)
   }
 
-  def resolveGenus(genus: String,
-                   take: Int, drop: Int): Future[Matches] = {
+  def resolveGenus(genus: String, take: Int, drop: Int): Future[Matches] = {
     val query = genusWords.filter { x => x.genusWord === genus }
                           .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -199,11 +193,10 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(query2portion.result)
       count <- db.run(query2count.result)
-    } yield Matches(count, portion.map { n => Match(n) })
+    } yield Matches(count, portion.map { n => Match(n) }, genus)
   }
 
-  def resolveSpecies(species: String,
-                     take: Int, drop: Int): Future[Matches] = {
+  def resolveSpecies(species: String, take: Int, drop: Int): Future[Matches] = {
     val query = speciesWords.filter { x => x.speciesWord === species }
                             .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -212,11 +205,10 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(query2portion.result)
       count <- db.run(query2count.result)
-    } yield Matches(count, portion.map { n => Match(n) })
+    } yield Matches(count, portion.map { n => Match(n) }, species)
   }
 
-  def resolveSubspecies(subspecies: String,
-                        take: Int, drop: Int): Future[Matches] = {
+  def resolveSubspecies(subspecies: String, take: Int, drop: Int): Future[Matches] = {
     val query = subspeciesWords.filter { x => x.subspeciesWord === subspecies }
                                .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -225,7 +217,7 @@ class Resolver(db: Database, matcher: Matcher) {
     for {
       portion <- db.run(query2portion.result)
       count <- db.run(query2count.result)
-    } yield Matches(count, portion.map { n => Match(n) })
+    } yield Matches(count, portion.map { n => Match(n) }, subspecies)
   }
 
   def resolveDataSources(uuid: UUID): Future[Seq[(NameStringIndex, DataSource)]] = {
@@ -272,5 +264,5 @@ object Resolver {
   }
 
   case class Match(nameString: NameString, kind: Kind = Kind.None)
-  case class Matches(total: Long, matches: Seq[Match], name: String = "")
+  case class Matches(total: Long, matches: Seq[Match], query: String)
 }
