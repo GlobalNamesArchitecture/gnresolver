@@ -28,12 +28,10 @@ dependencies:
 
 database:
   override:
-    - psql -U postgres -c "create database test_api encoding 'utf8';"
-    - psql -U postgres -c "create database test_resolver encoding 'utf8';"
-    - bundle exec rake db:migrate RACK_ENV=test_api --trace:
+    - bundle exec rake db:create db:migrate RACK_ENV=test_api --trace:
         pwd:
           db-migration
-    - bundle exec rake db:migrate RACK_ENV=test_resolver --trace:
+    - bundle exec rake db:create db:migrate RACK_ENV=test_resolver --trace:
         pwd:
           db-migration
 
