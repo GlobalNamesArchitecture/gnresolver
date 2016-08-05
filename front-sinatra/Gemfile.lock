@@ -36,6 +36,9 @@ GEM
       rack (>= 1.0.0)
       rack-test (>= 0.5.4)
       xpath (~> 2.0)
+    capybara-webkit (1.11.1)
+      capybara (>= 2.3.0, < 2.8.0)
+      json
     coderay (1.1.1)
     coveralls (0.8.15)
       json (>= 1.8, < 3)
@@ -177,6 +180,7 @@ DEPENDENCIES
   better_errors (~> 2.1)
   byebug (~> 9.0)
   capybara (~> 2.7)
+  capybara-webkit (~> 1.11)
   coveralls (~> 0.8)
   factory_girl (~> 4.7)
   git (~> 1.3)

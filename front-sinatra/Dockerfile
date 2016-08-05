@@ -8,6 +8,7 @@ RUN apt-get update && \
     apt-get update && \
     apt-get install -y ruby2.2 ruby2.2-dev ruby-switch \
     zlib1g-dev liblzma-dev libxml2-dev libpq-dev nodejs \
+    libqt4-dev libqtwebkit-dev \
     libxslt-dev supervisor build-essential supervisor && \
     add-apt-repository -y ppa:nginx/stable && \
     apt-get update && \
