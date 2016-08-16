@@ -29,8 +29,11 @@ RUN gem install bundle
 RUN mkdir /app
 WORKDIR /app
 
-ENV ASSEMBLY_JAR "gnresolver-api-assembly-${VERSION}.jar"
-ENV ASSEMBLY_PATH "https://github.com/GlobalNamesArchitecture/gnresolver/releases/download/snapshot/${ASSEMBLY_JAR}"
+ARG GNMATCHER_DUMP_PATH
+ADD ${GNMATCHER_DUMP_PATH} /app/
+
+ENV ASSEMBLY_JAR="gnresolver-api-assembly-${VERSION}.jar"
+ARG ASSEMBLY_PATH="https://github.com/GlobalNamesArchitecture/gnresolver/releases/download/snapshot/${ASSEMBLY_JAR}"
 ADD ${ASSEMBLY_PATH} /app/
 
 CMD bash -c "java -jar ${ASSEMBLY_JAR} -server -Xms4g -Xmx8g -XX:PermSize=512m \
