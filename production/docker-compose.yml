@@ -11,7 +11,6 @@ services:
       RACK_ENV: production
     depends_on:
       - pg
-    command: curl --retry 10000 --retry-delay 10000 http://something.com
   pg:
     image: postgres
     volumes: /opt/gna/data/gnresolver/postgresql:/var/lib/posgresql
