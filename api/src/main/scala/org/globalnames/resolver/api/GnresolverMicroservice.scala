@@ -150,8 +150,10 @@ object GnresolverMicroservice extends App with Service {
   override val logger   = Logging(system, getClass)
   override val database = Database.forConfig("postgresql")
   override val matcher  = {
-    val canonicalsStream = getClass.getResourceAsStream("/name_strings_canonical.tsv")
-    Matcher(Source.fromInputStream(canonicalsStream).getLines.toList, maxDistance = 2)
+    logger.info("Matcher: restoring")
+    val matcher = Matcher.restore(config.getString("gnresolver.gnmatcher_dump_path"))
+    logger.info("Matcher: restored")
+    matcher
   }
 
   Http().bindAndHandle(routes,
