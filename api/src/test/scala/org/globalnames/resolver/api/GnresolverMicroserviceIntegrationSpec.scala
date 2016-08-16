@@ -32,7 +32,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       seed("test_api", "GnresolverMicroserviceIntegrationSpec")
 
       "'GET'" in {
-        Get("/api/names?v=Favorinus+horridus|Stegia+lavatera") ~> routes ~> check {
+        Get("/api/name_resolvers?names=Favorinus+horridus|Stegia+lavatera") ~> routes ~> check {
           status shouldBe OK
           val response = responseAs[Seq[Matches]]
           response.size shouldBe 2
@@ -46,8 +46,8 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       }
 
       "'POST'" in {
-        Post("/api/names", HttpEntity(`application/json`,
-                                      """["Favorinus horridus", "Stegia lavatera"]""")) ~>
+        Post("/api/name_resolvers", HttpEntity(`application/json`,
+                                    """["Favorinus horridus", "Stegia lavatera"]""")) ~>
           routes ~> check {
           status shouldBe OK
           val response = responseAs[Seq[Matches]]

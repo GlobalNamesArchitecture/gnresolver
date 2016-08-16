@@ -99,27 +99,22 @@ trait Service extends Protocols {
           complete {
             BuildInfo.version
           }
-        } ~ path("names") {
-          get {
-            parameter('v) { values =>
-              complete {
-                resolver.resolve(values.split('|'))
-              }
+        } ~ path("name_resolvers") {
+          (get & parameter('names)) { values =>
+            complete {
+              resolver.resolve(values.split('|'))
             }
           } ~ (post & entity(as[Seq[String]])) { request =>
             complete {
               resolver.resolve(request.take(1000))
             }
           }
-        } ~ path("search") {
-          get {
-            parameters('v, 'take ? 1000, 'drop ? 0) {
-              (value, take, drop) =>
-                complete {
-                  val search = QueryParser.result(value)
-                  logger.debug(s"$search")
-                  resolve(search, take, drop)
-                }
+        } ~ path("name_strings") {
+          (get & parameters('search_term, 'take ? 1000, 'drop ? 0)) { (searchTerm, take, drop) =>
+            complete {
+              val search = QueryParser.result(searchTerm)
+              logger.debug(s"$search")
+              resolve(search, take, drop)
             }
           }
         } ~ path("names" / JavaUUID / "dataSources") { uuid =>
