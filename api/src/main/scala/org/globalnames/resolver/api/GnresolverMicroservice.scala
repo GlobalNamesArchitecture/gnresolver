@@ -20,7 +20,6 @@ import com.typesafe.config.ConfigFactory
 import spray.json.DefaultJsonProtocol
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.io.Source
 
 case class Request(names: Seq[String])
 case class QueryNames(value: String)
