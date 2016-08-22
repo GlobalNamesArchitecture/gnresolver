@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160609175652) do
+ActiveRecord::Schema.define(version: 20160802125615) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -49,14 +49,12 @@ ActiveRecord::Schema.define(version: 20160609175652) do
   add_index "name_string_indices", ["name_string_id"], name: "index_name_string_indices_on_name_string_id", using: :btree
 
   create_table "name_strings", id: :uuid, default: nil, force: :cascade do |t|
-    t.uuid     "id_mysql",                   null: false
-    t.string   "name",           limit: 255, null: false
-    t.uuid     "canonical_uuid"
-    t.string   "canonical",      limit: 255
-    t.datetime "created_at"
-    t.datetime "updated_at"
+    t.string "name",           limit: 255, null: false
+    t.uuid   "canonical_uuid"
+    t.string "canonical",      limit: 255
   end
 
+  add_index "name_strings", ["canonical"], name: "canonical_name_index", using: :btree
   add_index "name_strings", ["canonical_uuid"], name: "index_name_strings_on_canonical_uuid", using: :btree
 
   create_table "name_strings__author_words", id: false, force: :cascade do |t|
