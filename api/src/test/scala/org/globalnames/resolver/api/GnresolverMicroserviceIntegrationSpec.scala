@@ -28,36 +28,57 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       }
     }
 
-    "handle `names` request" when {
+    "handle requests" when {
       seed("test_api", "GnresolverMicroserviceIntegrationSpec")
 
-      "'GET'" in {
-        Get("/api/name_resolvers?names=Favorinus+horridus|Stegia+lavatera") ~> routes ~> check {
-          status shouldBe OK
-          val response = responseAs[Seq[Matches]]
-          response.size shouldBe 2
+      "handle `name_strings`/uuid request" when {
+        "existing name" in {
+          Get("/api/name_strings/b701ec9e-efb0-5d5b-bf03-b920c00d0a77") ~> routes ~> check {
+            status shouldBe OK
+            val response = responseAs[Matches]
+            response.matches.size shouldBe 1
+            response.matches(0).nameString.name.value shouldBe "Favorinus horridus"
+          }
+        }
 
-          response(0).total shouldBe 1
-          response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
-
-          response(1).total shouldBe 1
-          response(1).matches(0).nameString.name.value shouldBe "Stegia lavatera"
+        "non-existing name" in {
+          Get("/api/name_strings/AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA") ~> routes ~> check {
+            status shouldBe OK
+            val response = responseAs[Matches]
+            response.matches shouldBe empty
+          }
         }
       }
 
-      "'POST'" in {
-        Post("/api/name_resolvers", HttpEntity(`application/json`,
-                                    """["Favorinus horridus", "Stegia lavatera"]""")) ~>
-          routes ~> check {
-          status shouldBe OK
-          val response = responseAs[Seq[Matches]]
-          response.size shouldBe 2
+      "handle `name_resolvers` requests" when {
+        "'GET'" in {
+          Get("/api/name_resolvers?names=Favorinus+horridus|Stegia+lavatera") ~> routes ~> check {
+            status shouldBe OK
+            val response = responseAs[Seq[Matches]]
+            response.size shouldBe 2
 
-          response(0).total shouldBe 1
-          response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
+            response(0).total shouldBe 1
+            response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
 
-          response(1).total shouldBe 1
-          response(1).matches(0).nameString.name.value shouldBe "Stegia lavatera"
+            response(1).total shouldBe 1
+            response(1).matches(0).nameString.name.value shouldBe "Stegia lavatera"
+          }
+        }
+
+        "'POST'" in {
+          Post("/api/name_resolvers", HttpEntity(`application/json`,
+            """["Favorinus horridus", "Stegia lavatera"]""")) ~>
+            routes ~> check {
+            status shouldBe OK
+            val response = responseAs[Seq[Matches]]
+            response.size shouldBe 2
+
+            response(0).total shouldBe 1
+            response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
+
+            response(1).total shouldBe 1
+            response(1).matches(0).nameString.name.value shouldBe "Stegia lavatera"
+          }
         }
       }
     }

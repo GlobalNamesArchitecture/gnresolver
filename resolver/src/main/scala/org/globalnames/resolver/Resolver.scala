@@ -254,6 +254,11 @@ class Resolver(db: Database, matcher: Matcher) {
       existing <- existingLocalIds
     } yield mapped ++ (localIds diff existing).map { (_, "") }
   }
+
+  def findNameStringByUuid(uuid: UUID): Future[Matches] = {
+    val query = nameStrings.filter { ns => ns.id === uuid }.take(1)
+    db.run(query.result).map { xs => Matches(xs.size, xs.map { x => Match(x) }, uuid.toString) }
+  }
 }
 
 object Resolver {

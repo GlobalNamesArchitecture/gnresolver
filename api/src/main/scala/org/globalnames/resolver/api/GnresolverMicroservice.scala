@@ -108,6 +108,10 @@ trait Service extends Protocols {
               resolver.resolve(request.take(1000))
             }
           }
+        } ~ path("name_strings" / JavaUUID) { uuid =>
+          complete {
+            resolver.findNameStringByUuid(uuid)
+          }
         } ~ path("name_strings") {
           (get & parameters('search_term, 'take ? 1000, 'drop ? 0)) { (searchTerm, take, drop) =>
             complete {
