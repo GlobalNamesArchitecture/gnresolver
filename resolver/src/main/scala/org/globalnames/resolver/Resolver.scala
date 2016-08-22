@@ -230,7 +230,8 @@ class Resolver(db: Database, matcher: Matcher) {
     db.run(query.result)
   }
 
-  def crossMap(databaseSourceId: Int, databaseTargetId: Int, localIds: Seq[String]) = {
+  def crossMap(databaseSourceId: Int, databaseTargetId: Int,
+               localIds: Seq[String]): Future[Seq[(String, String)]] = {
     // Slick doesn't give facilities to create temporary table from `localIds` and
     // make join against it. Until https://github.com/slick/slick/issues/799 is solved
     val existingCrossMapsQuery = crossMaps.filter { cm =>
