@@ -3,16 +3,17 @@ package org.globalnames.resolver.model
 import java.util.UUID
 
 import slick.driver.PostgresDriver.api._
+import slick.lifted.ProvenShape
 
 case class UninomialWord(word: String, nameString: UUID)
 
 class UninomialWords(tag: Tag)
   extends Table[UninomialWord](tag, "name_strings_uninomial") {
 
-  def uninomialWord  = column[String]("uninomial")
+  def uninomialWord: Rep[String] = column[String]("uninomial")
 
-  def nameStringUuid = column[UUID]("name_uuid")
+  def nameStringUuid: Rep[UUID] = column[UUID]("name_uuid")
 
-  def * = (uninomialWord, nameStringUuid) <>
+  def * : ProvenShape[UninomialWord] = (uninomialWord, nameStringUuid) <>
     (UninomialWord.tupled, UninomialWord.unapply)
 }

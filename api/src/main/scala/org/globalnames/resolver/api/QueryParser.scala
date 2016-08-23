@@ -6,18 +6,18 @@ object QueryParser extends RegexParsers {
   case class Modifier(typ: String)
   case class SearchPart(modifier: Modifier, contents: String, wildcard: Boolean)
 
-  val noModifier         = "none"
-  val exactModifier      = "exact"
+  val noModifier = "none"
+  val exactModifier = "exact"
   val nameStringModifier = "ns"
-  val canonicalModifier  = "can"
-  val uninomialModifier  = "uni"
-  val genusModifier      = "gen"
-  val speciesModifier    = "sp"
+  val canonicalModifier = "can"
+  val uninomialModifier = "uni"
+  val genusModifier = "gen"
+  val speciesModifier = "sp"
   val subspeciesModifier = "ssp"
-  val authorModifier     = "au"
-  val yearModifier       = "yr"
+  val authorModifier = "au"
+  val yearModifier = "yr"
 
-  def word = """[A-Za-z0-9]+""".r
+  private def word = """[A-Za-z0-9]+""".r
 
   private def modifier: Parser[Modifier] =
     (exactModifier | nameStringModifier | canonicalModifier |

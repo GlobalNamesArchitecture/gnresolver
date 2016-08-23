@@ -86,7 +86,9 @@ object TestReporter {
   }
 
   private[TestReporter] def printlnGreen(str: String): Unit = {
+    // scalastyle:off println
     stdOut.println(s"$GreenColor$str")
+    // scalastyle:on println
     stdOut.flush()
   }
 
@@ -108,4 +110,3 @@ object TestReporter {
     formatter.print(duration)
   }
 }
-

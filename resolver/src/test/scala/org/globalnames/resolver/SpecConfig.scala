@@ -14,11 +14,14 @@ trait SpecConfig extends WordSpec with Matchers with OptionValues
                     with PatienceConfiguration {
   protected val log: Logger = LoggerFactory.getLogger(getClass)
 
-  implicit val defaultPatience: PatienceConfig =
+  implicit val defaultPatience: PatienceConfig = {
+    // scalastyle:off magic.number
     PatienceConfig(timeout = Span(4, Seconds), interval = Span(5, Millis))
+    // scalastyle:on magic.number
+  }
 
-  def seed(appEnv: String, specName: String) = {
-    println(Process(command = s"rake db:seed RACK_ENV=$appEnv SPEC_NAME=$specName",
-                    cwd = new File("../db-migration")).!!)
+  protected def seed(appEnv: String, specName: String) = {
+    log.info(Process(command = s"rake db:seed RACK_ENV=$appEnv SPEC_NAME=$specName",
+                     cwd = new File("../db-migration")).!!)
   }
 }

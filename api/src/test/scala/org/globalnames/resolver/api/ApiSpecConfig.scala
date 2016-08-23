@@ -8,5 +8,6 @@ import akka.testkit._
 import scala.concurrent.duration.DurationInt
 
 trait ApiSpecConfig {
-  implicit def default(implicit system: ActorSystem) = RouteTestTimeout(5.seconds.dilated(system))
+  implicit def default(implicit system: ActorSystem): RouteTestTimeout =
+    RouteTestTimeout(5.seconds.dilated(system))
 }

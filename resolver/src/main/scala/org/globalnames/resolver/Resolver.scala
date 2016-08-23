@@ -28,10 +28,12 @@ class Resolver(db: Database, matcher: Matcher) {
   val nameStringIndicies = TableQuery[NameStringIndices]
   val crossMaps = TableQuery[CrossMaps]
 
-  private def exactNamesQuery(nameUuid: Rep[UUID], canonicalNameUuid: Rep[UUID]) =
+  private def exactNamesQuery(nameUuid: Rep[UUID], canonicalNameUuid: Rep[UUID]) = {
+    val exactNamesMaxCount = 50
     nameStrings.filter { nameString =>
       nameString.id === nameUuid || nameString.canonicalUuid === canonicalNameUuid
-    }.take(50)
+    }.take(exactNamesMaxCount)
+  }
 
   private val exactNamesQueryCompiled = Compiled(exactNamesQuery _)
 
@@ -60,9 +62,10 @@ class Resolver(db: Database, matcher: Matcher) {
       val unfoundFuzzyResult =
         fuzzyMatch(unfoundFuzzyMatches.map { case (name, parts, _) => (name, parts.dropRight(1)) })
 
+      val fuzzyNameStringsMaxCount = 50
       val queryFoundFuzzy = DBIO.sequence(foundFuzzyMatches.map { case (_, _, candUuids) =>
         nameStrings.filter { ns => ns.canonicalUuid.inSetBind(candUuids) }
-                   .take(50)
+                   .take(fuzzyNameStringsMaxCount)
                    .result
       })
 
@@ -87,9 +90,11 @@ class Resolver(db: Database, matcher: Matcher) {
   def resolve(names: Seq[String]): Future[Seq[Matches]] = {
     val namesCapital = names.map { n => capitalize(n) }
 
-    val scientificNamesFuture = Future.sequence(namesCapital.grouped(200).map { namesGp =>
-      Future { namesGp.map { name => snp.fromString(name) } }
-    }).map { x => x.flatten.toList }
+    val nameStringsPerFuture = 200
+    val scientificNamesFuture = Future.sequence(
+      namesCapital.grouped(nameStringsPerFuture).map { namesGp =>
+        Future { namesGp.map { name => snp.fromString(name) } }
+      }).map { x => x.flatten.toList }
 
     scientificNamesFuture.flatMap { scientificNames =>
       val exactMatches = scientificNames.grouped(scientificNames.size / 50 + 1).map { sns =>
@@ -271,4 +276,8 @@ object Resolver {
 
   case class Match(nameString: NameString, kind: Kind = Kind.None)
   case class Matches(total: Long, matches: Seq[Match], query: String)
+
+  object Matches {
+    val empty = Matches(0, Seq(), "")
+  }
 }

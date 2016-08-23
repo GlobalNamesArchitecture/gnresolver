@@ -24,7 +24,7 @@ dependencies:
         timeout: 360
         pwd:
           db-migration
-    - sbt test:compile
+    - sbt test:scalastyle test:compile
 
 database:
   override:

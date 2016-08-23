@@ -10,9 +10,9 @@ case class Match(nameString: NameString)
 case class Response(total: Int, matches: Seq[Match])
 
 object Formatters {
-  implicit val nameFormat       = Json.format[Name]
+  implicit val nameFormat = Json.format[Name]
   implicit val nameStringFormat = Json.format[NameString]
   implicit val dataSourceFormat = Json.format[DataSource]
-  implicit val matchFormat      = Json.format[Match]
-  implicit val responseFormat   = Json.format[Response]
+  implicit val matchFormat = Json.format[Match]
+  implicit val responseFormat = Json.format[Response]
 }
