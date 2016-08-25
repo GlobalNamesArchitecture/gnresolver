@@ -53,19 +53,15 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       "handle `name_resolvers` requests" when {
         "'GET'" in {
           Get("""/api/name_resolvers?""" +
-              """names=[{"value":"Favorinus+horridus"},{"value":"Stegia+lavatera"}]""") ~>
+              """names=[{"value":"Favorinus+horridus"}]""") ~>
           routes ~> check {
             status shouldBe OK
             val response = responseAs[Seq[Matches]]
-            response.size shouldBe 2
+            response.size shouldBe 1
 
             response(0).total shouldBe 1
             response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
             response(0).localId shouldBe None
-
-            response(1).total shouldBe 1
-            response(1).matches(0).nameString.name.value shouldBe "Stegia lavatera"
-            response(1).localId shouldBe None
           }
         }
 
@@ -73,37 +69,28 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
           val localId = 7
 
           Get("""/api/name_resolvers?""" +
-             s"""names=[{"value":"Favorinus+horridus","localId":$localId},""" +
-              """{"value":"Stegia+lavatera"}]""") ~> routes ~> check {
+             s"""names=[{"value":"Favorinus+horridus","localId":$localId}]""") ~> routes ~> check {
             status shouldBe OK
             val response = responseAs[Seq[Matches]]
-            response.size shouldBe 2
+            response.size shouldBe 1
 
             response(0).total shouldBe 1
             response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
             response(0).localId shouldBe Some(localId)
-
-            response(1).total shouldBe 1
-            response(1).matches(0).nameString.name.value shouldBe "Stegia lavatera"
-            response(1).localId shouldBe None
           }
         }
 
         "'POST'" in {
           Post("/api/name_resolvers", HttpEntity(`application/json`,
-            """[{"value":"Favorinus horridus"}, {"value":"Stegia lavatera"}]""")) ~>
+            """[{"value":"Favorinus horridus"}]""")) ~>
             routes ~> check {
             status shouldBe OK
             val response = responseAs[Seq[Matches]]
-            response.size shouldBe 2
+            response.size shouldBe 1
 
             response(0).total shouldBe 1
             response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
             response(0).localId shouldBe None
-
-            response(1).total shouldBe 1
-            response(1).matches(0).nameString.name.value shouldBe "Stegia lavatera"
-            response(1).localId shouldBe None
           }
         }
 
@@ -111,20 +98,15 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
           val localId = 7
 
           Post("/api/name_resolvers", HttpEntity(`application/json`,
-            s"""[{"value":"Favorinus horridus", "localId": $localId},
-                |{"value":"Stegia lavatera"}]""".stripMargin)) ~>
+            s"""[{"value":"Favorinus horridus", "localId": $localId}]""")) ~>
             routes ~> check {
             status shouldBe OK
             val response = responseAs[Seq[Matches]]
-            response.size shouldBe 2
+            response.size shouldBe 1
 
             response(0).total shouldBe 1
             response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
             response(0).localId shouldBe Some(localId)
-
-            response(1).total shouldBe 1
-            response(1).matches(0).nameString.name.value shouldBe "Stegia lavatera"
-            response(1).localId shouldBe None
           }
         }
       }
