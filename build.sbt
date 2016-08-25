@@ -155,6 +155,7 @@ lazy val api = (project in file("./api"))
   .configs(UnitTest, ItTest)
   .settings(inConfig(UnitTest)(Defaults.testTasks))
   .settings(inConfig(ItTest)(Defaults.testTasks))
+  .enablePlugins(BuildInfoPlugin)
   .settings(commonSettings ++ testSettings: _*)
   .settings(
     name := "gnresolver-api",
