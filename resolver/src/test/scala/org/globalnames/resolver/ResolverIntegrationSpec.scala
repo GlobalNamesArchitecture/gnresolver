@@ -33,7 +33,7 @@ class ResolverIntegrationSpec extends SpecConfig {
     "support general resolve" when {
       "exact match by name UUID" in {
         val resolver = new Resolver(conn, matcher)
-        whenReady(resolver.resolve(Seq("Stelletta cyathoides Burton 1926"))) { res =>
+        whenReady(resolver.resolveStrings(Seq("Stelletta cyathoides Burton 1926"))) { res =>
           res.size shouldBe 1
 
           res.head.matches.head.nameString.name.id shouldBe
@@ -43,7 +43,7 @@ class ResolverIntegrationSpec extends SpecConfig {
 
       "exact match by canonical name UUID" in {
         val resolver = new Resolver(conn, matcher)
-        whenReady(resolver.resolve(Seq("Pteroplatus arrogans"))) { res =>
+        whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogans"))) { res =>
           res.size shouldBe 1
 
           res.head.matches.head.nameString.canonicalName.value.id shouldBe
@@ -53,7 +53,7 @@ class ResolverIntegrationSpec extends SpecConfig {
 
       "fuzzy match by canonical name UUID" in {
         val resolver = new Resolver(conn, matcher)
-        whenReady(resolver.resolve(Seq("Pteroplatus arrogaxx"))) { res =>
+        whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogaxx"))) { res =>
           res.size shouldBe 1
 
           res.head.matches.head.nameString.canonicalName.value.value shouldBe "Pteroplatus arrogans"

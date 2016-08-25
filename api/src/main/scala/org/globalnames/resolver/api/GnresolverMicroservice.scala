@@ -9,18 +9,16 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.{Config, ConfigFactory}
-import org.globalnames.resolver.Resolver.{Kind, Match, Matches}
+import org.globalnames.resolver.Resolver.{Kind, Match, Matches, NameRequest}
 import org.globalnames.resolver.api.QueryParser.{Modifier, SearchPart}
 import org.globalnames.resolver.model.{DataSource, Name, NameString, NameStringIndex}
 import slick.driver.PostgresDriver.api._
 import spray.json.{DefaultJsonProtocol, _}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-
-case class Request(names: Seq[String])
-case class QueryNames(value: String)
 
 trait Protocols extends DefaultJsonProtocol {
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
@@ -35,6 +33,7 @@ trait Protocols extends DefaultJsonProtocol {
     def write(x: Kind): JsString = JsString(x.toString)
     def read(value: JsValue): Kind = value match {
       case JsString("None") => Kind.None
+      case JsString("Fuzzy(0)") => Kind.Fuzzy(0)
       case x => deserializationError("Expected Kind as JsString, but got " + x)
     }
   }
@@ -43,9 +42,15 @@ trait Protocols extends DefaultJsonProtocol {
   implicit val nameStringIndexFormat = jsonFormat3(NameStringIndex.apply)
   implicit val dataSourceFormat = jsonFormat3(DataSource.apply)
   implicit val matchFormat = jsonFormat2(Match.apply)
-  implicit val matchesFormat = jsonFormat3(Matches.apply)
-  implicit val requestFormat = jsonFormat1(Request.apply)
-  implicit val queryNamesFormat = jsonFormat1(QueryNames.apply)
+  implicit val matchesFormat = jsonFormat4(Matches.apply)
+  implicit val nameRequestFormat = jsonFormat2(NameRequest.apply)
+
+  implicit def unmarshalStringJson2NameRequest: Unmarshaller[String, Seq[NameRequest]] =
+    Unmarshaller.strict((_: String).parseJson match {
+      case JsArray(objs: Vector[JsValue]) =>
+        objs.map { case obj: JsObject => nameRequestFormat.read(obj) }
+      case obj: JsObject => Seq(nameRequestFormat.read(obj))
+    })
 }
 
 trait Service extends Protocols {
@@ -67,7 +72,7 @@ trait Service extends Protocols {
   def resolve(search: SearchPart, take: Int, drop: Int): Future[Matches] = {
     search.modifier match {
       case Modifier(QueryParser.noModifier) =>
-        resolver.resolve(Seq(search.contents)).map { _.head }
+        resolver.resolveStrings(Seq(search.contents)).map { _.head }
       case Modifier(QueryParser.canonicalModifier) =>
         if (search.wildcard) {
           resolver.resolveCanonicalLike(search.contents + '%', take, drop)
@@ -99,13 +104,9 @@ trait Service extends Protocols {
             BuildInfo.version
           }
         } ~ path("name_resolvers") {
-          (get & parameter('names)) { values =>
-            complete {
-              resolver.resolve(values.split('|'))
-            }
-          } ~ (post & entity(as[Seq[String]])) { request =>
-            complete {
-              resolver.resolve(request.take(nameStringsMaxCount))
+          ((get & parameters('names.as[Seq[NameRequest]]))
+            | (post & entity(as[Seq[NameRequest]]))) { names => complete {
+              resolver.resolve(names.take(nameStringsMaxCount))
             }
           }
         } ~ path("name_strings" / JavaUUID) { uuid =>
