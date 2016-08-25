@@ -20,6 +20,9 @@ import spray.json.{DefaultJsonProtocol, _}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
+import scalaz._
+import Scalaz.{get => _, _}
+
 trait Protocols extends DefaultJsonProtocol {
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
     def write(x: UUID): JsString = JsString(x.toString)
@@ -41,7 +44,7 @@ trait Protocols extends DefaultJsonProtocol {
   implicit val nameStringFormat = jsonFormat2(NameString.apply)
   implicit val nameStringIndexFormat = jsonFormat3(NameStringIndex.apply)
   implicit val dataSourceFormat = jsonFormat3(DataSource.apply)
-  implicit val matchFormat = jsonFormat2(Match.apply)
+  implicit val matchFormat = jsonFormat3(Match.apply)
   implicit val matchesFormat = jsonFormat4(Matches.apply)
   implicit val nameRequestFormat = jsonFormat2(NameRequest.apply)
 
@@ -50,6 +53,11 @@ trait Protocols extends DefaultJsonProtocol {
       case JsArray(objs: Vector[JsValue]) =>
         objs.map { case obj: JsObject => nameRequestFormat.read(obj) }
       case obj: JsObject => Seq(nameRequestFormat.read(obj))
+    })
+
+  implicit def unmarshalStringJson2SeqInt: Unmarshaller[String, Vector[Int]] =
+    Unmarshaller.strict((_: String).parseJson match {
+      case JsArray(xs: Vector[JsValue]) => xs.map { case x: JsNumber => x.value.toInt }
     })
 }
 
@@ -104,9 +112,15 @@ trait Service extends Protocols {
             BuildInfo.version
           }
         } ~ path("name_resolvers") {
-          ((get & parameters('names.as[Seq[NameRequest]]))
-            | (post & entity(as[Seq[NameRequest]]))) { names => complete {
-              resolver.resolve(names.take(nameStringsMaxCount))
+          val getNameResolvers =
+            get &
+              parameters('names.as[Seq[NameRequest]], 'dataSourceIds.as[Vector[Int]] ?)
+          val postNameResolvers =
+            post & entity(as[Seq[NameRequest]]) & parameter('dataSourceIds.as[Vector[Int]] ?)
+
+          (getNameResolvers | postNameResolvers) {
+            (names, dataSourceIds) => complete {
+              resolver.resolve(names.take(nameStringsMaxCount), dataSourceIds.orZero)
             }
           }
         } ~ path("name_strings" / JavaUUID) { uuid =>

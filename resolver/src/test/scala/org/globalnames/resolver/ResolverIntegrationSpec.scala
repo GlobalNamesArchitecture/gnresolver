@@ -33,11 +33,12 @@ class ResolverIntegrationSpec extends SpecConfig {
     "support general resolve" when {
       "exact match by name UUID" in {
         val resolver = new Resolver(conn, matcher)
-        whenReady(resolver.resolveStrings(Seq("Stelletta cyathoides Burton 1926"))) { res =>
-          res.size shouldBe 1
+        whenReady(resolver.resolveStrings(
+          Seq("Pteroplatus arrogans BUQUET Jean Baptiste Lucien, 1840"))) { res =>
+            res.size shouldBe 1
 
           res.head.matches.head.nameString.name.id shouldBe
-            UUID.fromString("5477686c-260f-5762-82f5-1737d850f943")
+            UUID.fromString("405b2394-d89f-52df-a5bd-efd195f3b33f")
         }
       }
 
