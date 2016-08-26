@@ -80,6 +80,21 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
           }
         }
 
+        "'GET' with dataSourceIds" in {
+          Get("""/api/name_resolvers?dataSourceIds=[7]&""" +
+             s"""names=[{"value":"Galeodila+somalica+Caporiacco+1945"}]""") ~>
+            routes ~> check {
+              status shouldBe OK
+              val response = responseAs[Seq[Matches]]
+              response.size shouldBe 1
+
+              response(0).total shouldBe 1
+              response(0).matches(0).nameString.name.value shouldBe
+                "Galeodila somalica Caporiacco 1945"
+              response(0).matches(0).dataSourceId shouldBe 7
+          }
+        }
+
         "'POST'" in {
           Post("/api/name_resolvers", HttpEntity(`application/json`,
             """[{"value":"Favorinus horridus"}]""")) ~>
@@ -107,6 +122,20 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
             response(0).total shouldBe 1
             response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
             response(0).localId shouldBe Some(localId)
+          }
+        }
+
+        "'POST' with dataSourceIds" in {
+          Post("/api/name_resolvers?dataSourceIds=[7]", HttpEntity(`application/json`,
+             """[{"value":"Galeodila somalica Caporiacco 1945"}]""")) ~> routes ~> check {
+            status shouldBe OK
+            val response = responseAs[Seq[Matches]]
+            response.size shouldBe 1
+
+            response(0).total shouldBe 1
+            response(0).matches(0).nameString.name.value shouldBe
+              "Galeodila somalica Caporiacco 1945"
+            response(0).matches(0).dataSourceId shouldBe 7
           }
         }
       }
