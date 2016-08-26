@@ -302,7 +302,8 @@ object Resolver {
   }
 
   case class Match(nameString: NameString, dataSourceId: Int = 0, kind: Kind = Kind.None)
-  case class Matches(total: Long, matches: Seq[Match], query: String, localId: LocalId = None)
+  case class Matches(total: Long, matches: Seq[Match],
+                     suppliedNameString: String, localId: LocalId = None)
 
   object Matches {
     val empty = Matches(0, Seq(), "")
