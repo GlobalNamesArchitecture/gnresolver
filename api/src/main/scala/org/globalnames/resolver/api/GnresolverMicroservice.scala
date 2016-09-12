@@ -101,7 +101,8 @@ trait Service extends Protocols {
       case Modifier(QueryParser.subspeciesModifier) =>
         resolver.resolveSubspecies(search.contents, take, drop)
       case Modifier(QueryParser.nameStringModifier) => Future.successful(Matches.empty)
-      case Modifier(QueryParser.exactModifier) => Future.successful(Matches.empty)
+      case Modifier(QueryParser.exactModifier) =>
+        resolver.resolveExact(search.contents, take, drop)
     }
   }
 

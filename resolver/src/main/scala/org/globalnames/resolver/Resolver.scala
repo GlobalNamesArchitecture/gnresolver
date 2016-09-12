@@ -248,6 +248,16 @@ class Resolver(db: Database, matcher: Matcher) {
     } yield Matches(count, portion.map { n => Match(n) }, subspecies)
   }
 
+  def resolveExact(exact: String, take: Int, drop: Int): Future[Matches] = {
+    val query = nameStrings.filter { ns => ns.canonical === exact || ns.name === exact }
+    val queryCount = query.countDistinct
+    val queryPortion = query.drop(drop).take(take)
+    for {
+      portion <- db.run(queryPortion.result)
+      count <- db.run(queryCount.result)
+    } yield Matches(count, portion.map { n => Match(n) }, exact)
+  }
+
   def resolveDataSources(uuid: UUID): Future[Seq[(NameStringIndex, DataSource)]] = {
     val query = for {
       nsi <- nameStringIndicies
