@@ -2,6 +2,7 @@ package org.globalnames
 package resolver
 package api
 
+import java.io.File
 import java.util.UUID
 
 import akka.actor.ActorSystem
@@ -19,7 +20,7 @@ import slick.driver.PostgresDriver.api._
 import spray.json.{DefaultJsonProtocol, _}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-
+import scala.concurrent.duration._
 import scalaz._
 import Scalaz.{get => _, _}
 
@@ -164,7 +165,24 @@ object GnresolverMicroservice extends App with Service {
   override val database = Database.forConfig("postgresql")
   override val matcher = {
     logger.info("Matcher: restoring")
-    val matcher = Matcher.restore(config.getString("gnresolver.gnmatcher_dump_path"))
+    val dumpPath = config.getString("gnresolver.gnmatcher-dump-path")
+    val useDump = config.getBoolean("gnresolver.gnmatcher-use-dump")
+    logger.info(s"Matcher: using dump file '$dumpPath' -- $useDump")
+    def createMatcher = {
+      val nameStrings = scala.concurrent.Await.result(
+        database.run(resolver.nameStrings.map { _.canonical }.result.map { _.flatten }),
+        5.seconds
+      )
+      Matcher(nameStrings, maxDistance = 2)
+    }
+    val matcher = (useDump, new File(dumpPath).exists()) match {
+      case (true, true) => Matcher.restore(dumpPath)
+      case (true, false) =>
+        val matcher = createMatcher
+        matcher.dump(dumpPath)
+        matcher
+      case (false, _) => createMatcher
+    }
     logger.info("Matcher: restored")
     matcher
   }
