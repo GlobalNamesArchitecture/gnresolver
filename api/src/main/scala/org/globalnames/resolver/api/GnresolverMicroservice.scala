@@ -100,7 +100,12 @@ trait Service extends Protocols {
         resolver.resolveSpecies(search.contents, take, drop)
       case Modifier(QueryParser.subspeciesModifier) =>
         resolver.resolveSubspecies(search.contents, take, drop)
-      case Modifier(QueryParser.nameStringModifier) => Future.successful(Matches.empty)
+      case Modifier(QueryParser.nameStringModifier) =>
+        if (search.wildcard) {
+          resolver.resolveNameStringsLike(search.contents + '%', take, drop)
+        } else {
+          resolver.resolveNameStrings(search.contents, take, drop)
+        }
       case Modifier(QueryParser.exactModifier) =>
         resolver.resolveExact(search.contents, take, drop)
     }
@@ -115,8 +120,7 @@ trait Service extends Protocols {
           }
         } ~ path("name_resolvers") {
           val getNameResolvers =
-            get &
-              parameters('names.as[Seq[NameRequest]], 'dataSourceIds.as[Vector[Int]] ?)
+            get & parameters('names.as[Seq[NameRequest]], 'dataSourceIds.as[Vector[Int]] ?)
           val postNameResolvers =
             post & entity(as[Seq[NameRequest]]) & parameter('dataSourceIds.as[Vector[Int]] ?)
 

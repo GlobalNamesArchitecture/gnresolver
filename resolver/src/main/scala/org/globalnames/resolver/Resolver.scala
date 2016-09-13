@@ -248,6 +248,26 @@ class Resolver(db: Database, matcher: Matcher) {
     } yield Matches(count, portion.map { n => Match(n) }, subspecies)
   }
 
+  def resolveNameStrings(nameStringQuery: String, take: Int, drop: Int): Future[Matches] = {
+    val query = nameStrings.filter { ns => ns.name === nameStringQuery }
+    val queryCount = query.countDistinct
+    val queryPortion = query.drop(drop).take(take)
+    for {
+      portion <- db.run(queryPortion.result)
+      count <- db.run(queryCount.result)
+    } yield Matches(count, portion.map { n => Match(n) }, nameStringQuery)
+  }
+
+  def resolveNameStringsLike(nameStringQuery: String, take: Int, drop: Int): Future[Matches] = {
+    val query = nameStrings.filter { ns => ns.name.like(nameStringQuery) }
+    val queryCount = query.countDistinct
+    val queryPortion = query.drop(drop).take(take)
+    for {
+      portion <- db.run(queryPortion.result)
+      count <- db.run(queryCount.result)
+    } yield Matches(count, portion.map { n => Match(n) }, nameStringQuery)
+  }
+
   def resolveExact(exact: String, take: Int, drop: Int): Future[Matches] = {
     val query = nameStrings.filter { ns => ns.canonical === exact || ns.name === exact }
     val queryCount = query.countDistinct
@@ -314,8 +334,4 @@ object Resolver {
   case class Match(nameString: NameString, dataSourceId: Int = 0, kind: Kind = Kind.None)
   case class Matches(total: Long, matches: Seq[Match],
                      suppliedNameString: String, localId: LocalId = None)
-
-  object Matches {
-    val empty = Matches(0, Seq(), "")
-  }
 }
