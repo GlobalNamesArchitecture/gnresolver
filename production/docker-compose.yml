@@ -13,4 +13,8 @@ services:
       - pg
   pg:
     image: postgres
-    volumes: /opt/gna/data/gnresolver/postgresql:/var/lib/posgresql
+    volumes:
+      - pgdata:/var/lib/posgresql/data
+volumes:
+  pgdata:
+    external: false
