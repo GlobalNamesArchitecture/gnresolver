@@ -39,7 +39,7 @@ WORKDIR /app
 COPY ./project/*.sbt /app/project/
 COPY ./project/build.properties /app/project/
 COPY build.sbt /app
-RUN sbt test:compile
+RUN sbt test:scalastyle test:compile
 
 COPY ./db-migration/Gemfile /app/db-migration/
 WORKDIR /app/db-migration
