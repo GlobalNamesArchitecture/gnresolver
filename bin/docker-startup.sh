@@ -22,4 +22,4 @@ done
 cd ..
 
 echo "Starting GNResolver API server"
-sbt ~api/reStart
+sbt "~;test:compile;scalastyle;test;api/reStart"
