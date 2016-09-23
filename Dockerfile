@@ -36,10 +36,9 @@ RUN gem install bundle
 RUN mkdir /app
 WORKDIR /app
 
-COPY ./project/*.sbt /app/project/
-COPY ./project/build.properties /app/project/
-COPY build.sbt /app
-RUN sbt test:scalastyle test:compile
+COPY ./project/*.sbt ./project/build.properties /app/project/
+COPY scalastyle-config.xml build.sbt /app/
+RUN sbt test:compile
 
 COPY ./db-migration/Gemfile /app/db-migration/
 WORKDIR /app/db-migration
@@ -47,4 +46,4 @@ RUN bundle
 COPY . /app
 WORKDIR /app
 
-CMD ["sbt", "~api/reStart"]
+CMD ["/app/bin/docker-startup.sh"]

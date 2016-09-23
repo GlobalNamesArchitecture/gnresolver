@@ -5,6 +5,7 @@ machine:
   ruby:
     version: 2.2.3
   environment:
+    DB_DATABASE: development
     DB_HOST: localhost
     DB_USER: postgres
     DB_USER_PASS: ""
