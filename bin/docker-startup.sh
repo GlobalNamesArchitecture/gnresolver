@@ -19,6 +19,8 @@ do
   rake db:migrate RACK_ENV=$db --trace
 done
 
+rake db:seed RACK_ENV=development --trace
+
 cd ..
 
 echo "Starting GNResolver API server"

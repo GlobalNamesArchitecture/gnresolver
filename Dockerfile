@@ -46,4 +46,4 @@ RUN bundle
 COPY . /app
 WORKDIR /app
 
-# CMD ["sbt", "'~;test:compile;scalastyle;test;api/reStart'"]
+CMD ["/app/bin/docker-startup.sh"]
