@@ -64,7 +64,7 @@
     <check level="error" class="org.scalastyle.scalariform.PublicMethodsHaveTypeChecker"
            enabled="true"/>
 
-    <check level="error" class="org.scalastyle.file.NewLineAtEofChecker" enabled="false"/>
+    <check level="error" class="org.scalastyle.file.NewLineAtEofChecker" enabled="true"/>
 
     <check level="error" class="org.scalastyle.scalariform.NonASCIICharacterChecker"
            enabled="true"/>
@@ -134,7 +134,7 @@
         <parameters><parameter name="illegalImports"><![CDATA[sun._,java.awt._]]></parameter></parameters>
     </check>
 
-    <check level="error" class="org.scalastyle.file.NoNewLineAtEofChecker" enabled="true"/>
+    <check level="error" class="org.scalastyle.file.NoNewLineAtEofChecker" enabled="false"/>
 
     <check level="error" class="org.scalastyle.scalariform.SimplifyBooleanExpressionChecker"
            enabled="true"/>
