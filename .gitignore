@@ -38,7 +38,6 @@ logs/
 tmp/
 VARS_PROD*.env
 pgpass*
-api/gnmatcher_name_strings_canonical.dump
 
 # Play Framework
 RUNNING_PID
