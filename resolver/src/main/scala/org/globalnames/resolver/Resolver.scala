@@ -27,7 +27,6 @@ class Resolver(db: Database, matcher: Matcher) {
   val yearWords = TableQuery[YearWords]
   val dataSources = TableQuery[DataSources]
   val nameStringIndicies = TableQuery[NameStringIndices]
-  val crossMaps = TableQuery[CrossMaps]
 
   private def exactNamesQuery(nameUuid: Rep[UUID], canonicalNameUuid: Rep[UUID]) = {
     val exactNamesMaxCount = 50
@@ -286,31 +285,6 @@ class Resolver(db: Database, matcher: Matcher) {
     } yield (nsi, ds)
 
     db.run(query.result)
-  }
-
-  def crossMap(databaseSourceId: Int, databaseTargetId: Int,
-               localIds: Seq[String]): Future[Seq[(String, String)]] = {
-    // Slick doesn't give facilities to create temporary table from `localIds` and
-    // make join against it. Until https://github.com/slick/slick/issues/799 is solved
-    val existingCrossMapsQuery = crossMaps.filter { cm =>
-      cm.dataSourceId === databaseSourceId && cm.localId.inSetBind(localIds)
-    }
-    val existingLocalIds = db.run(existingCrossMapsQuery.map { _.localId }.result)
-
-    val query = for {
-      sourceCrossMap <- existingCrossMapsQuery
-      mapping <- nameStringIndicies.filter { nsi =>
-        nsi.nameStringId === sourceCrossMap.nameStringId
-      }
-      targetCrossMap <- crossMaps.filter { cm =>
-        cm.dataSourceId === databaseTargetId && cm.nameStringId === mapping.nameStringId
-      }
-    } yield (sourceCrossMap.localId, targetCrossMap.localId)
-
-    for {
-      mapped <- db.run(query.result).map { _.distinct }
-      existing <- existingLocalIds
-    } yield mapped ++ (localIds diff existing).map { (_, "") }
   }
 
   def findNameStringByUuid(uuid: UUID): Future[Matches] = {

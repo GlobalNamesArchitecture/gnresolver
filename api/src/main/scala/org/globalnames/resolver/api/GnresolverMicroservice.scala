@@ -77,6 +77,7 @@ trait Service extends Protocols {
   val database: Database
   val matcher: Matcher
   lazy val resolver = new Resolver(database, matcher)
+  lazy val crossMap = new CrossMap(database)
 
   def resolve(search: SearchPart, take: Int, drop: Int): Future[Matches] = {
     search.modifier match {
@@ -151,7 +152,7 @@ trait Service extends Protocols {
           (post & entity(as[Seq[String]]) &
             parameters('dbSourceId.as[Int], 'dbTargetId.as[Int])) {
               (localIds, dbSourceId, dbTargetId) => complete {
-                resolver.crossMap(dbSourceId, dbTargetId, localIds)
+                crossMap.execute(dbSourceId, dbTargetId, localIds)
               }
             }
           }
