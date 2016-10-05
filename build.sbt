@@ -117,7 +117,7 @@ val noPublishingSettings = Seq(
 
 /////////////////////// PROJECTS /////////////////////////
 
-lazy val root = project.in(file("."))
+lazy val `gnresolver-root` = project.in(file("."))
   .aggregate(resolver, benchmark, api, front)
   .settings(noPublishingSettings: _*)
   .settings(
