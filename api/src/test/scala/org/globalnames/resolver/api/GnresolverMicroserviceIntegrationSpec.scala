@@ -9,7 +9,7 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.typesafe.config.ConfigFactory
-import Resolver.Matches
+import model.Matches
 import slick.driver.PostgresDriver.api._
 
 class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfig

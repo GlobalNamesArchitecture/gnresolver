@@ -13,9 +13,9 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.{Config, ConfigFactory}
-import Resolver.{Kind, Match, Matches, NameRequest}
+import Resolver.NameRequest
 import QueryParser.{Modifier, SearchPart}
-import model.{DataSource, Name, NameString, NameStringIndex}
+import model.{DataSource, Name, NameString, NameStringIndex, Kind, Match, Matches}
 import slick.driver.PostgresDriver.api._
 import spray.json.{DefaultJsonProtocol, _}
 

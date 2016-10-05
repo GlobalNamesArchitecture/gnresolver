@@ -15,7 +15,7 @@ import scalaz._
 import Scalaz._
 
 class Resolver(db: Database, matcher: Matcher) {
-  import Resolver.{Match, Matches, LocalId, Kind}
+  import Resolver.NameRequest
 
   val gen = UuidGenerator()
   val nameStrings = TableQuery[NameStrings]
@@ -40,7 +40,7 @@ class Resolver(db: Database, matcher: Matcher) {
   private val exactNamesQueryCompiled = Compiled(exactNamesQuery _)
 
   private def gnmatchCanonicals(
-      canonicalNamePartsNonEmpty: Seq[(String, Array[String], LocalId)]) = {
+      canonicalNamePartsNonEmpty: Seq[(String, Array[String], Option[LocalId])]) = {
     val canonicalNamesFuzzy = canonicalNamePartsNonEmpty.map { case (name, parts, localId) =>
       val candsUuids: Seq[UUID] = if (parts.length > 1) {
         val can = parts.mkString(" ")
@@ -58,7 +58,7 @@ class Resolver(db: Database, matcher: Matcher) {
     (foundFuzzyMatches, unfoundFuzzyMatches)
   }
 
-  private def fuzzyMatch(canonicalNameParts: Seq[(String, Array[String], LocalId)],
+  private def fuzzyMatch(canonicalNameParts: Seq[(String, Array[String], Option[LocalId])],
                          dataSourceIds: Seq[Int]): Future[Seq[Matches]] = {
     val canonicalNamePartsNonEmpty = canonicalNameParts.filter {
       case (_, parts, _) => parts.nonEmpty
@@ -320,18 +320,5 @@ class Resolver(db: Database, matcher: Matcher) {
 }
 
 object Resolver {
-  type LocalId = Option[Int]
-
-  case class NameRequest(value: String, localId: LocalId)
-
-  sealed trait Kind
-  object Kind {
-    case object None extends Kind
-
-    case class Fuzzy(score: Int) extends Kind
-  }
-
-  case class Match(nameString: NameString, dataSourceId: Int = 0, kind: Kind = Kind.None)
-  case class Matches(total: Long, matches: Seq[Match],
-                     suppliedNameString: String, localId: LocalId = None)
+  case class NameRequest(value: String, localId: Option[LocalId])
 }
