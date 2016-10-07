@@ -15,7 +15,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.{Config, ConfigFactory}
 import Resolver.NameRequest
 import QueryParser.{Modifier, SearchPart}
-import model.{DataSource, Name, NameString, NameStringIndex, Kind, Match, Matches}
+import model.{DataSource, Name, NameString, NameStrings, NameStringIndex, Kind, Match, Matches}
 import slick.driver.PostgresDriver.api._
 import spray.json.{DefaultJsonProtocol, _}
 
@@ -77,6 +77,7 @@ trait Service extends Protocols {
   val database: Database
   val matcher: Matcher
   lazy val resolver = new Resolver(database, matcher)
+  lazy val facetedSearcher = new FacetedSearcher(database)
   lazy val crossMap = new CrossMap(database)
 
   def resolve(search: SearchPart, take: Int, drop: Int): Future[Matches] = {
@@ -85,30 +86,30 @@ trait Service extends Protocols {
         resolver.resolveStrings(Seq(search.contents)).map { _.head }
       case Modifier(QueryParser.canonicalModifier) =>
         if (search.wildcard) {
-          resolver.resolveCanonicalLike(search.contents + '%', take, drop)
+          facetedSearcher.resolveCanonicalLike(search.contents + '%', take, drop)
         } else {
-          resolver.resolveCanonical(search.contents, take, drop)
+          facetedSearcher.resolveCanonical(search.contents, take, drop)
         }
       case Modifier(QueryParser.authorModifier) =>
-        resolver.resolveAuthor(search.contents, take, drop)
+        facetedSearcher.resolveAuthor(search.contents, take, drop)
       case Modifier(QueryParser.yearModifier) =>
-        resolver.resolveYear(search.contents, take, drop)
+        facetedSearcher.resolveYear(search.contents, take, drop)
       case Modifier(QueryParser.uninomialModifier) =>
-        resolver.resolveUninomial(search.contents, take, drop)
+        facetedSearcher.resolveUninomial(search.contents, take, drop)
       case Modifier(QueryParser.genusModifier) =>
-        resolver.resolveGenus(search.contents, take, drop)
+        facetedSearcher.resolveGenus(search.contents, take, drop)
       case Modifier(QueryParser.speciesModifier) =>
-        resolver.resolveSpecies(search.contents, take, drop)
+        facetedSearcher.resolveSpecies(search.contents, take, drop)
       case Modifier(QueryParser.subspeciesModifier) =>
-        resolver.resolveSubspecies(search.contents, take, drop)
+        facetedSearcher.resolveSubspecies(search.contents, take, drop)
       case Modifier(QueryParser.nameStringModifier) =>
         if (search.wildcard) {
-          resolver.resolveNameStringsLike(search.contents + '%', take, drop)
+          facetedSearcher.resolveNameStringsLike(search.contents + '%', take, drop)
         } else {
-          resolver.resolveNameStrings(search.contents, take, drop)
+          facetedSearcher.resolveNameStrings(search.contents, take, drop)
         }
       case Modifier(QueryParser.exactModifier) =>
-        resolver.resolveExact(search.contents, take, drop)
+        facetedSearcher.resolveExact(search.contents, take, drop)
     }
   }
 
@@ -132,7 +133,7 @@ trait Service extends Protocols {
           }
         } ~ path("name_strings" / JavaUUID) { uuid =>
           complete {
-            resolver.findNameStringByUuid(uuid)
+            facetedSearcher.findNameStringByUuid(uuid)
           }
         } ~ path("name_strings") {
           (get & parameters('search_term, 'take ? nameStringsMaxCount, 'drop ? 0)) {
@@ -145,7 +146,7 @@ trait Service extends Protocols {
         } ~ path("names" / JavaUUID / "dataSources") { uuid =>
           get {
             complete {
-              resolver.resolveDataSources(uuid)
+              facetedSearcher.resolveDataSources(uuid)
             }
           }
         } ~ pathPrefix("crossmap") {
@@ -176,7 +177,7 @@ object GnresolverMicroservice extends App with Service {
     logger.info(s"Matcher: using dump file '$dumpPath' -- $useDump")
     def createMatcher = {
       val nameStrings = scala.concurrent.Await.result(
-        database.run(resolver.nameStrings.map { _.canonical }.result.map { _.flatten }),
+        database.run(TableQuery[NameStrings].map { _.canonical }.result.map { _.flatten }),
         5.seconds
       )
       Matcher(nameStrings, maxDistance = 2)
