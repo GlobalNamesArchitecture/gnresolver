@@ -1,8 +1,7 @@
 package org.globalnames
 package resolver
-package modles
+package model
 
-import org.globalnames.resolver.model.DataSources
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Await

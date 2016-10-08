@@ -9,11 +9,10 @@ import org.slf4j.{Logger, LoggerFactory}
 
 import scala.sys.process.Process
 
-trait SpecConfig extends FunSpec with Matchers with OptionValues
+trait SpecConfig extends FunSpec with GivenWhenThen with Matchers with OptionValues
                     with BeforeAndAfterEach with BeforeAndAfterAll with ScalaFutures
                     with PatienceConfiguration {
   protected val log: Logger = LoggerFactory.getLogger(getClass)
-  val context = describe _
 
   implicit val defaultPatience: PatienceConfig = {
     // scalastyle:off magic.number

@@ -3,7 +3,7 @@ package resolver
 
 import java.util.UUID
 
-import org.globalnames.resolver.model.NameStrings
+import model.NameStrings
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Await
@@ -13,6 +13,7 @@ class ResolverIntegrationSpec extends SpecConfig {
   val conn = Database.forConfig("postgresql-test")
   val nameStrings = TableQuery[NameStrings]
   var matcher: Matcher = _
+  var resolver: Resolver = _
 
   seed("test_resolver", "ResolverIntegrationSpec")
 
@@ -23,6 +24,7 @@ class ResolverIntegrationSpec extends SpecConfig {
       nameStrings.filter { _.canonical.isDefined }.map { _.canonical.get }
     val canonicalNames = Await.result(conn.run(canonicalNamesQuery.result), 5.seconds)
     matcher = Matcher(canonicalNames, maxDistance = 2)
+    resolver = new Resolver(conn, matcher)
   }
 
   override def afterAll(): Unit = {
@@ -30,43 +32,34 @@ class ResolverIntegrationSpec extends SpecConfig {
   }
 
   describe("Resolver") {
-    val resolver = new Resolver(conn, matcher)
 
     describe(".resolve") {
 
-      context("exact match by name-string") {
-        it("resolves") {
-          whenReady(resolver.resolveStrings(
-            Seq("Pteroplatus arrogans BUQUET Jean Baptiste Lucien, 1840"))) { res =>
-              res.size shouldBe 1
-
-            res.head.matches.head.nameString.name.id shouldBe
-              UUID.fromString("405b2394-d89f-52df-a5bd-efd195f3b33f")
-          }
+      it("exact matches by name-string") {
+        whenReady(resolver.resolveStrings(
+                  Seq("Pteroplatus arrogans BUQUET Jean Baptiste Lucien, 1840"))) { res =>
+          res.size shouldBe 1
+          res.head.matches.head.nameString.name.id shouldBe
+            UUID.fromString("405b2394-d89f-52df-a5bd-efd195f3b33f")
         }
       }
 
-      context("exact match by canonical form") {
-        it("resolves") {
-          whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogans"))) { res =>
-            res.size shouldBe 1
-
-            res.head.matches.head.nameString.canonicalName.value.id shouldBe
-              UUID.fromString("9669d573-ff19-59fa-87c3-258a9058d6d2")
-          }
+      it("exact matches by canonical form") {
+        whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogans"))) { res =>
+          res.size shouldBe 1
+          res.head.matches.head.nameString.canonicalName.value.id shouldBe
+            UUID.fromString("9669d573-ff19-59fa-87c3-258a9058d6d2")
         }
       }
 
-      // context("fuzzy match by canonical form") {
-      //   it("resolves") {
-      //     whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogaxx"))) { res =>
-      //       res.size shouldBe 1
-      //
-      //       res.head.matches.head.nameString.canonicalName.value.value shouldBe
-      //         "Pteroplatus arrogans"
-      //     }
-      //   }
-      // }
+      it("fuzzy matches by canonical form") {
+        pending
+        whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogaxx"))) { res =>
+          res.size shouldBe 1
+          res.head.matches.head.nameString.canonicalName.value.value shouldBe "Pteroplatus arrogans"
+        }
+      }
+
     }
   }
 }

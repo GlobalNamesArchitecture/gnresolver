@@ -9,7 +9,7 @@ import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.typesafe.config.ConfigFactory
-import org.globalnames.resolver.Resolver.Matches
+import Resolver.Matches
 import slick.driver.PostgresDriver.api._
 
 class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfig
@@ -33,7 +33,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
     }
 
     describe("/name_strings") {
-      context("access by UUID") {
+      describe("access by UUID") {
         it("returns one record if found") {
           Get("/api/name_strings/b701ec9e-efb0-5d5b-bf03-b920c00d0a77") ~> routes ~> check {
             status shouldBe OK
@@ -60,19 +60,20 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
           }
         }
 
-        // it("does not break with bad UUIDS") {
-        //   Get("/api/name_strings/aaaaaaaa-efb0") ~> routes ~> check {
-        //     status shouldBe OK
-        //     val response = responseAs[Matches]
-        //     response.matches shouldBe empty
-        //   }
-        // }
+        it("does not break with bad UUIDS") {
+          pending
+          Get("/api/name_strings/aaaaaaaa-efb0") ~> routes ~> check {
+            status shouldBe OK
+            val response = responseAs[Matches]
+            response.matches shouldBe empty
+          }
+        }
       }
     }
 
     describe("/name_resolvers") {
-      context("access by 'names' parameter") {
-        context("GET method") {
+      describe("access by 'names' parameter") {
+        describe("GET method") {
           it("returns records for known names") {
             Get("""/api/name_resolvers?""" +
                 """names=[{"value":"Favorinus+horridus"}]""") ~>
@@ -119,7 +120,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
           }
         }
 
-        context("POST method") {
+        describe("POST method") {
           it("returns records for known names") {
             Post("/api/name_resolvers", HttpEntity(`application/json`,
               """[{"value":"Favorinus horridus"}]""")) ~>
@@ -169,7 +170,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
     }
 
     describe("/crossmap") {
-      context("POST method") {
+      describe("POST method") {
         it("maps one local id to another") {
           seed("test_api", "GnresolverMicroserviceIntegrationSpec_CrossMap")
           Post("/api/crossmap?dbSourceId=8&dbTargetId=178",

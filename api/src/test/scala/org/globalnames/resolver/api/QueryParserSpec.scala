@@ -4,13 +4,11 @@ package api
 
 import org.scalatest.FunSpec
 import org.scalatest.Matchers._
-import org.globalnames.resolver.api.QueryParser.{Modifier, SearchPart}
+import QueryParser.{Modifier, SearchPart}
 
 class QueryParserSpec extends FunSpec {
-  val context = describe _
-
   describe(".result") {
-    context("modifiers") {
+    describe("modifiers") {
       it("works without modifier") {
         QueryParser.result("Pomatomus") shouldBe
           SearchPart(Modifier("none"), "Pomatomus", false)
@@ -62,7 +60,7 @@ class QueryParserSpec extends FunSpec {
       }
     }
 
-    context("wild card") {
+    describe("wild card") {
       it("recognises wild card without modifiers") {
         QueryParser.result("Pom*") shouldBe
           SearchPart(Modifier("none"), "Pom", true)
@@ -74,7 +72,7 @@ class QueryParserSpec extends FunSpec {
       }
     }
 
-    context("edge cases") {
+    describe("edge cases") {
       it("ignores unknown modifiers") {
         QueryParser.result("what:Something") shouldBe
           SearchPart(Modifier("none"), "what:Something", false)
@@ -101,21 +99,22 @@ class QueryParserSpec extends FunSpec {
       }
     }
 
-    context("BUGS") {
-      it("is confused by text starting as the same modifier") {
-        QueryParser.result("sp:spathulata") shouldBe
-          SearchPart(Modifier("none"), "sp:spathulata", false)
-      }
+    it("is confused by text starting as the same modifier") {
+      pending
+      QueryParser.result("sp:spathulata") shouldBe
+        SearchPart(Modifier("none"), "sp:spathulata", false)
+    }
 
-      it("is confused by text starting as a different modifier") {
-        QueryParser.result("au:spathulata") shouldBe
-          SearchPart(Modifier("none"), "au:spathulata", false)
-      }
+    it("is confused by text starting as a different modifier") {
+      pending
+      QueryParser.result("au:spathulata") shouldBe
+        SearchPart(Modifier("none"), "au:spathulata", false)
+    }
 
-      it("ignores modifier repeated without text") {
-        QueryParser.result("yr:yr") shouldBe
-          SearchPart(Modifier("none"), "yr:yr", false)
-      }
+    it("ignores modifier repeated without text") {
+      pending
+      QueryParser.result("yr:yr") shouldBe
+        SearchPart(Modifier("none"), "yr:yr", false)
     }
   }
 }
