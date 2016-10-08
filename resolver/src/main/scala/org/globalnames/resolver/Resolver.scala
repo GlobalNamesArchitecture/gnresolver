@@ -4,9 +4,9 @@ package resolver
 import java.util.UUID
 
 import org.apache.commons.lang3.StringUtils.capitalize
-import org.globalnames.parser.ScientificNameParser.{instance => snp}
-import org.globalnames.resolver.Resolver.NameRequest
-import org.globalnames.resolver.model._
+import parser.ScientificNameParser.{instance => snp}
+import Resolver.NameRequest
+import resolver.model._
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global

@@ -28,6 +28,7 @@ out/
 
 # Vim
 tags
+.vim.custom
 
 # Other
 *.pyc
