@@ -3,7 +3,7 @@ package resolver
 
 import java.util.UUID
 
-import model.NameStrings
+import model.{Kind, NameStrings}
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Await
@@ -41,6 +41,7 @@ class ResolverIntegrationSpec extends SpecConfig {
           res.size shouldBe 1
           res.head.matches.head.nameString.name.id shouldBe
             UUID.fromString("405b2394-d89f-52df-a5bd-efd195f3b33f")
+          res.head.matches.head.kind shouldBe Kind.ExactNameMatchByUUID
         }
       }
 
@@ -49,17 +50,24 @@ class ResolverIntegrationSpec extends SpecConfig {
           res.size shouldBe 1
           res.head.matches.head.nameString.canonicalName.value.id shouldBe
             UUID.fromString("9669d573-ff19-59fa-87c3-258a9058d6d2")
+          res.head.matches.head.kind shouldBe Kind.ExactCanonicalNameMatchByUUID
         }
       }
 
       it("fuzzy matches by canonical form") {
-        pending
         whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogaxx"))) { res =>
           res.size shouldBe 1
           res.head.matches.head.nameString.canonicalName.value.value shouldBe "Pteroplatus arrogans"
+          res.head.matches.head.kind shouldBe Kind.Fuzzy
         }
       }
 
+      it("handles capitalization of request") {
+        whenReady(resolver.resolveStrings(Seq("pteroplatus arrogaxx"))) { res =>
+          res.size shouldBe 1
+          res.head.suppliedNameString shouldBe "Pteroplatus arrogaxx"
+        }
+      }
     }
   }
 }

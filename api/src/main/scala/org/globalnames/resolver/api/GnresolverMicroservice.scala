@@ -37,7 +37,9 @@ trait Protocols extends DefaultJsonProtocol {
     def write(x: Kind): JsString = JsString(x.toString)
     def read(value: JsValue): Kind = value match {
       case JsString("None") => Kind.None
-      case JsString("Fuzzy(0)") => Kind.Fuzzy(0)
+      case JsString("Fuzzy") => Kind.Fuzzy
+      case JsString("ExactNameMatchByUUID") => Kind.ExactNameMatchByUUID
+      case JsString("ExactCanonicalNameMatchByUUID") => Kind.ExactCanonicalNameMatchByUUID
       case x => deserializationError("Expected Kind as JsString, but got " + x)
     }
   }

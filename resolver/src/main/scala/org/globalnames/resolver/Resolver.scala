@@ -5,7 +5,6 @@ import java.util.UUID
 
 import org.apache.commons.lang3.StringUtils.capitalize
 import parser.ScientificNameParser.{instance => snp}
-import Resolver.NameRequest
 import resolver.model._
 import slick.driver.PostgresDriver.api._
 
@@ -79,7 +78,7 @@ class Resolver(db: Database, matcher: Matcher) {
           val matchesInDataSources = matches
             .filter { case (ns, nsi) =>
               dataSourceIds.isEmpty || dataSourceIds.contains(nsi.dataSourceId)
-            }.map { case (ns, nsi) => Match(ns, nsi.dataSourceId, Kind.Fuzzy(0)) }
+            }.map { case (ns, nsi) => Match(ns, nsi.dataSourceId, Kind.Fuzzy) }
           Matches(matchesInDataSources.size, matchesInDataSources, name, localId)
         }
         val matchedFuzzyResult = {
@@ -134,7 +133,11 @@ class Resolver(db: Database, matcher: Matcher) {
           val matches = matchedNameStrings
               .filter { case (ns, nsi) =>
                 dataSourceIds.isEmpty || dataSourceIds.contains(nsi.dataSourceId)
-              }.map { case (ns, nsi) => Match(ns, nsi.dataSourceId, Kind.Fuzzy(0)) }
+              }.map { case (ns, nsi) =>
+                val kind: Kind = if (ns.name.id == sn.input.id) Kind.ExactNameMatchByUUID
+                                 else Kind.ExactCanonicalNameMatchByUUID
+                Match(ns, nsi.dataSourceId, kind)
+              }
           Matches(matches.size, matches, sn.input.verbatim, localId)
         }
 

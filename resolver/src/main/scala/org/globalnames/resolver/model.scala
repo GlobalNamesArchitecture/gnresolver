@@ -6,7 +6,9 @@ package object model {
   sealed trait Kind
   object Kind {
     case object None extends Kind
-    case class Fuzzy(score: Int) extends Kind
+    case object ExactNameMatchByUUID extends Kind
+    case object ExactCanonicalNameMatchByUUID extends Kind
+    case object Fuzzy extends Kind
   }
 
   type LocalId = Int
