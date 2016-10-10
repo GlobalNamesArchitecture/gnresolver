@@ -38,7 +38,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
           Get("/api/name_strings/b701ec9e-efb0-5d5b-bf03-b920c00d0a77") ~> routes ~> check {
             status shouldBe OK
             val response = responseAs[Matches]
-            response.matches.size shouldBe 1
+            response.matches should have size 1
             response.matches(0).nameString.name.value shouldBe "Favorinus horridus"
           }
         }
@@ -47,7 +47,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
           Get("/api/name_strings/B701EC9E-EFB0-5D5B-BF03-B920C00D0A77") ~> routes ~> check {
             status shouldBe OK
             val response = responseAs[Matches]
-            response.matches.size shouldBe 1
+            response.matches should have size 1
             response.matches(0).nameString.name.value shouldBe "Favorinus horridus"
           }
         }
@@ -80,7 +80,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
             routes ~> check {
               status shouldBe OK
               val response = responseAs[Seq[Matches]]
-              response.size shouldBe 1
+              response should have size 1
 
               response(0).total shouldBe 1
               response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
@@ -96,7 +96,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
             Get(url) ~> routes ~> check {
               status shouldBe OK
               val response = responseAs[Seq[Matches]]
-              response.size shouldBe 1
+              response should have size 1
 
               response(0).total shouldBe 1
               response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
@@ -110,7 +110,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
               routes ~> check {
                 status shouldBe OK
                 val response = responseAs[Seq[Matches]]
-                response.size shouldBe 1
+                response should have size 1
 
                 response(0).total shouldBe 1
                 response(0).matches(0).nameString.name.value shouldBe
@@ -127,7 +127,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
               routes ~> check {
               status shouldBe OK
               val response = responseAs[Seq[Matches]]
-              response.size shouldBe 1
+              response should have size 1
 
               response(0).total shouldBe 1
               response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
@@ -144,7 +144,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
               routes ~> check {
               status shouldBe OK
               val response = responseAs[Seq[Matches]]
-              response.size shouldBe 1
+              response should have size 1
 
               response(0).total shouldBe 1
               response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
@@ -157,7 +157,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
               """[{"value":"Galeodila somalica Caporiacco 1945"}]""")) ~> routes ~> check {
               status shouldBe OK
               val response = responseAs[Seq[Matches]]
-              response.size shouldBe 1
+              response should have size 1
 
               response(0).total shouldBe 1
               response(0).matches(0).nameString.name.value shouldBe
@@ -177,7 +177,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
             HttpEntity(`application/json`, """["1", "1005101"]""")) ~> routes ~> check {
             status shouldBe OK
             val response = responseAs[Seq[(String, String)]]
-            response.size shouldBe 2
+            response should have size 2
 
             response should contain (("1", ""))
             response should contain (("1005101", "AF468436/#6"))
