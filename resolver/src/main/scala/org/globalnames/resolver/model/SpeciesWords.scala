@@ -8,7 +8,7 @@ import slick.lifted.ProvenShape
 case class SpeciesWord(word: String, nameString: UUID)
 
 class SpeciesWords(tag: Tag)
-  extends Table[SpeciesWord](tag, "name_strings_species") {
+  extends Table[SpeciesWord](tag, "name_strings__species") {
 
   def speciesWord: Rep[String] = column[String]("species")
 

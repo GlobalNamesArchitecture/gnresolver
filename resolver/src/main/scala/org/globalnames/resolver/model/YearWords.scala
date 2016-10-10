@@ -8,7 +8,7 @@ import slick.lifted.ProvenShape
 case class YearWord(word: String, nameString: UUID)
 
 class YearWords(tag: Tag)
-  extends Table[YearWord](tag, "name_strings_year") {
+  extends Table[YearWord](tag, "name_strings__year") {
 
   def yearWord: Rep[String] = column[String]("year")
 

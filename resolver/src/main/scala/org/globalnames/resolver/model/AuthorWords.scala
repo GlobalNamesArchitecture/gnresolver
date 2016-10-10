@@ -8,7 +8,7 @@ import slick.lifted.ProvenShape
 case class AuthorWord(word: String, nameString: UUID)
 
 class AuthorWords(tag: Tag)
-  extends Table[AuthorWord](tag, "name_strings_author_words") {
+  extends Table[AuthorWord](tag, "name_strings__author_words") {
 
   def authorWord: Rep[String] = column[String]("author_word")
 

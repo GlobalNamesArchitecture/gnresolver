@@ -8,7 +8,7 @@ import slick.lifted.ProvenShape
 case class UninomialWord(word: String, nameString: UUID)
 
 class UninomialWords(tag: Tag)
-  extends Table[UninomialWord](tag, "name_strings_uninomial") {
+  extends Table[UninomialWord](tag, "name_strings__uninomial") {
 
   def uninomialWord: Rep[String] = column[String]("uninomial")
 
