@@ -52,6 +52,12 @@ class FacetedSearcherSpec extends SpecConfig {
         }
       }
 
+      it("returns no matches when empty string is provided") {
+        whenReady(searcher.resolveCanonical("", takeDefault, dropDefault)) { res =>
+          res.matches shouldBe 'empty
+        }
+      }
+
       it("resolves wildcard") {
         whenReady(searcher.resolveCanonicalLike("Aaadonta constricta ba%",
           takeDefault, dropDefault)) { res =>
@@ -60,6 +66,12 @@ class FacetedSearcherSpec extends SpecConfig {
               Match(ns5a68f4ec6121553e88433d602089ec88),
               Match(ns073bab6018165b5cb01887b4193db6f7)
             )
+        }
+      }
+
+      it("returns no wildcarded matches when empty string is provided") {
+        whenReady(searcher.resolveCanonicalLike("", takeDefault, dropDefault)) { res =>
+          res.matches shouldBe 'empty
         }
       }
     }
@@ -74,6 +86,12 @@ class FacetedSearcherSpec extends SpecConfig {
           )
         }
       }
+
+      it("returns no matches when empty string is provided") {
+        whenReady(searcher.resolveAuthor("", takeDefault, dropDefault)) { res =>
+          res.matches shouldBe 'empty
+        }
+      }
     }
 
     describe(".resolveYear") {
@@ -84,6 +102,12 @@ class FacetedSearcherSpec extends SpecConfig {
             Match(ns66d68908fe7d524b87ec86e5447993a0),
             Match(nsb2cf575fec5350ec96b4da94de2d926f)
           )
+        }
+      }
+
+      it("returns no matches when empty string is provided") {
+        whenReady(searcher.resolveYear("", takeDefault, dropDefault)) { res =>
+          res.matches shouldBe 'empty
         }
       }
     }
@@ -99,6 +123,12 @@ class FacetedSearcherSpec extends SpecConfig {
           )
         }
       }
+
+      it("returns no matches when empty string is provided") {
+        whenReady(searcher.resolveUninomial("", takeDefault, dropDefault)) { res =>
+          res.matches shouldBe 'empty
+        }
+      }
     }
 
     describe(".resolveGenus") {
@@ -110,6 +140,12 @@ class FacetedSearcherSpec extends SpecConfig {
             Match(ns7e38ca7a0c955c73b4d4a7c8b5efcb99),
             Match(ns3b963c1cc1265fc1998df42c4210216a)
           )
+        }
+      }
+
+      it("returns no matches when empty string is provided") {
+        whenReady(searcher.resolveGenus("", takeDefault, dropDefault)) { res =>
+          res.matches shouldBe 'empty
         }
       }
     }
@@ -125,6 +161,12 @@ class FacetedSearcherSpec extends SpecConfig {
           )
         }
       }
+
+      it("returns no matches when empty string is provided") {
+        whenReady(searcher.resolveSpecies("", takeDefault, dropDefault)) { res =>
+          res.matches shouldBe 'empty
+        }
+      }
     }
 
     describe(".resolveSubspecies") {
@@ -137,6 +179,12 @@ class FacetedSearcherSpec extends SpecConfig {
           )
         }
       }
+
+      it("returns no matches when empty string is provided") {
+        whenReady(searcher.resolveSubspecies("", takeDefault, dropDefault)) { res =>
+          res.matches shouldBe 'empty
+        }
+      }
     }
 
     describe(".resolveNameStrings") {
@@ -144,6 +192,12 @@ class FacetedSearcherSpec extends SpecConfig {
         whenReady(searcher.resolveNameStrings("Aaadonta constricta babelthuapi",
           takeDefault, dropDefault)) { res =>
             res.matches should contain only Match(ns5a68f4ec6121553e88433d602089ec88)
+        }
+      }
+
+      it("returns no matches when empty string is provided") {
+        whenReady(searcher.resolveNameStrings("", takeDefault, dropDefault)) { res =>
+          res.matches shouldBe 'empty
         }
       }
 
@@ -155,6 +209,12 @@ class FacetedSearcherSpec extends SpecConfig {
               Match(ns51b7b1b207ba5a0ea65dc5ca402b58de),
               Match(nsedd01cc80e7a53708d90173d24c9341c)
             )
+        }
+      }
+
+      it("returns no wildcarded matches when empty string is provided") {
+        whenReady(searcher.resolveNameStringsLike("", takeDefault, dropDefault)) { res =>
+          res.matches shouldBe 'empty
         }
       }
     }
