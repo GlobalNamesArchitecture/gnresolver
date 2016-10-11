@@ -88,7 +88,7 @@ trait Service extends Protocols {
         resolver.resolveStrings(Seq(search.contents)).map { _.head }
       case Modifier(QueryParser.canonicalModifier) =>
         if (search.wildcard) {
-          facetedSearcher.resolveCanonicalLike(search.contents + '%', take, drop)
+          facetedSearcher.resolveCanonicalLike(search.contents, take, drop)
         } else {
           facetedSearcher.resolveCanonical(search.contents, take, drop)
         }
@@ -106,7 +106,7 @@ trait Service extends Protocols {
         facetedSearcher.resolveSubspecies(search.contents, take, drop)
       case Modifier(QueryParser.nameStringModifier) =>
         if (search.wildcard) {
-          facetedSearcher.resolveNameStringsLike(search.contents + '%', take, drop)
+          facetedSearcher.resolveNameStringsLike(search.contents, take, drop)
         } else {
           facetedSearcher.resolveNameStrings(search.contents, take, drop)
         }

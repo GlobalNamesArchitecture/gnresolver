@@ -70,15 +70,15 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves no mathches when string request of length less than 3 is provided") {
-        val query = "Aaa%"
+        val query = "Aaa"
         whenReady(searcher.resolveCanonicalLike(query, takeDefault, dropDefault)) { res =>
-          res shouldBe Matches.empty(query)
+          res shouldBe Matches.empty(query + "%")
         }
       }
 
       it("returns no wildcarded matches when empty string is provided") {
         whenReady(searcher.resolveCanonicalLike("", takeDefault, dropDefault)) { res =>
-          res.matches shouldBe 'empty
+          res shouldBe Matches.empty("%")
         }
       }
     }
@@ -209,26 +209,27 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves wildcard") {
-        whenReady(searcher.resolveNameStringsLike("Aaadonta constricta komak%",
-          takeDefault, dropDefault)) { res =>
-            res.matches should have size 2
-            res.matches should contain theSameElementsAs Seq(
-              Match(ns51b7b1b207ba5a0ea65dc5ca402b58de),
-              Match(nsedd01cc80e7a53708d90173d24c9341c)
-            )
+        val query = "Aaadonta constricta komak"
+        whenReady(searcher.resolveNameStringsLike(query, takeDefault, dropDefault)) { res =>
+          res.matches should have size 2
+          res.matches should contain theSameElementsAs Seq(
+            Match(ns51b7b1b207ba5a0ea65dc5ca402b58de),
+            Match(nsedd01cc80e7a53708d90173d24c9341c)
+          )
+          res.suppliedNameString shouldBe (query + "%")
         }
       }
 
       it("returns no wildcarded matches when empty string is provided") {
         whenReady(searcher.resolveNameStringsLike("", takeDefault, dropDefault)) { res =>
-          res.matches shouldBe 'empty
+          res shouldBe Matches.empty("%")
         }
       }
 
       it("resolves no mathches when string request of length less than 3 is provided") {
-        val query = "Aaa%"
+        val query = "Aaa"
         whenReady(searcher.resolveNameStringsLike(query, takeDefault, dropDefault)) { res =>
-          res shouldBe Matches.empty(query)
+          res shouldBe Matches.empty(query + "%")
         }
       }
     }

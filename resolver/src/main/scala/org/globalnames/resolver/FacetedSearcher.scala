@@ -35,17 +35,18 @@ class FacetedSearcher(db: Database) {
   }
 
   def resolveCanonicalLike(canonicalName: String, take: Int, drop: Int): Future[Matches] = {
-    if (canonicalName.length <= 4) Future.successful(Matches.empty(canonicalName))
+    val canonicalNameLike = canonicalName + "%"
+    if (canonicalName.length <= 3) Future.successful(Matches.empty(canonicalNameLike))
     else {
       val queryByCanonicalName = nameStrings.filter { x =>
-        x.canonical.like(canonicalName)
+        x.canonical.like(canonicalNameLike)
       }
       val queryByCanonicalNamePortion = queryByCanonicalName.drop(drop).take(take)
       val queryByCanonicalNameCount = queryByCanonicalName.countDistinct
       for {
         portion <- db.run(queryByCanonicalNamePortion.result)
         count <- db.run(queryByCanonicalNameCount.result)
-      } yield Matches(count, portion.map { n => Match(n) }, canonicalName)
+      } yield Matches(count, portion.map { n => Match(n) }, canonicalNameLike)
     }
   }
 
@@ -132,15 +133,16 @@ class FacetedSearcher(db: Database) {
   }
 
   def resolveNameStringsLike(nameStringQuery: String, take: Int, drop: Int): Future[Matches] = {
-    if (nameStringQuery.length <= 4) Future.successful(Matches.empty(nameStringQuery))
+    val nameStringQueryLike = nameStringQuery + "%"
+    if (nameStringQuery.length <= 3) Future.successful(Matches.empty(nameStringQueryLike))
     else {
-      val query = nameStrings.filter { ns => ns.name.like(nameStringQuery) }
+      val query = nameStrings.filter { ns => ns.name.like(nameStringQueryLike) }
       val queryCount = query.countDistinct
       val queryPortion = query.drop(drop).take(take)
       for {
         portion <- db.run(queryPortion.result)
         count <- db.run(queryCount.result)
-      } yield Matches(count, portion.map { n => Match(n) }, nameStringQuery)
+      } yield Matches(count, portion.map { n => Match(n) }, nameStringQueryLike)
     }
   }
 
