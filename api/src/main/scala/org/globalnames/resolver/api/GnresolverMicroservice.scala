@@ -137,6 +137,10 @@ trait Service extends Protocols {
           complete {
             facetedSearcher.findNameStringByUuid(uuid)
           }
+        } ~ path("name_strings" / Remaining) { remaining =>
+          complete {
+            Matches.empty(remaining)
+          }
         } ~ path("name_strings") {
           (get & parameters('search_term, 'take ? nameStringsMaxCount, 'drop ? 0)) {
             (searchTerm, take, drop) => complete {

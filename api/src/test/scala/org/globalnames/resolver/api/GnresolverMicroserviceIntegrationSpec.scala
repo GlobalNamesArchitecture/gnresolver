@@ -7,6 +7,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.HttpEntity
 import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import com.typesafe.config.ConfigFactory
 import model.Matches
@@ -60,12 +61,13 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
           }
         }
 
-        it("does not break with bad UUIDS") {
-          pending
-          Get("/api/name_strings/aaaaaaaa-efb0") ~> routes ~> check {
-            status shouldBe OK
-            val response = responseAs[Matches]
-            response.matches shouldBe empty
+        it("returns no matches with bad UUIDS") {
+          val uuids = Seq("aaaaaaaa-efb0", "aaaaaa-efb0/abc/uh", "{}[]ac")
+          for (uuid <- uuids) {
+            Get("/api/name_strings/" + uuid) ~> routes ~> check {
+              status shouldBe OK
+              responseAs[Matches] shouldBe Matches.empty(Path(uuid).toString)
+            }
           }
         }
       }
