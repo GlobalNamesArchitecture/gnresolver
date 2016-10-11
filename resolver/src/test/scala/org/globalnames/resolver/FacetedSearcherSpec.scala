@@ -18,24 +18,24 @@ class FacetedSearcherSpec extends SpecConfig {
 
   val (takeDefault, dropDefault) = (50, 0)
 
-  val all @ Seq(ns05375e93f74c5bf488151cc363c1b98c,
-                ns073bab6018165b5cb01887b4193db6f7,
-                ns14414d49b3215aa39da132ca0ba45614,
-                ns3b963c1cc1265fc1998df42c4210216a,
-                ns51b7b1b207ba5a0ea65dc5ca402b58de,
-                ns5a68f4ec6121553e88433d602089ec88,
-                ns66d68908fe7d524b87ec86e5447993a0,
-                ns7c9866391fd55277987ce18f3301388a,
-                ns7e38ca7a0c955c73b4d4a7c8b5efcb99,
-                nsa3a97b4b8c845da28feddab445c82d12,
-                nsaebf444c6b645e338e6599f866538ecd,
-                nsb2cf575fec5350ec96b4da94de2d926f,
-                nsc96fd1c5c5cb50edafd163bd1368896b,
-                nsd0cf534d0785576b87a8960e5e6ce374,
-                nsdc6e0eb5363254aaaa16bfa8de8b92db,
-                nse529d9786a13578bb3ebbd9b8ad50a53,
-                nsedd01cc80e7a53708d90173d24c9341c,
-                nsf8a825d4b30e5234805d96dbb5230c87) =
+  val Seq(ns05375e93f74c5bf488151cc363c1b98c,
+          ns073bab6018165b5cb01887b4193db6f7,
+          ns14414d49b3215aa39da132ca0ba45614,
+          ns3b963c1cc1265fc1998df42c4210216a,
+          ns51b7b1b207ba5a0ea65dc5ca402b58de,
+          ns5a68f4ec6121553e88433d602089ec88,
+          ns66d68908fe7d524b87ec86e5447993a0,
+          ns7c9866391fd55277987ce18f3301388a,
+          ns7e38ca7a0c955c73b4d4a7c8b5efcb99,
+          nsa3a97b4b8c845da28feddab445c82d12,
+          nsaebf444c6b645e338e6599f866538ecd,
+          nsb2cf575fec5350ec96b4da94de2d926f,
+          nsc96fd1c5c5cb50edafd163bd1368896b,
+          nsd0cf534d0785576b87a8960e5e6ce374,
+          nsdc6e0eb5363254aaaa16bfa8de8b92db,
+          nse529d9786a13578bb3ebbd9b8ad50a53,
+          nsedd01cc80e7a53708d90173d24c9341c,
+          nsf8a825d4b30e5234805d96dbb5230c87) =
     Await.result(conn.run(nameStrings.sortBy { _.id }.result), 3.seconds)
 
   describe("FacetedSearcher") {
