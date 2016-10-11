@@ -3,7 +3,7 @@ package resolver
 
 import java.util.UUID
 
-import model.{Match, NameStrings}
+import model.{Match, Matches, NameStrings}
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Await
@@ -66,6 +66,13 @@ class FacetedSearcherSpec extends SpecConfig {
               Match(ns5a68f4ec6121553e88433d602089ec88),
               Match(ns073bab6018165b5cb01887b4193db6f7)
             )
+        }
+      }
+
+      it("resolves no mathches when string request of length less than 3 is provided") {
+        val query = "Aaa%"
+        whenReady(searcher.resolveCanonicalLike(query, takeDefault, dropDefault)) { res =>
+          res shouldBe Matches.empty(query)
         }
       }
 
@@ -215,6 +222,13 @@ class FacetedSearcherSpec extends SpecConfig {
       it("returns no wildcarded matches when empty string is provided") {
         whenReady(searcher.resolveNameStringsLike("", takeDefault, dropDefault)) { res =>
           res.matches shouldBe 'empty
+        }
+      }
+
+      it("resolves no mathches when string request of length less than 3 is provided") {
+        val query = "Aaa%"
+        whenReady(searcher.resolveNameStringsLike(query, takeDefault, dropDefault)) { res =>
+          res shouldBe Matches.empty(query)
         }
       }
     }

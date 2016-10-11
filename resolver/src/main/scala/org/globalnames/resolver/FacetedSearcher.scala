@@ -35,15 +35,18 @@ class FacetedSearcher(db: Database) {
   }
 
   def resolveCanonicalLike(canonicalName: String, take: Int, drop: Int): Future[Matches] = {
-    val queryByCanonicalName = nameStrings.filter { x =>
-      x.canonical.like(canonicalName)
+    if (canonicalName.length <= 4) Future.successful(Matches.empty(canonicalName))
+    else {
+      val queryByCanonicalName = nameStrings.filter { x =>
+        x.canonical.like(canonicalName)
+      }
+      val queryByCanonicalNamePortion = queryByCanonicalName.drop(drop).take(take)
+      val queryByCanonicalNameCount = queryByCanonicalName.countDistinct
+      for {
+        portion <- db.run(queryByCanonicalNamePortion.result)
+        count <- db.run(queryByCanonicalNameCount.result)
+      } yield Matches(count, portion.map { n => Match(n) }, canonicalName)
     }
-    val queryByCanonicalNamePortion = queryByCanonicalName.drop(drop).take(take)
-    val queryByCanonicalNameCount = queryByCanonicalName.countDistinct
-    for {
-      portion <- db.run(queryByCanonicalNamePortion.result)
-      count <- db.run(queryByCanonicalNameCount.result)
-    } yield Matches(count, portion.map { n => Match(n) }, canonicalName)
   }
 
   def resolveAuthor(authorName: String, take: Int, drop: Int): Future[Matches] = {
@@ -129,13 +132,16 @@ class FacetedSearcher(db: Database) {
   }
 
   def resolveNameStringsLike(nameStringQuery: String, take: Int, drop: Int): Future[Matches] = {
-    val query = nameStrings.filter { ns => ns.name.like(nameStringQuery) }
-    val queryCount = query.countDistinct
-    val queryPortion = query.drop(drop).take(take)
-    for {
-      portion <- db.run(queryPortion.result)
-      count <- db.run(queryCount.result)
-    } yield Matches(count, portion.map { n => Match(n) }, nameStringQuery)
+    if (nameStringQuery.length <= 4) Future.successful(Matches.empty(nameStringQuery))
+    else {
+      val query = nameStrings.filter { ns => ns.name.like(nameStringQuery) }
+      val queryCount = query.countDistinct
+      val queryPortion = query.drop(drop).take(take)
+      for {
+        portion <- db.run(queryPortion.result)
+        count <- db.run(queryCount.result)
+      } yield Matches(count, portion.map { n => Match(n) }, nameStringQuery)
+    }
   }
 
   def resolveExact(exact: String, take: Int, drop: Int): Future[Matches] = {

@@ -17,5 +17,10 @@ package object model {
 
   case class Matches(total: Long, matches: Seq[Match],
                      suppliedNameString: String, localId: Option[LocalId] = None)
+  object Matches {
+    def empty(suppliedNameString: String): Matches = {
+      Matches(0, Seq(), suppliedNameString)
+    }
+  }
 
 }
