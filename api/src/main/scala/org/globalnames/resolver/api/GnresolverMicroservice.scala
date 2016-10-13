@@ -3,6 +3,7 @@ package resolver
 package api
 
 import java.io.File
+import java.nio.file.Paths
 import java.util.UUID
 
 import akka.actor.ActorSystem
@@ -15,7 +16,7 @@ import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.{Config, ConfigFactory}
 import Resolver.NameRequest
 import QueryParser.{Modifier, SearchPart}
-import model.{DataSource, Name, NameString, NameStrings, NameStringIndex, Kind, Match, Matches}
+import model.{DataSource, Kind, Match, Matches, Name, NameString, NameStringIndex, NameStrings}
 import slick.driver.PostgresDriver.api._
 import spray.json.{DefaultJsonProtocol, _}
 
@@ -178,7 +179,14 @@ object GnresolverMicroservice extends App with Service {
   override val database = Database.forConfig("postgresql")
   override val matcher = {
     logger.info("Matcher: restoring")
-    val dumpPath = config.getString("gnresolver.gnmatcher-dump-path")
+    val dumpPath = {
+      val dumpFolder = {
+        val folder = config.getString("gnresolver.gnmatcher-dump-folder")
+        folder.isEmpty ? System.getProperty("java.io.tmpdir") | folder
+      }
+      val dumpFile = config.getString("gnresolver.gnmatcher-dump-file")
+      Paths.get(dumpFolder, dumpFile).toString
+    }
     val useDump = config.getBoolean("gnresolver.gnmatcher-use-dump")
     logger.info(s"Matcher: using dump file '$dumpPath' -- $useDump")
     def createMatcher = {
