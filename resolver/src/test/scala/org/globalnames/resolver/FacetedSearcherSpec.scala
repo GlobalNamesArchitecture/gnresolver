@@ -54,7 +54,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("returns no matches when empty string is provided") {
         whenReady(searcher.resolveCanonical("", takeDefault, dropDefault)) { res =>
-          res.matches shouldBe 'empty
+          res.matches shouldBe empty
         }
       }
 
@@ -96,7 +96,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("returns no matches when empty string is provided") {
         whenReady(searcher.resolveAuthor("", takeDefault, dropDefault)) { res =>
-          res.matches shouldBe 'empty
+          res.matches shouldBe empty
         }
       }
     }
@@ -114,7 +114,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("returns no matches when empty string is provided") {
         whenReady(searcher.resolveYear("", takeDefault, dropDefault)) { res =>
-          res.matches shouldBe 'empty
+          res.matches shouldBe empty
         }
       }
     }
@@ -133,7 +133,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("returns no matches when empty string is provided") {
         whenReady(searcher.resolveUninomial("", takeDefault, dropDefault)) { res =>
-          res.matches shouldBe 'empty
+          res.matches shouldBe empty
         }
       }
     }
@@ -152,7 +152,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("returns no matches when empty string is provided") {
         whenReady(searcher.resolveGenus("", takeDefault, dropDefault)) { res =>
-          res.matches shouldBe 'empty
+          res.matches shouldBe empty
         }
       }
     }
@@ -171,7 +171,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("returns no matches when empty string is provided") {
         whenReady(searcher.resolveSpecies("", takeDefault, dropDefault)) { res =>
-          res.matches shouldBe 'empty
+          res.matches shouldBe empty
         }
       }
     }
@@ -189,7 +189,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("returns no matches when empty string is provided") {
         whenReady(searcher.resolveSubspecies("", takeDefault, dropDefault)) { res =>
-          res.matches shouldBe 'empty
+          res.matches shouldBe empty
         }
       }
     }
@@ -204,7 +204,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("returns no matches when empty string is provided") {
         whenReady(searcher.resolveNameStrings("", takeDefault, dropDefault)) { res =>
-          res.matches shouldBe 'empty
+          res.matches shouldBe empty
         }
       }
 
