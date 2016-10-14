@@ -24,6 +24,7 @@ val jodaConvert     = "org.joda"           %  "joda-convert"                    
 val scalatest       = "org.scalatest"      %% "scalatest"                           % "2.2.6"     % Test
 val akkaHttpTestkit = "com.typesafe.akka"  %% "akka-http-testkit"                   % akkaV       % Test
 val pegdown         = "org.pegdown"        %  "pegdown"                             % "1.6.0"     % Test
+val commonsio       = "commons-io"         %  "commons-io"                          % "2.5"       % Test
 
 //////////////////////////////////////////////////////////////
 
@@ -165,7 +166,7 @@ lazy val api = (project in file("./api"))
 
     mainClass in reStart := Some("org.globalnames.resolver.api.GnresolverMicroservice"),
     libraryDependencies ++= Seq(akkaActor, akkaHttpCore, akkaHttp, sprayJson, akkaHttpTestkit,
-                                scalatest, jodaTime, jodaConvert),
+                                scalatest, jodaTime, jodaConvert, commonsio),
 
     mainClass in assembly := Some("org.globalnames.resolver.api.GnresolverMicroservice"),
     test in assembly := {},

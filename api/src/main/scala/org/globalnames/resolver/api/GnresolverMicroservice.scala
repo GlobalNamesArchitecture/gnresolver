@@ -121,7 +121,7 @@ trait Service extends Protocols {
       pathPrefix("api") {
         path("version") {
           complete {
-            BuildInfo.version
+            Map("version" -> BuildInfo.version)
           }
         } ~ path("name_resolvers") {
           val getNameResolvers =

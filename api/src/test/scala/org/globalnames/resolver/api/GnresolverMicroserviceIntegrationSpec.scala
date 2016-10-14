@@ -2,16 +2,23 @@ package org.globalnames
 package resolver
 package api
 
+import java.io.File
+import java.nio.file.Paths
+
 import akka.event.Logging
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.ContentTypes._
-import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.{HttpEntity, StatusCode}
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import com.typesafe.config.ConfigFactory
-import model.Matches
+import org.apache.commons.io.FileUtils
+import org.globalnames.resolver.model.Matches
 import slick.driver.PostgresDriver.api._
+import scala.collection.JavaConversions._
+import com.typesafe.config.{ConfigFactory, ConfigRenderOptions}
+import spray.json._
+import DefaultJsonProtocol._
 
 class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfig
                                                with Service with ScalatestRouteTest {
@@ -24,12 +31,33 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
   describe("GnresolverMicroservice") {
     seed("test_api", "GnresolverMicroserviceIntegrationSpec")
 
-    describe("/version") {
-      it("returns version") {
-        Get("/api/version") ~> routes ~> check {
-          status shouldBe OK
-          responseAs[String] shouldBe BuildInfo.version
+    def test(method: String, url: String, statusCode: StatusCode, responseBody: JsValue): Unit = {
+      it(s"handles $method $url") {
+        val request = method match {
+          case "GET" => Get(url)
+          case "POST" => Post(url)
+          case meth => fail(s"Method is not supported in testing: $meth")
         }
+
+        request ~> routes ~> check {
+          status shouldBe statusCode
+          responseAs[String].parseJson shouldBe responseBody
+        }
+      }
+    }
+
+    val testFolder = "test_data"
+    val testFolderUri = ClassLoader.getSystemResource(testFolder).toURI
+    FileUtils.listFiles(new File(testFolderUri), Array("conf"), true).foreach { f =>
+      val testFilePath = Paths.get(testFolder, testFolderUri.relativize(f.toURI).getPath)
+                              .normalize.toString
+      val conf = ConfigFactory.load(testFilePath)
+
+      val statusCode: StatusCode = conf.getInt("response.status")
+      val responseBody = conf.getObject("response.body").render(ConfigRenderOptions.concise)
+      for { url <- conf.getStringList("request.urls")
+            method <- conf.getStringList("request.methods") } {
+        test(method, url, statusCode, responseBody.parseJson)
       }
     }
 
