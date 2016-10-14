@@ -34,9 +34,9 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
   describe("GnresolverMicroservice") {
     seed("test_api", "GnresolverMicroserviceIntegrationSpec")
 
-    def test(method: String, url: String,
+    def test(description: String, method: String, url: String,
              statusCode: StatusCode, responseBody: Option[JsValue]): Unit = {
-      it(s"handles $method $url") {
+        it(s"$method $url ~> $statusCode") {
         val request = method match {
           case "GET" => Get(url)
           case "POST" => Post(url)
@@ -59,13 +59,16 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
                               .normalize.toString
       val conf = ConfigFactory.load(testFilePath)
 
+      val description = conf.getString("description")
       val statusCode: StatusCode = conf.getInt("response.status")
       val responseBody = conf.getOptionalObject("response.body").map { obj =>
                            obj.render(ConfigRenderOptions.concise).parseJson
                          }
-      for { url <- conf.getStringList("request.urls")
-            method <- conf.getStringList("request.methods") } {
-        test(method, url, statusCode, responseBody)
+      describe(description) {
+        for { url <- conf.getStringList("request.urls")
+              method <- conf.getStringList("request.methods") } {
+          test(description, method, url, statusCode, responseBody)
+        }
       }
     }
 
