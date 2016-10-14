@@ -15,10 +15,13 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.apache.commons.io.FileUtils
 import org.globalnames.resolver.model.Matches
 import slick.driver.PostgresDriver.api._
+
 import scala.collection.JavaConversions._
 import com.typesafe.config.{ConfigFactory, ConfigRenderOptions}
 import spray.json._
 import DefaultJsonProtocol._
+import Ops._
+import akka.http.scaladsl.server.Route
 
 class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfig
                                                with Service with ScalatestRouteTest {
@@ -31,7 +34,8 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
   describe("GnresolverMicroservice") {
     seed("test_api", "GnresolverMicroserviceIntegrationSpec")
 
-    def test(method: String, url: String, statusCode: StatusCode, responseBody: JsValue): Unit = {
+    def test(method: String, url: String,
+             statusCode: StatusCode, responseBody: Option[JsValue]): Unit = {
       it(s"handles $method $url") {
         val request = method match {
           case "GET" => Get(url)
@@ -39,9 +43,11 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
           case meth => fail(s"Method is not supported in testing: $meth")
         }
 
-        request ~> routes ~> check {
+        request ~> Route.seal(routes) ~> check {
           status shouldBe statusCode
-          responseAs[String].parseJson shouldBe responseBody
+          if (responseBody.isDefined) {
+            responseAs[String].parseJson shouldBe responseBody.value
+          }
         }
       }
     }
@@ -54,10 +60,12 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       val conf = ConfigFactory.load(testFilePath)
 
       val statusCode: StatusCode = conf.getInt("response.status")
-      val responseBody = conf.getObject("response.body").render(ConfigRenderOptions.concise)
+      val responseBody = conf.getOptionalObject("response.body").map { obj =>
+                           obj.render(ConfigRenderOptions.concise).parseJson
+                         }
       for { url <- conf.getStringList("request.urls")
             method <- conf.getStringList("request.methods") } {
-        test(method, url, statusCode, responseBody.parseJson)
+        test(method, url, statusCode, responseBody)
       }
     }
 
