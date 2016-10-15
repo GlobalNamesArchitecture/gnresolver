@@ -64,7 +64,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       val responseBody = conf.getOptionalObject("response.body").map { obj =>
                            obj.render(ConfigRenderOptions.concise).parseJson
                          }
-      describe(description) {
+      describe(s"$description ($testFilePath)") {
         for { url <- conf.getStringList("request.urls")
               method <- conf.getStringList("request.methods") } {
           test(description, method, url, statusCode, responseBody)
