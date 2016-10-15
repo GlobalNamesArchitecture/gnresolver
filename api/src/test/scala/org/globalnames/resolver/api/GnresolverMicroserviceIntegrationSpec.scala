@@ -72,46 +72,6 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       }
     }
 
-    describe("/name_strings") {
-      describe("access by UUID") {
-        it("returns one record if found") {
-          Get("/api/name_strings/b701ec9e-efb0-5d5b-bf03-b920c00d0a77") ~> routes ~> check {
-            status shouldBe OK
-            val response = responseAs[Matches]
-            response.matches should have size 1
-            response.matches(0).nameString.name.value shouldBe "Favorinus horridus"
-          }
-        }
-
-        it("works with capitalized UUIDs") {
-          Get("/api/name_strings/B701EC9E-EFB0-5D5B-BF03-B920C00D0A77") ~> routes ~> check {
-            status shouldBe OK
-            val response = responseAs[Matches]
-            response.matches should have size 1
-            response.matches(0).nameString.name.value shouldBe "Favorinus horridus"
-          }
-        }
-
-        it("returns no records with unknown UUID") {
-          Get("/api/name_strings/aaaaaaaa-efb0-5d5b-bf03-b920c00d0a77") ~> routes ~> check {
-            status shouldBe OK
-            val response = responseAs[Matches]
-            response.matches shouldBe empty
-          }
-        }
-
-        it("returns no matches with bad UUIDS") {
-          val uuids = Seq("aaaaaaaa-efb0", "aaaaaa-efb0/abc/uh", "{}[]ac")
-          for (uuid <- uuids) {
-            Get("/api/name_strings/" + uuid) ~> routes ~> check {
-              status shouldBe OK
-              responseAs[Matches] shouldBe Matches.empty(Path(uuid).toString)
-            }
-          }
-        }
-      }
-    }
-
     describe("/name_resolvers") {
       describe("access by 'names' parameter") {
         describe("GET method") {
