@@ -165,7 +165,7 @@
         <parameters><parameter name="maxMethods"><![CDATA[30]]></parameter></parameters>
     </check>
 
-    <check level="error" class="org.scalastyle.scalariform.MagicNumberChecker" enabled="true">
+    <check level="error" class="org.scalastyle.scalariform.MagicNumberChecker" enabled="false">
         <parameters><parameter name="ignore">-1,0,1,2,3</parameter></parameters>
     </check>
 

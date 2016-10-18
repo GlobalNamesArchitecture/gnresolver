@@ -6,12 +6,13 @@ import org.scalatest._
 import org.scalatest.concurrent.{PatienceConfiguration, ScalaFutures}
 import org.scalatest.time.{Millis, Seconds, Span}
 import org.slf4j.{Logger, LoggerFactory}
+import org.scalatest.mock.MockitoSugar
 
 import scala.sys.process.Process
 
-trait SpecConfig extends FunSpec with GivenWhenThen with Matchers with OptionValues
-                    with BeforeAndAfterEach with BeforeAndAfterAll with ScalaFutures
-                    with PatienceConfiguration {
+trait SpecConfig extends FunSpec with MockitoSugar with GivenWhenThen with Matchers
+                    with OptionValues with BeforeAndAfterEach with BeforeAndAfterAll
+                    with ScalaFutures with PatienceConfiguration {
   protected val log: Logger = LoggerFactory.getLogger(getClass)
 
   implicit val defaultPatience: PatienceConfig = {

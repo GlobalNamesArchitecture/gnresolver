@@ -25,6 +25,7 @@ val scalatest       = "org.scalatest"      %% "scalatest"                       
 val akkaHttpTestkit = "com.typesafe.akka"  %% "akka-http-testkit"                   % akkaV       % Test
 val pegdown         = "org.pegdown"        %  "pegdown"                             % "1.6.0"     % Test
 val commonsio       = "commons-io"         %  "commons-io"                          % "2.5"       % Test
+val mockito         = "org.mockito"        %  "mockito-core"                        % "2.2.5"     % Test
 
 //////////////////////////////////////////////////////////////
 
@@ -139,7 +140,7 @@ lazy val resolver = (project in file("./resolver"))
     test in assembly := {},
 
     libraryDependencies ++= Seq(slick, logback, postgresql, hikariSlick, gnparser, gnmatcher,
-                                scalatest, jodaTime, jodaConvert)
+                                scalatest, jodaTime, jodaConvert, mockito)
   )
 
 lazy val benchmark = (project in file("./benchmark"))
@@ -166,7 +167,7 @@ lazy val api = (project in file("./api"))
 
     mainClass in reStart := Some("org.globalnames.resolver.api.GnresolverMicroservice"),
     libraryDependencies ++= Seq(akkaActor, akkaHttpCore, akkaHttp, sprayJson, akkaHttpTestkit,
-                                scalatest, jodaTime, jodaConvert, commonsio),
+                                scalatest, jodaTime, jodaConvert, commonsio, mockito),
 
     mainClass in assembly := Some("org.globalnames.resolver.api.GnresolverMicroservice"),
     test in assembly := {},

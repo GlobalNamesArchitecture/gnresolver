@@ -21,7 +21,8 @@ class FacetedSearcher(db: Database) {
   private val dataSources = TableQuery[DataSources]
   private val nameStringIndicies = TableQuery[NameStringIndices]
 
-  def resolveCanonical(canonicalName: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveCanonical(canonicalName: String,
+                                         take: Int, drop: Int): Future[Matches] = {
     val canonicalNameUuid = gen.generate(canonicalName)
     val queryByCanonicalName = nameStrings.filter { x =>
       x.canonicalUuid === canonicalNameUuid
@@ -34,7 +35,8 @@ class FacetedSearcher(db: Database) {
     } yield Matches(count, portion.map { n => Match(n) }, canonicalName)
   }
 
-  def resolveCanonicalLike(canonicalName: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveCanonicalLike(canonicalName: String,
+                                             take: Int, drop: Int): Future[Matches] = {
     val canonicalNameLike = canonicalName + "%"
     if (canonicalName.length <= 3) Future.successful(Matches.empty(canonicalNameLike))
     else {
@@ -50,7 +52,8 @@ class FacetedSearcher(db: Database) {
     }
   }
 
-  def resolveAuthor(authorName: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveAuthor(authorName: String,
+                                      take: Int, drop: Int): Future[Matches] = {
     val query = authorWords.filter { x => x.authorWord === authorName }
                            .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -62,7 +65,7 @@ class FacetedSearcher(db: Database) {
     } yield Matches(count, portion.map { n => Match(n) }, authorName)
   }
 
-  def resolveYear(year: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveYear(year: String, take: Int, drop: Int): Future[Matches] = {
     val query = yearWords.filter { x => x.yearWord === year }
                          .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -74,7 +77,8 @@ class FacetedSearcher(db: Database) {
     } yield Matches(count, portion.map { n => Match(n) }, year)
   }
 
-  def resolveUninomial(uninomial: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveUninomial(uninomial: String,
+                                         take: Int, drop: Int): Future[Matches] = {
     val query = uninomialWords.filter { x => x.uninomialWord === uninomial }
                               .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -86,7 +90,8 @@ class FacetedSearcher(db: Database) {
     } yield Matches(count, portion.map { n => Match(n) }, uninomial)
   }
 
-  def resolveGenus(genus: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveGenus(genus: String,
+                                     take: Int, drop: Int): Future[Matches] = {
     val query = genusWords.filter { x => x.genusWord === genus }
                           .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -98,7 +103,7 @@ class FacetedSearcher(db: Database) {
     } yield Matches(count, portion.map { n => Match(n) }, genus)
   }
 
-  def resolveSpecies(species: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveSpecies(species: String, take: Int, drop: Int): Future[Matches] = {
     val query = speciesWords.filter { x => x.speciesWord === species }
                             .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -110,7 +115,8 @@ class FacetedSearcher(db: Database) {
     } yield Matches(count, portion.map { n => Match(n) }, species)
   }
 
-  def resolveSubspecies(subspecies: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveSubspecies(subspecies: String,
+                                          take: Int, drop: Int): Future[Matches] = {
     val query = subspeciesWords.filter { x => x.subspeciesWord === subspecies }
                                .map { _.nameStringUuid }
     val query2 = nameStrings.filter { ns => ns.id.in(query) }
@@ -122,7 +128,8 @@ class FacetedSearcher(db: Database) {
     } yield Matches(count, portion.map { n => Match(n) }, subspecies)
   }
 
-  def resolveNameStrings(nameStringQuery: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveNameStrings(nameStringQuery: String,
+                                           take: Int, drop: Int): Future[Matches] = {
     val query = nameStrings.filter { ns => ns.name === nameStringQuery }
     val queryCount = query.countDistinct
     val queryPortion = query.drop(drop).take(take)
@@ -132,7 +139,8 @@ class FacetedSearcher(db: Database) {
     } yield Matches(count, portion.map { n => Match(n) }, nameStringQuery)
   }
 
-  def resolveNameStringsLike(nameStringQuery: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveNameStringsLike(nameStringQuery: String,
+                                               take: Int, drop: Int): Future[Matches] = {
     val nameStringQueryLike = nameStringQuery + "%"
     if (nameStringQuery.length <= 3) Future.successful(Matches.empty(nameStringQueryLike))
     else {
@@ -146,7 +154,7 @@ class FacetedSearcher(db: Database) {
     }
   }
 
-  def resolveExact(exact: String, take: Int, drop: Int): Future[Matches] = {
+  private[resolver] def resolveExact(exact: String, take: Int, drop: Int): Future[Matches] = {
     val query = nameStrings.filter { ns => ns.canonical === exact || ns.name === exact }
     val queryCount = query.countDistinct
     val queryPortion = query.drop(drop).take(take)

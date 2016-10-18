@@ -94,6 +94,10 @@ class Resolver(db: Database, matcher: Matcher) {
     }
   }
 
+  def resolveString(name: String, take: Int, drop: Int): Future[Matches] = {
+    resolveStrings(Seq(name)).map { _.head }
+  }
+
   def resolveStrings(names: Seq[String]): Future[Seq[Matches]] = {
     resolve(names.map { n => NameRequest(n, None) }, Vector())
   }
