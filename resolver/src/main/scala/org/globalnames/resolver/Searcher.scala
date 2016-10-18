@@ -16,17 +16,19 @@ case class Searcher(resolver: Resolver, facetedSearcher: FacetedSearcher) {
     }
   }
 
-  def resolve(value: String, modifier: Modifier,
+  def resolve(value: String, modifier: Modifier, wildcard: Boolean = false,
               take: Int = 50, drop: Int = 0): Future[Matches] = {
     val takeActual = take.min(50).max(0)
     val dropActual = drop.max(0)
     val resolverFun: (String, Int, Int) => Future[Matches] = modifier match {
       case NoModifier => resolver.resolveString
       case ExactModifier => facetedSearcher.resolveExact
-      case NameStringModifier(true) => facetedSearcher.resolveNameStringsLike
-      case NameStringModifier(false) => facetedSearcher.resolveNameStrings
-      case CanonicalModifier(true) => facetedSearcher.resolveCanonicalLike
-      case CanonicalModifier(false) => facetedSearcher.resolveCanonical
+      case NameStringModifier =>
+        if (wildcard) facetedSearcher.resolveNameStringsLike
+        else facetedSearcher.resolveNameStrings
+      case CanonicalModifier =>
+        if (wildcard) facetedSearcher.resolveCanonicalLike
+        else facetedSearcher.resolveCanonical
       case UninomialModifier => facetedSearcher.resolveUninomial
       case GenusModifier => facetedSearcher.resolveGenus
       case SpeciesModifier => facetedSearcher.resolveSpecies
@@ -42,8 +44,8 @@ object Searcher {
   sealed trait Modifier
   case object NoModifier extends Modifier
   case object ExactModifier extends Modifier
-  case class NameStringModifier(wildcard: Boolean) extends Modifier
-  case class CanonicalModifier(wildcard: Boolean) extends Modifier
+  case object NameStringModifier extends Modifier
+  case object CanonicalModifier extends Modifier
   case object UninomialModifier extends Modifier
   case object GenusModifier extends Modifier
   case object SpeciesModifier extends Modifier

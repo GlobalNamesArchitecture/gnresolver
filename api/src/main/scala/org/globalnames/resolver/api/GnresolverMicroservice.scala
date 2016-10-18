@@ -15,7 +15,7 @@ import akka.http.scaladsl.unmarshalling.Unmarshaller
 import akka.stream.{ActorMaterializer, Materializer}
 import com.typesafe.config.{Config, ConfigFactory}
 import Resolver.NameRequest
-import QueryParser.{Modifier, SearchPart}
+import QueryParser.SearchPart
 import model.{DataSource, Kind, Match, Matches, Name, NameString, NameStringIndex, NameStrings}
 import slick.driver.PostgresDriver.api._
 import spray.json.{DefaultJsonProtocol, _}
@@ -81,39 +81,11 @@ trait Service extends Protocols {
   val matcher: Matcher
   lazy val resolver = new Resolver(database, matcher)
   lazy val facetedSearcher = new FacetedSearcher(database)
+  lazy val searcher: Searcher = new Searcher(resolver, facetedSearcher)
   lazy val crossMap = new CrossMap(database)
 
   def resolve(search: SearchPart, take: Int, drop: Int): Future[Matches] = {
-    search.modifier match {
-      case Modifier(QueryParser.noModifier) =>
-        resolver.resolveStrings(Seq(search.contents)).map { _.head }
-      case Modifier(QueryParser.canonicalModifier) =>
-        if (search.wildcard) {
-          facetedSearcher.resolveCanonicalLike(search.contents, take, drop)
-        } else {
-          facetedSearcher.resolveCanonical(search.contents, take, drop)
-        }
-      case Modifier(QueryParser.authorModifier) =>
-        facetedSearcher.resolveAuthor(search.contents, take, drop)
-      case Modifier(QueryParser.yearModifier) =>
-        facetedSearcher.resolveYear(search.contents, take, drop)
-      case Modifier(QueryParser.uninomialModifier) =>
-        facetedSearcher.resolveUninomial(search.contents, take, drop)
-      case Modifier(QueryParser.genusModifier) =>
-        facetedSearcher.resolveGenus(search.contents, take, drop)
-      case Modifier(QueryParser.speciesModifier) =>
-        facetedSearcher.resolveSpecies(search.contents, take, drop)
-      case Modifier(QueryParser.subspeciesModifier) =>
-        facetedSearcher.resolveSubspecies(search.contents, take, drop)
-      case Modifier(QueryParser.nameStringModifier) =>
-        if (search.wildcard) {
-          facetedSearcher.resolveNameStringsLike(search.contents, take, drop)
-        } else {
-          facetedSearcher.resolveNameStrings(search.contents, take, drop)
-        }
-      case Modifier(QueryParser.exactModifier) =>
-        facetedSearcher.resolveExact(search.contents, take, drop)
-    }
+    searcher.resolve(search.contents, search.modifier, search.wildcard, take, drop)
   }
 
   val routes = {

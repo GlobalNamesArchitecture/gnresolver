@@ -44,7 +44,7 @@ class FacetedSearcherSpec extends SpecConfig {
   describe("FacetedSearcher") {
     describe(".resolveCanonical") {
       it("resolves exact") {
-        whenReady(searcher.resolve("Aaadonta constricta", CanonicalModifier(false))) {
+        whenReady(searcher.resolve("Aaadonta constricta", CanonicalModifier)) {
           res =>
             res.matches should have size 3
             res.matches should contain theSameElementsAs Seq(
@@ -56,8 +56,7 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves exact with multiple spaces input") {
-        whenReady(searcher.resolve(" \t Aaadonta   constricta    ",
-                                   CanonicalModifier(false))) { res =>
+        whenReady(searcher.resolve(" \t Aaadonta   constricta    ", CanonicalModifier)) { res =>
           res.matches should have size 3
           res.matches should contain theSameElementsAs Seq(
             Match(ns66d68908fe7d524b87ec86e5447993a0),
@@ -68,19 +67,19 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves exact with wildcard inside input") {
-        whenReady(searcher.resolve("Aaadonta %constricta", CanonicalModifier(false))) {
+        whenReady(searcher.resolve("Aaadonta %constricta", CanonicalModifier)) {
           res => res.matches shouldBe empty
         }
       }
 
       it("resolves exact with wildcard as input") {
-        whenReady(searcher.resolve("%", CanonicalModifier(false))) { res =>
+        whenReady(searcher.resolve("%", CanonicalModifier)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves wildcard") {
-        whenReady(searcher.resolve("Aaadonta constricta ba", CanonicalModifier(true))) { res =>
+        whenReady(searcher.resolve("Aaadonta constricta ba", CanonicalModifier, true)) { res =>
             res.matches should have size 2
             res.matches should contain theSameElementsAs Seq(
               Match(ns5a68f4ec6121553e88433d602089ec88),
@@ -91,13 +90,13 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("resolves no mathches when string request of length less than 4 is provided") {
         val query = "Aaa"
-        whenReady(searcher.resolve(query, CanonicalModifier(true))) { res =>
+        whenReady(searcher.resolve(query, CanonicalModifier, true)) { res =>
           res shouldBe Matches.empty(query + "%")
         }
       }
 
       it("returns no wildcarded matches when empty string is provided") {
-        whenReady(searcher.resolve("", CanonicalModifier(true))) { res =>
+        whenReady(searcher.resolve("", CanonicalModifier, true)) { res =>
           res shouldBe Matches.empty("%")
         }
       }
@@ -245,33 +244,32 @@ class FacetedSearcherSpec extends SpecConfig {
 
     describe(".resolveNameStrings") {
       it("resolves exact") {
-        whenReady(searcher.resolve("Aaadonta constricta babelthuapi",
-                                   NameStringModifier(false))) { res =>
+        whenReady(searcher.resolve("Aaadonta constricta babelthuapi", NameStringModifier)) { res =>
             res.matches should contain only Match(ns5a68f4ec6121553e88433d602089ec88)
         }
       }
 
       it("returns no matches when empty string is provided") {
-        whenReady(searcher.resolve("", NameStringModifier(false))) { res =>
+        whenReady(searcher.resolve("", NameStringModifier)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves exact with non-existing input") {
-        whenReady(searcher.resolve("Pararara", CanonicalModifier(false))) { res =>
+        whenReady(searcher.resolve("Pararara", CanonicalModifier)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves no matches when empty string is provided") {
-        whenReady(searcher.resolve("", CanonicalModifier(false))) { res =>
+        whenReady(searcher.resolve("", CanonicalModifier)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves wildcard") {
         val query = "Aaadonta constricta komak"
-        whenReady(searcher.resolve(query, NameStringModifier(true))) { res =>
+        whenReady(searcher.resolve(query, NameStringModifier, true)) { res =>
           res.matches should have size 2
           res.matches should contain theSameElementsAs Seq(
             Match(ns51b7b1b207ba5a0ea65dc5ca402b58de),
@@ -282,19 +280,19 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("returns no wildcarded matches when empty string is provided") {
-        whenReady(searcher.resolve("", NameStringModifier(true))) { res =>
+        whenReady(searcher.resolve("", NameStringModifier, true)) { res =>
           res shouldBe Matches.empty("%")
         }
       }
 
       it("resolves nothing wildcard with non-existing stirng") {
-        whenReady(searcher.resolve("Pararara", CanonicalModifier(true))) { res =>
+        whenReady(searcher.resolve("Pararara", CanonicalModifier, true)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves wildcard with wildcard in begin of input") {
-        whenReady(searcher.resolve("%Aaadonta constricta ba", CanonicalModifier(true))) { res =>
+        whenReady(searcher.resolve("%Aaadonta constricta ba", CanonicalModifier, true)) { res =>
           res.matches should have size 2
           res.matches should contain theSameElementsAs Seq(
             Match(ns073bab6018165b5cb01887b4193db6f7),
@@ -304,14 +302,14 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves wildcard with wildcard in middle of input") {
-        whenReady(searcher.resolve("Aaadonta % constricta ba", CanonicalModifier(true))) { res =>
+        whenReady(searcher.resolve("Aaadonta % constricta ba", CanonicalModifier, true)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves no matches when string request of length less than 4 is provided") {
         val query = "Aaa"
-        whenReady(searcher.resolve(query, NameStringModifier(true))) { res =>
+        whenReady(searcher.resolve(query, NameStringModifier, true)) { res =>
           res shouldBe Matches.empty(query + "%")
         }
       }
