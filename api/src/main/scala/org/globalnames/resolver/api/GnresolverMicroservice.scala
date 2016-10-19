@@ -25,7 +25,7 @@ import scala.concurrent.duration._
 import scalaz._
 import Scalaz.{get => _, _}
 
-trait Protocols extends DefaultJsonProtocol {
+trait Protocols extends DefaultJsonProtocol with NullOptions {
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
     def write(x: UUID): JsString = JsString(x.toString)
     def read(value: JsValue): UUID = value match {
@@ -48,7 +48,30 @@ trait Protocols extends DefaultJsonProtocol {
   implicit val nameStringFormat = jsonFormat2(NameString.apply)
   implicit val nameStringIndexFormat = jsonFormat3(NameStringIndex.apply)
   implicit val dataSourceFormat = jsonFormat3(DataSource.apply)
-  implicit val matchFormat = jsonFormat3(Match.apply)
+  implicit object MatchJsonFormat extends RootJsonFormat[Match] {
+    def write(m: Match): JsObject = JsObject(
+        "nameStringUuid" -> JsString(m.nameString.name.id.toString)
+      , "nameString" -> JsString(m.nameString.name.value)
+      , "canonicalNameUuid" -> m.nameString.canonicalName.map { x => JsString(x.id.toString) }
+                                                         .getOrElse(JsNull)
+      , "canonicalName" -> m.nameString.canonicalName.map { x => JsString(x.value) }
+                                                     .getOrElse(JsNull)
+      , "dataSourceId" -> JsNumber(m.dataSourceId)
+      , "kind" -> KindJsonFormat.write(m.kind)
+    )
+
+    def read(m: JsValue): Match =
+      m.asJsObject.getFields("nameStringUuid", "nameString", "canonicalNameUuid", "canonicalName",
+                             "dataSourceId", "kind") match {
+        case Seq(JsString(nsUuid), JsString(ns), cnUuidJs, cnJs, JsNumber(dsi), kindJs) =>
+          val canonical =
+            for { cnUuidOpt <- cnUuidJs.convertTo[Option[UUID]]
+                  cnOpt <- cnJs.convertTo[Option[String]] } yield Name(cnUuidOpt, cnOpt)
+          val nameString = NameString(Name(UUID.fromString(nsUuid), ns), canonical)
+          Match(nameString, dsi.toInt, kindJs.convertTo[Kind])
+        case _ => deserializationError("Match expected")
+      }
+  }
   implicit val matchesFormat = jsonFormat4(Matches.apply)
   implicit val nameRequestFormat = jsonFormat2(NameRequest.apply)
 
