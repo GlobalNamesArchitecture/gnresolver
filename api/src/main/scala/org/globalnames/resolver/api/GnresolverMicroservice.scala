@@ -37,10 +37,13 @@ trait Protocols extends DefaultJsonProtocol with NullOptions {
   implicit object KindJsonFormat extends RootJsonFormat[Kind] {
     def write(x: Kind): JsString = JsString(x.toString)
     def read(value: JsValue): Kind = value match {
-      case JsString("None") => Kind.None
-      case JsString("Fuzzy") => Kind.Fuzzy
-      case JsString("ExactNameMatchByUUID") => Kind.ExactNameMatchByUUID
-      case JsString("ExactCanonicalNameMatchByUUID") => Kind.ExactCanonicalNameMatchByUUID
+      case JsString(js) => js match {
+        case "None" => Kind.None
+        case "Fuzzy" => Kind.Fuzzy
+        case "ExactNameMatchByUUID" => Kind.ExactNameMatchByUUID
+        case "ExactCanonicalNameMatchByUUID" => Kind.ExactCanonicalNameMatchByUUID
+        case x => deserializationError("Expected Kind as JsString, but got " + x)
+      }
       case x => deserializationError("Expected Kind as JsString, but got " + x)
     }
   }
