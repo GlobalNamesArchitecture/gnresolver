@@ -116,7 +116,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
                 response(0).total shouldBe 1
                 response(0).matches(0).nameString.name.value shouldBe
                   "Galeodila somalica Caporiacco 1945"
-                response(0).matches(0).dataSourceId shouldBe 7
+                response(0).matches(0).dataSource.id shouldBe 7
             }
           }
         }
@@ -163,7 +163,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
               response(0).total shouldBe 1
               response(0).matches(0).nameString.name.value shouldBe
                 "Galeodila somalica Caporiacco 1945"
-              response(0).matches(0).dataSourceId shouldBe 7
+              response(0).matches(0).dataSource.id shouldBe 7
             }
           }
         }

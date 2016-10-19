@@ -59,19 +59,23 @@ trait Protocols extends DefaultJsonProtocol with NullOptions {
                                                          .getOrElse(JsNull)
       , "canonicalName" -> m.nameString.canonicalName.map { x => JsString(x.value) }
                                                      .getOrElse(JsNull)
-      , "dataSourceId" -> JsNumber(m.dataSourceId)
+      , "dataSourceId" -> JsNumber(m.dataSource.id)
+      , "dataSourceTitle" -> JsString(m.dataSource.title)
       , "kind" -> KindJsonFormat.write(m.kind)
     )
 
     def read(m: JsValue): Match =
       m.asJsObject.getFields("nameStringUuid", "nameString", "canonicalNameUuid", "canonicalName",
-                             "dataSourceId", "kind") match {
-        case Seq(JsString(nsUuid), JsString(ns), cnUuidJs, cnJs, JsNumber(dsi), kindJs) =>
+                             "dataSourceId", "dataSourceTitle", "kind") match {
+        case Seq(JsString(nsUuid), JsString(ns), cnUuidJs, cnJs, JsNumber(dsi), JsString(dst),
+                 kindJs) =>
           val canonical =
             for { cnUuidOpt <- cnUuidJs.convertTo[Option[UUID]]
                   cnOpt <- cnJs.convertTo[Option[String]] } yield Name(cnUuidOpt, cnOpt)
           val nameString = NameString(Name(UUID.fromString(nsUuid), ns), canonical)
-          Match(nameString, dsi.toInt, kindJs.convertTo[Kind])
+          val dataSource = DataSource(dsi.toInt, dst, "")
+          val nameStringIndex = NameStringIndex(dataSource.id, nameString.name.id, None)
+          Match(nameString, dataSource, nameStringIndex, kindJs.convertTo[Kind])
         case _ => deserializationError("Match expected")
       }
   }
