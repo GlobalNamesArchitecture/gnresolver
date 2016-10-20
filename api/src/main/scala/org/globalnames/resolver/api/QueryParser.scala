@@ -18,7 +18,7 @@ object QueryParser extends RegexParsers {
   private val authorModifier = "au" ^^ { _ => AuthorModifier }
   private val yearModifier = "yr" ^^ { _ => YearModifier }
 
-  private def word = """[A-Za-z0-9]+""".r
+  private def word = s"""[^$wildcard]*""".r
 
   private def modifier: Parser[Modifier] =
     exactModifier | nameStringModifier | canonicalModifier |
@@ -28,20 +28,16 @@ object QueryParser extends RegexParsers {
   private def wildcard: String = "*"
 
   private def searchPartModifier: Parser[SearchPart] =
-    modifier ~ ":" ~ rep1(not(modifier) ~> word) ~
-    opt(wildcard) ^^ { case mod ~ _ ~ parts ~ wildcard =>
-      SearchPart(mod, parts.mkString(" "), wildcard.isDefined)
+    modifier ~ ":" ~ word ~ opt(wildcard) ^^ { case mod ~ _ ~ word ~ wildcard =>
+      SearchPart(mod, word, wildcard.isDefined)
     }
 
   private def searchPartNoModifier: Parser[SearchPart] =
-    s"""[^$wildcard]*""".r ~ opt(wildcard) ^^ { case contents ~ wildcard =>
+    word ~ opt(wildcard) ^^ { case contents ~ wildcard =>
       SearchPart(NoModifier, contents, wildcard.isDefined)
     }
 
   private def searchPart = searchPartModifier | searchPartNoModifier
-
-
-  private def searchQuery = rep1(searchPart)
 
   def result(text: String): SearchPart = parse(searchPart, text) match {
     case Success(sp, _) => sp

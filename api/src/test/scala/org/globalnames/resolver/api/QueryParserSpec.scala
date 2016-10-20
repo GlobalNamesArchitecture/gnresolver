@@ -20,7 +20,7 @@ class QueryParserSpec extends FunSpec {
           SearchPart(ExactModifier, "Pomatomus", false)
       }
 
-      it("recognises 'name string' modifier"){
+      it("recognises 'name string' modifier") {
         QueryParser.result("ns:Pomatomus") shouldBe
           SearchPart(NameStringModifier, "Pomatomus", false)
       }
@@ -84,38 +84,35 @@ class QueryParserSpec extends FunSpec {
           SearchPart(NoModifier, ":Something", false)
       }
 
-      it("ignores missplaced modifier") {
+      it("ignores misplaced modifier") {
         QueryParser.result("Something:ssp") shouldBe
           SearchPart(NoModifier, "Something:ssp", false)
       }
 
       it("ignores chained modifiers") {
         QueryParser.result("yr:sp:1887") shouldBe
-          SearchPart(NoModifier, "yr:sp:1887", false)
+          SearchPart(YearModifier, "sp:1887", false)
       }
 
       it("recognises wildcard ignoring bad modifiers") {
         QueryParser.result("yr:sp:1887*") shouldBe
-          SearchPart(NoModifier, "yr:sp:1887", true)
+          SearchPart(YearModifier, "sp:1887", true)
       }
-    }
 
-    it("is confused by text starting as the same modifier") {
-      pending
-      QueryParser.result("sp:spathulata") shouldBe
-        SearchPart(SpeciesModifier, "sp:spathulata", false)
-    }
+      it("recognizes text starting as the same modifier") {
+        QueryParser.result("sp:spathulata") shouldBe
+          SearchPart(SpeciesModifier, "spathulata", false)
+      }
 
-    it("is confused by text starting as a different modifier") {
-      pending
-      QueryParser.result("au:spathulata") shouldBe
-        SearchPart(NoModifier, "au:spathulata", false)
-    }
+      it("recognizes text starting as a different modifier") {
+        QueryParser.result("au:spathulata") shouldBe
+          SearchPart(AuthorModifier, "spathulata", false)
+      }
 
-    it("ignores modifier repeated without text") {
-      pending
-      QueryParser.result("yr:yr") shouldBe
-        SearchPart(NoModifier, "yr:yr", false)
+      it("ignores modifier repeated without text") {
+        QueryParser.result("yr:yr") shouldBe
+          SearchPart(YearModifier, "yr", false)
+      }
     }
   }
 }
