@@ -23,8 +23,7 @@ class NameStringIndicesSpec extends SpecConfig {
 
     describe("#dataSourceId") {
       it("returns an id of a data source") {
-        whenReady(conn.run(nameStringIndices
-          .map { _.dataSourceId }.result.head)) { res =>
+        whenReady(conn.run(nameStringIndices.map { _.dataSourceId }.result.head)) { res =>
           res shouldBe an[Integer]
         }
       }
@@ -32,8 +31,7 @@ class NameStringIndicesSpec extends SpecConfig {
 
     describe("#nameStringId") {
       it("returns an id of a name string") {
-        whenReady(conn.run(nameStringIndices
-          .map { _.nameStringId }.result.head)) { res =>
+        whenReady(conn.run(nameStringIndices.map { _.nameStringId }.result.head)) { res =>
           res shouldBe an[UUID]
         }
       }
@@ -42,9 +40,8 @@ class NameStringIndicesSpec extends SpecConfig {
     describe("#url") {
       describe("CONTEXT: url is given") {
         it("returns url link to the index data") {
-          whenReady(conn.run(nameStringIndices
-            .filter(!_.url.isEmpty)
-            .map { _.url }.result.head)) { res =>
+          whenReady(conn.run(nameStringIndices.filter { _.url.isDefined }
+                                              .map { _.url }.result.head)) { res =>
             res.value shouldBe a[String]
           }
         }
@@ -52,9 +49,8 @@ class NameStringIndicesSpec extends SpecConfig {
 
       describe("CONTEXT: url is missing") {
         it("returns None") {
-          whenReady(conn.run(nameStringIndices
-            .filter(_.url.isEmpty)
-            .map { _.url }.result.head)) { res =>
+          whenReady(conn.run(nameStringIndices.filter { _.url.isEmpty }
+                                              .map { _.url }.result.head)) { res =>
             res shouldBe None
           }
         }

@@ -30,9 +30,8 @@ class AuthorWordsSpec extends SpecConfig {
 
     describe("#nameStringUuid") {
       it("returns an name_string UUID") {
-        whenReady(conn.run(authorWords
-          .map { _.nameStringUuid }.result.head)) { res =>
-            res shouldBe an[UUID]
+        whenReady(conn.run(authorWords.map { _.nameStringUuid }.result.head)) { res =>
+          res shouldBe an[UUID]
         }
       }
     }

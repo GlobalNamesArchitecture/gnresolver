@@ -23,8 +23,7 @@ class NameStringsSpec extends SpecConfig {
 
     describe("#id") {
       it("returns an id of a name string") {
-        whenReady(conn.run(nameStrings
-          .map { _.id }.result.head)) { res =>
+        whenReady(conn.run(nameStrings.map { _.id }.result.head)) { res =>
           res shouldBe an[UUID]
         }
       }
@@ -32,8 +31,7 @@ class NameStringsSpec extends SpecConfig {
 
     describe("#name") {
       it("returns a name of a name string") {
-        whenReady(conn.run(nameStrings
-          .map { _.name }.result.head)) { res =>
+        whenReady(conn.run(nameStrings.map { _.name }.result.head)) { res =>
           res shouldBe a[String]
         }
       }
@@ -42,9 +40,8 @@ class NameStringsSpec extends SpecConfig {
     describe("#canonicalUuid") {
       describe("CONTEXT: canonical is given") {
         it("returns an optional canonicalUuid of a name string") {
-          whenReady(conn.run(nameStrings
-            .filter(!_.canonical.isEmpty)
-            .map { _.canonicalUuid }.result.head)) { res =>
+          whenReady(conn.run(nameStrings.filter { _.canonical.isDefined }
+                                        .map { _.canonicalUuid }.result.head)) { res =>
             res.value shouldBe an[UUID]
           }
         }
@@ -52,8 +49,8 @@ class NameStringsSpec extends SpecConfig {
 
       describe("CONTEXT: canonical is missing") {
         it("returns None") {
-          whenReady(conn.run(nameStrings
-            .filter { _.canonical.isEmpty }.map { _.canonicalUuid }.result.head)) { res =>
+          whenReady(conn.run(nameStrings.filter { _.canonical.isEmpty }
+                                        .map { _.canonicalUuid }.result.head)) { res =>
             res shouldBe None
           }
         }
@@ -63,9 +60,8 @@ class NameStringsSpec extends SpecConfig {
     describe("#canonical") {
       describe("CONTEXT: canonical is known") {
         it("returns an optional canonical of a name string") {
-          whenReady(conn.run(nameStrings
-            .filter(!_.canonical.isEmpty)
-            .map { _.canonical }.result.head)) { res =>
+          whenReady(conn.run(nameStrings.filter { _.canonical.isDefined }
+                                        .map { _.canonical }.result.head)) { res =>
             res.value shouldBe a[String]
           }
         }
@@ -73,8 +69,8 @@ class NameStringsSpec extends SpecConfig {
 
       describe("CONTEXT: canonical is missing") {
         it("returns None") {
-          whenReady(conn.run(a = nameStrings
-            .filter { _.canonical.isEmpty }.map { _.canonical }.result.head)) { res =>
+          whenReady(conn.run(nameStrings.filter { _.canonical.isEmpty }
+                                        .map { _.canonical }.result.head)) { res =>
             res shouldBe None
           }
         }
@@ -82,4 +78,3 @@ class NameStringsSpec extends SpecConfig {
     }
   }
 }
-

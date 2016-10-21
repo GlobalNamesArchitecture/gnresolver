@@ -23,7 +23,7 @@ class YearWordsSpec extends SpecConfig {
     describe("#yearWord") {
       it("returns an year word") {
         whenReady(conn.run(yearWords.map { _.yearWord }.result.head)) { res =>
-          res shouldBe "1926"
+          res shouldBe a[String]
         }
       }
     }
@@ -31,11 +31,9 @@ class YearWordsSpec extends SpecConfig {
     describe("#nameStringUuid") {
       it("returns an name_string UUID") {
         whenReady(conn.run(yearWords.map { _.nameStringUuid }.result.head)) { res =>
-          res shouldBe UUID.fromString("5477686c-260f-5762-82f5-1737d850f943")
+          res shouldBe an[UUID]
         }
       }
     }
   }
 }
-
-

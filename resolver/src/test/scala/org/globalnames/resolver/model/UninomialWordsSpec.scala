@@ -37,4 +37,3 @@ class UninomialWordsSpec extends SpecConfig {
     }
   }
 }
-

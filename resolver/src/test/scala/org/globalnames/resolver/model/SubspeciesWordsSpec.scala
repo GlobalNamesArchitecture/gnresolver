@@ -37,4 +37,3 @@ class SubspeciesWordsSpec extends SpecConfig {
     }
   }
 }
-
