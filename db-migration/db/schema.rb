@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20160802125615) do
+ActiveRecord::Schema.define(version: 20161017094344) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -40,9 +40,18 @@ ActiveRecord::Schema.define(version: 20160802125615) do
   end
 
   create_table "name_string_indices", id: false, force: :cascade do |t|
-    t.integer "data_source_id",             null: false
-    t.uuid    "name_string_id",             null: false
-    t.string  "url",            limit: 255
+    t.integer "data_source_id",                        null: false
+    t.uuid    "name_string_id",                        null: false
+    t.string  "url",                       limit: 255
+    t.string  "taxon_id",                  limit: 255, null: false
+    t.string  "global_id",                 limit: 255
+    t.string  "local_id",                  limit: 255
+    t.integer "nomenclatural_code_id"
+    t.string  "rank",                      limit: 255
+    t.string  "accepted_taxon_id",         limit: 255
+    t.text    "classification_path"
+    t.text    "classification_path_ids"
+    t.text    "classification_path_ranks"
   end
 
   add_index "name_string_indices", ["data_source_id"], name: "index_name_string_indices_on_data_source_id", using: :btree
