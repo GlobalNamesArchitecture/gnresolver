@@ -38,6 +38,8 @@ logs/
 tmp/
 VARS_PROD*.env
 pgpass*
+.ensime*
+.tags
 
 # Play Framework
 RUNNING_PID

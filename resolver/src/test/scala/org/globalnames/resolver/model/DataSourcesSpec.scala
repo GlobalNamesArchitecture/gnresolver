@@ -4,9 +4,6 @@ package model
 
 import slick.driver.PostgresDriver.api._
 
-import scala.concurrent.Await
-import scala.concurrent.duration._
-
 class DataSourcesSpec extends SpecConfig {
   val conn = Database.forConfig("postgresql-test")
   seed("test_resolver", "ResolverIntegrationSpec")
@@ -24,24 +21,24 @@ class DataSourcesSpec extends SpecConfig {
 
     describe("#id") {
       it("returns an id of a data source") {
-        whenReady(conn.run(dataSources.take(1).map { _.id }.result)) { res =>
-          res(0) shouldBe 1
+        whenReady(conn.run(dataSources.map { _.id }.result.head)) { res =>
+          res shouldBe an[Integer]
         }
       }
     }
 
     describe("#title") {
       it("returns a title of a data source") {
-        whenReady(conn.run(dataSources.take(1).map { _.title }.result)) { res =>
-          res(0) shouldBe "Catalogue of Life"
+        whenReady(conn.run(dataSources.map { _.title }.result.head)) { res =>
+          res shouldBe a[String]
         }
       }
     }
 
     describe("#description") {
       it("returns a description of a data source") {
-        whenReady(conn.run(dataSources.take(1).map { _.description }.result)) { res =>
-          res(0) should startWith ("[\"This release")
+        whenReady(conn.run(dataSources.map { _.description }.result.head)) { res =>
+          res shouldBe a[String]
         }
       }
     }
