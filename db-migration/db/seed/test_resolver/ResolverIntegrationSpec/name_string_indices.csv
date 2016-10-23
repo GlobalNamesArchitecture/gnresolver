@@ -4,14 +4,15 @@
 159	28a5cda5-dd02-5f39-b134-f4c0d2c2569b		106302217				Species	106302217
 168	3a5e56fe-be2a-5620-a418-141b66b38f08	http://www.organismnames.com/details.htm?lsid=1004112	126511950				Species	126511950
 169	405b2394-d89f-52df-a5bd-efd195f3b33f	http://www.ubio.org/browser/details.php?namebankID=2461268	95672765	urn:lsid:ubio.org:namebank:2461268	urn:lsid:ubio.org:namebank:2461268			95672765	|Pteroplatus arrogans		kingdom|
-166	7c9c1253-6b64-5269-b337-923111be3e0d	http://www.nlbif.nl/species_details.php?name=Amblyopone+armigera	131002325				Species	131002325
+168	7c4ed81b-18a1-53c2-8c3d-68f9057d02ad	http://www.organismnames.com/details.htm?lsid=4121843	129452855				Species	129452855
 169	7c9c1253-6b64-5269-b337-923111be3e0d	http://www.ubio.org/browser/details.php?namebankID=563274	94170901	urn:lsid:ubio.org:namebank:563274	urn:lsid:ubio.org:namebank:563274			94170901	|Amblyopone armigera		kingdom|
 170	7c9c1253-6b64-5269-b337-923111be3e0d		1954887		1954887			1954887	Animalia|Arthropoda|Insecta|Hymenoptera|Formicidae|Amblyopone|Amblyopone armigera		kingdom|phylum|class|order|family|genus|
-12	7c9c1253-6b64-5269-b337-923111be3e0d	http://eol.org/pages/491834	33858901		491834		species	33858901
+126	7c9c1253-6b64-5269-b337-923111be3e0d		sp1125			2	species	sp1125	Animalia|Arthropoda|Insecta|Hymenoptera|Formicidae|Amblyoponinae|Amblyopone|Amblyopone armigera	1|2|3|4|5|54|55|sp1125	kingdom|phylum|clase|order|family|tribe|genus|species
 1	7c9c1253-6b64-5269-b337-923111be3e0d		6882571				species	6882571	Animalia|Arthropoda|Insecta|Hymenoptera|Vespoidea|Formicidae|Amblyopone|Amblyopone armigera	21835313|21835328|21835526|21835737|21837535|21838844|21912201|6882571	kingdom|phylum|class|order|superfamily|family|genus|species
 3	7c9c1253-6b64-5269-b337-923111be3e0d		582834				Species	582834	Animalia|Bilateria|Protostomia|Ecdysozoa|Arthropoda|Hexapoda|Insecta|Pterygota|Neoptera|Holometabola|Hymenoptera|Apocrita|Aculeata|Vespoidea|Formicidae|Ponerinae|Amblyoponini|Amblyopone|Amblyopone armigera	202423|914154|914155|914158|82696|563886|99208|100500|563890|914213|152741|152864|709253|154248|154193|573831|573880|574173|582834	Kingdom|Subkingdom|Infrakingdom|Superphylum|Phylum|Subphylum|Class|Subclass|Infraclass|Superorder|Order|Suborder|Infraorder|Superfamily|Family|Subfamily|Tribe|Genus|Species
 8	7c9c1253-6b64-5269-b337-923111be3e0d		11369101				species	11369101	Animalia|Arthropoda|Insecta|Hymenoptera|Formicidae|Amblyopone|Amblyopone armigera	11|235|1096|10830|101758|1344539|11369101	kingdom|phylum|class|order|family|genus|species
 11	7c9c1253-6b64-5269-b337-923111be3e0d		1327436				species	1327436	Animalia|Arthropoda|Insecta|Hymenoptera|Vespoidea|Formicidae|Amblyopone|Amblyopone armigera	1|54|216|1457|1629|4342|1327374|1327436	kingdom|phylum|class|order|superfamily|family|genus|species
-126	7c9c1253-6b64-5269-b337-923111be3e0d		sp1125			2	species	sp1125	Animalia|Arthropoda|Insecta|Hymenoptera|Formicidae|Amblyoponinae|Amblyopone|Amblyopone armigera	1|2|3|4|5|54|55|sp1125	kingdom|phylum|clase|order|family|tribe|genus|species
+12	7c9c1253-6b64-5269-b337-923111be3e0d	http://eol.org/pages/491834	33858901		491834		species	33858901
+166	7c9c1253-6b64-5269-b337-923111be3e0d	http://www.nlbif.nl/species_details.php?name=Amblyopone+armigera	131002325				Species	131002325
 162	a6f36fee-e5a3-5fee-9b95-2810ce158a86	http://nsdb.bishopmuseum.org/urn:lsid:bishopmuseum.org:tnu:B92C9ABC-5013-4B5B-A0AC-F4F879CE99D8	105683992				Genus	105683992
 168	e8d1cc0d-0b73-53b1-b31d-b070d5d49e38	http://www.organismnames.com/details.htm?lsid=2876360	128209175				Species	128209175
