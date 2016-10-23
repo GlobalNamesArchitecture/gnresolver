@@ -51,7 +51,7 @@ class NameStringsSpec extends SpecConfig {
         it("returns None") {
           whenReady(conn.run(nameStrings.filter { _.canonical.isEmpty }
                                         .map { _.canonicalUuid }.result.head)) { res =>
-            res shouldBe None
+            res.value shouldBe NameStrings.emptyCanonicalUuid
           }
         }
       }
