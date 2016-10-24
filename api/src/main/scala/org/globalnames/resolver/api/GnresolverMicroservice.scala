@@ -49,7 +49,7 @@ trait Protocols extends DefaultJsonProtocol with NullOptions {
   }
   implicit val nameFormat = jsonFormat2(Name.apply)
   implicit val nameStringFormat = jsonFormat2(NameString.apply)
-  implicit val nameStringIndexFormat = jsonFormat3(NameStringIndex.apply)
+  implicit val nameStringIndexFormat = jsonFormat12(NameStringIndex.apply)
   implicit val dataSourceFormat = jsonFormat3(DataSource.apply)
   implicit object MatchJsonFormat extends RootJsonFormat[Match] {
     def write(m: Match): JsObject = JsObject(
@@ -59,19 +59,45 @@ trait Protocols extends DefaultJsonProtocol with NullOptions {
                                                          .getOrElse(JsNull)
       , "canonicalName" -> m.nameString.canonicalName.map { x => JsString(x.value) }
                                                      .getOrElse(JsNull)
-      , "dataSourceId" -> JsNumber(m.dataSourceId)
+      , "dataSourceId" -> JsNumber(m.dataSource.id)
+      , "dataSourceTitle" -> JsString(m.dataSource.title)
+      , "taxonId" -> JsString(m.nameStringIndex.taxonId)
+      , "globalId" -> m.nameStringIndex.globalId.map { x => JsString(x) }.getOrElse(JsNull)
+      , "classificationPath" -> m.nameStringIndex.classificationPath.map { x => JsString(x) }
+                                                                    .getOrElse(JsNull)
+      , "classificationPathIds" -> m.nameStringIndex.classificationPathIds.map { x => JsString(x) }
+                                                                          .getOrElse(JsNull)
+      , "classificationPathRanks" -> m.nameStringIndex.classificationPathRanks
+                                                      .map { x => JsString(x) }.getOrElse(JsNull)
       , "kind" -> KindJsonFormat.write(m.kind)
     )
 
     def read(m: JsValue): Match =
       m.asJsObject.getFields("nameStringUuid", "nameString", "canonicalNameUuid", "canonicalName",
-                             "dataSourceId", "kind") match {
-        case Seq(JsString(nsUuid), JsString(ns), cnUuidJs, cnJs, JsNumber(dsi), kindJs) =>
+                             "dataSourceId", "dataSourceTitle", "kind",
+                             "taxonId", "globalId", "classificationPath",
+                             "classificationPathIds", "classificationPathRanks") match {
+        case Seq(JsString(nsUuid), JsString(ns), cnUuidJs, cnJs, JsNumber(dsi), JsString(dst),
+                 kindJs, JsString(taxonId), globalId,
+                 classificationPath, classificationPathIds, classificationPathRanks) =>
           val canonical =
             for { cnUuidOpt <- cnUuidJs.convertTo[Option[UUID]]
                   cnOpt <- cnJs.convertTo[Option[String]] } yield Name(cnUuidOpt, cnOpt)
           val nameString = NameString(Name(UUID.fromString(nsUuid), ns), canonical)
-          Match(nameString, dsi.toInt, kindJs.convertTo[Kind])
+          val dataSource = DataSource(dsi.toInt, dst, "")
+          val nameStringIndex = {
+            val cpOpt = classificationPath.convertTo[Option[String]]
+            val cpiOpt = classificationPathIds.convertTo[Option[String]]
+            val cprOpt = classificationPathRanks.convertTo[Option[String]]
+            NameStringIndex(dataSource.id, nameString.name.id, url = None,
+                            taxonId = taxonId, globalId = globalId.convertTo[Option[String]],
+                            localId = None, nomenclaturalCodeId = None,
+                            rank = None, acceptedTaxonId = None,
+                            classificationPath = cpOpt,
+                            classificationPathIds = cpiOpt,
+                            classificationPathRanks = cprOpt)
+          }
+          Match(nameString, dataSource, nameStringIndex, kindJs.convertTo[Kind])
         case _ => deserializationError("Match expected")
       }
   }

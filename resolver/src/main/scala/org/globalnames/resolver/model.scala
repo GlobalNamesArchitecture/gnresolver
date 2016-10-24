@@ -13,7 +13,8 @@ package object model {
 
   type LocalId = Int
 
-  case class Match(nameString: NameString, dataSourceId: Int = 0, kind: Kind = Kind.None)
+  case class Match(nameString: NameString, dataSource: DataSource, nameStringIndex: NameStringIndex,
+                   kind: Kind = Kind.None)
 
   case class Matches(total: Long, matches: Seq[Match],
                      suppliedNameString: String, localId: Option[LocalId] = None)
