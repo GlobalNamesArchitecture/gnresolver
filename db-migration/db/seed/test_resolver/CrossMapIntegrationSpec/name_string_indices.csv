@@ -1,4 +1,19 @@
-169	a637361f-6334-5e65-b7ce-3ccec8a8e7f8	http://www.ubio.org/browser/details.php?namebankID=3017682	96226244	urn:lsid:ubio.org:namebank:3017682	urn:lsid:ubio.org:namebank:3017682			96226244
-12	a637361f-6334-5e65-b7ce-3ccec8a8e7f8	http://eol.org/pages/97255	28801173		97255		genus	28801173
-4	a637361f-6334-5e65-b7ce-3ccec8a8e7f8		193383				genus	193383	|Bacteria|Actinobacteria|Actinobacteria|Micrococcales|Microbacteriaceae|Rhodoglobus	131567|2|201174|1760|85006|85023|193383	|superkingdom|phylum|class|order|family|genus
-1	a637361f-6334-5e65-b7ce-3ccec8a8e7f8		21951497				genus	21951497	Bacteria|Actinobacteria|Actinobacteria|Actinomycetales|Microbacteriaceae|Rhodoglobus	21835475|21839254|21839255|21839269|21839288|21951497	kingdom|phylum|class|order|family|genus
+4	00003a4b-16d8-58f1-9f1a-f38ea5cebb27		40800				species	40800	|Eukaryota|Viridiplantae|Streptophyta|Streptophytina|Embryophyta|Tracheophyta|Euphyllophyta|Spermatophyta|Magnoliophyta|Mesangiospermae||Gunneridae|Pentapetalae|Saxifragales|Saxifragaceae|Mitella|Mitella stauropetala	131567|2759|33090|35493|131221|3193|58023|78536|58024|3398|1437183|71240|91827|1437201|41946|3792|40794|40800	|superkingdom|kingdom|phylum|||||||||||order|family|genus|species
+12	00003a4b-16d8-58f1-9f1a-f38ea5cebb27	http://eol.org/pages/584043	28868521		584043		species	28868521
+159	00003a4b-16d8-58f1-9f1a-f38ea5cebb27		106021134				Species	106021134
+169	00003a4b-16d8-58f1-9f1a-f38ea5cebb27	http://www.ubio.org/browser/details.php?namebankID=2649715	95859992	urn:lsid:ubio.org:namebank:2649715	urn:lsid:ubio.org:namebank:2649715			95859992	|Mitella stauropetala		kingdom|
+170	00003a4b-16d8-58f1-9f1a-f38ea5cebb27		1798650		1798650			1798650	Plantae|Tracheophyta|Magnoliopsida|Rosales|Saxifragaceae|Mitella|Mitella stauropetala		kingdom|phylum|class|order|family|genus|
+1	00026087-718e-5616-97f2-9e3780ff3f7c		21839181				phylum	21839181	Bacteria|Fibrobacteres	21835475|21839181	kingdom|phylum
+1	00026087-718e-5616-97f2-9e3780ff3f7c		21839182				class	21839182	Bacteria|Fibrobacteres|Fibrobacteres	21835475|21839181|21839182	kingdom|phylum|class
+2	00026087-718e-5616-97f2-9e3780ff3f7c	http://species.wikimedia.org/wiki/Fibrobacteres	129396					129396	Hydrogenimonaceae|Fibrobacteres	403|129396	|
+4	00026087-718e-5616-97f2-9e3780ff3f7c		65842				phylum	65842	|Bacteria||Fibrobacteres	131567|2|131550|65842	|superkingdom|superphylum|phylum
+7	00026087-718e-5616-97f2-9e3780ff3f7c		2825135				above family	2825135	|Cellular life|Eubacteria|Fibrobacteres	2822864|2823207|2823470|2825135	|above family|above family|above family
+8	00026087-718e-5616-97f2-9e3780ff3f7c		161				phylum	161	Bacteria|Fibrobacteres	13|161	kingdom|phylum
+11	00026087-718e-5616-97f2-9e3780ff3f7c		29				phylum	29	Bacteria|Fibrobacteres	3|29	kingdom|phylum
+11	00026087-718e-5616-97f2-9e3780ff3f7c		302				class	302	Bacteria|Fibrobacteres|Fibrobacteres	3|29|302	kingdom|phylum|class
+12	00026087-718e-5616-97f2-9e3780ff3f7c	http://eol.org/pages/7788	28792470		7788		phylum	28792470
+12	00026087-718e-5616-97f2-9e3780ff3f7c	http://eol.org/pages/7788/names/synonyms	s_5051955		7788		phylum	28792470
+159	00026087-718e-5616-97f2-9e3780ff3f7c		106107671				NA	106107671
+164	00026087-718e-5616-97f2-9e3780ff3f7c	http://www.biolib.cz/en/taxon/id464985/	141464736				Species	141464736
+164	00026087-718e-5616-97f2-9e3780ff3f7c	http://www.biolib.cz/en/taxon/id480235/	141465229				Species	141465229
+169	00026087-718e-5616-97f2-9e3780ff3f7c	http://www.ubio.org/browser/details.php?namebankID=230026	93922652	urn:lsid:ubio.org:namebank:230026	urn:lsid:ubio.org:namebank:230026			93922652

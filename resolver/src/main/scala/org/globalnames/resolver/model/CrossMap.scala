@@ -13,7 +13,7 @@ class CrossMaps(tag: Tag) extends Table[CrossMap](tag, "cross_maps") {
 
   def nameStringId: Rep[UUID] = column[UUID]("name_string_id")
 
-  def localId: Rep[String] = column[String]("local_id")
+  def localId: Rep[String] = column[String]("cm_local_id")
 
   def * : ProvenShape[CrossMap] = (dataSourceId, nameStringId, localId) <>
     (CrossMap.tupled, CrossMap.unapply)
