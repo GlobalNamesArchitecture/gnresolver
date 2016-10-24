@@ -43,5 +43,23 @@ class CrossMapSpec extends SpecConfig {
         }
       }
     }
+
+
+    describe("#dataSourceIdCrossMap") {
+      it("returns a dataSourceId for cross_map") {
+        whenReady(conn.run(crossMaps.map { _.dataSourceIdCrossMap }.result.head)) { res =>
+          res shouldBe an[Integer]
+        }
+      }
+    }
+
+
+    describe("#taxonId") {
+      it("returns a taxon id") {
+        whenReady(conn.run(crossMaps.map { _.taxonId }.result.head)) { res =>
+          res shouldBe an[String]
+        }
+      }
+    }
   }
 }
