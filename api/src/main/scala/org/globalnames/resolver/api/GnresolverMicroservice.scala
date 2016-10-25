@@ -17,6 +17,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import Resolver.NameRequest
 import QueryParser.SearchPart
 import model.{DataSource, Kind, Match, Matches, Name, NameString, NameStringIndex, NameStrings}
+import resolver.CrossMap.{Source, Result, Target}
 import slick.driver.PostgresDriver.api._
 import spray.json.{DefaultJsonProtocol, _}
 
@@ -25,11 +26,17 @@ import scala.concurrent.duration._
 import scalaz._
 import Scalaz.{get => _, _}
 
+trait CrossMapProtocols extends DefaultJsonProtocol with NullOptions {
+  case class CrossMapRequest(dbSinkIds: Seq[Int], localIds: Seq[String])
+
+  implicit val crossMapRequestFormat = jsonFormat2(CrossMapRequest.apply)
+
+  implicit val cmSourceFormat = jsonFormat2(Source.apply)
+  implicit val cmTargetFormat = jsonFormat3(Target.apply)
+  implicit val cmResultFormat = jsonFormat2(Result.apply)
+}
+
 trait Protocols extends DefaultJsonProtocol with NullOptions {
-  case class CrossMapRequest(dbSinkIds: Seq[Int], localIds: Seq[String], taxonIds: Seq[String])
-
-  implicit val crossMapRequestFormat = jsonFormat3(CrossMapRequest.apply)
-
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
     def write(x: UUID): JsString = JsString(x.toString)
     def read(value: JsValue): UUID = value match {
@@ -121,7 +128,7 @@ trait Protocols extends DefaultJsonProtocol with NullOptions {
     })
 }
 
-trait Service extends Protocols {
+trait Service extends Protocols with CrossMapProtocols {
   private val nameStringsMaxCount = 1000
 
   implicit val system: ActorSystem
@@ -186,10 +193,10 @@ trait Service extends Protocols {
           }
         } ~ pathPrefix("crossmap") {
           (post & entity(as[CrossMapRequest]) &
-            parameters('dbSourceId.as[Int], 'dbTargetId.as[Int])) {
+            parameters('dbSourceId.as[Int], 'dbTargetId.as[Int] ?)) {
               (crossMapReq, dbSourceId, dbTargetId) => complete {
                 crossMap.execute(dbSourceId, crossMapReq.dbSinkIds, dbTargetId,
-                                 crossMapReq.taxonIds, crossMapReq.localIds)
+                                 crossMapReq.localIds)
               }
             }
           }

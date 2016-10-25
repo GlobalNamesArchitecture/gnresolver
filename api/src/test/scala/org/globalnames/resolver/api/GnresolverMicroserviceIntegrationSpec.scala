@@ -10,10 +10,10 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.{HttpEntity, StatusCode}
 import akka.http.scaladsl.model.StatusCodes._
-import akka.http.scaladsl.model.Uri.Path
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.apache.commons.io.FileUtils
-import org.globalnames.resolver.model.Matches
+import model.Matches
+import resolver.CrossMap.{Result, Source, Target}
 import slick.driver.PostgresDriver.api._
 
 import scala.collection.JavaConversions._
@@ -176,14 +176,17 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
           seed("test_api", "GnresolverMicroserviceIntegrationSpec_CrossMap")
           Post("/api/crossmap?dbSourceId=4&dbTargetId=11",
             HttpEntity(`application/json`, """{
-                                              |"dbSinkIds":[],
-                                              |"localIds":["745315"],
-                                              |"taxonIds":["foo", "40800"]
+                                              |"dbSinkIds":[179],
+                                              |"localIds":["foo", "40800"]
                                               |}""".stripMargin)) ~> routes ~> check {
             status shouldBe OK
-            val response = responseAs[Seq[(String, String)]]
+            val response = responseAs[Seq[Result]]
             response should have size 2
-            response should contain only (("foo", ""), ("40800", "5371640"))
+            val Seq(resp1, resp2) = response
+            resp1.source shouldBe Source(4, "foo")
+            resp2.source shouldBe Source(4, "40800")
+            resp1.target shouldBe empty
+            resp2.target should contain only Target(179, 11, "5371640")
           }
         }
       }
