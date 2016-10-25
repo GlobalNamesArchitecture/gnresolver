@@ -174,14 +174,16 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       describe("POST method") {
         it("maps one local id to another") {
           seed("test_api", "GnresolverMicroserviceIntegrationSpec_CrossMap")
-          Post("/api/crossmap?dbSourceId=8&dbTargetId=178",
-            HttpEntity(`application/json`, """["1", "1005101"]""")) ~> routes ~> check {
+          Post("/api/crossmap?dbSourceId=4&dbTargetId=11",
+            HttpEntity(`application/json`, """{
+                                              |"dbSinkIds":[],
+                                              |"localIds":["745315"],
+                                              |"taxonIds":["foo", "40800"]
+                                              |}""".stripMargin)) ~> routes ~> check {
             status shouldBe OK
             val response = responseAs[Seq[(String, String)]]
             response should have size 2
-
-            response should contain (("1", ""))
-            response should contain (("1005101", "AF468436/#6"))
+            response should contain only (("foo", ""), ("40800", "5371640"))
           }
         }
       }

@@ -26,6 +26,10 @@ import scalaz._
 import Scalaz.{get => _, _}
 
 trait Protocols extends DefaultJsonProtocol with NullOptions {
+  case class CrossMapRequest(dbSinkIds: Seq[Int], localIds: Seq[String], taxonIds: Seq[String])
+
+  implicit val crossMapRequestFormat = jsonFormat3(CrossMapRequest.apply)
+
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
     def write(x: UUID): JsString = JsString(x.toString)
     def read(value: JsValue): UUID = value match {
@@ -181,10 +185,11 @@ trait Service extends Protocols {
             }
           }
         } ~ pathPrefix("crossmap") {
-          (post & entity(as[Seq[String]]) &
+          (post & entity(as[CrossMapRequest]) &
             parameters('dbSourceId.as[Int], 'dbTargetId.as[Int])) {
-              (localIds, dbSourceId, dbTargetId) => complete {
-                crossMap.execute(dbSourceId, dbTargetId, localIds)
+              (crossMapReq, dbSourceId, dbTargetId) => complete {
+                crossMap.execute(dbSourceId, crossMapReq.dbSinkIds, dbTargetId,
+                                 crossMapReq.taxonIds, crossMapReq.localIds)
               }
             }
           }
