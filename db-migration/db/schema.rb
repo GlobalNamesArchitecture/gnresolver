@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161024090718) do
+ActiveRecord::Schema.define(version: 20161025175634) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -24,8 +24,8 @@ ActiveRecord::Schema.define(version: 20161024090718) do
     t.string  "taxon_id",          limit: 255, null: false
   end
 
-  add_index "cross_maps", ["data_source_id"], name: "index_cross_maps_on_data_source_id", using: :btree
-  add_index "cross_maps", ["name_string_id"], name: "index_cross_maps_on_name_string_id", using: :btree
+  add_index "cross_maps", ["cm_data_source_id", "cm_local_id"], name: "index__cmdsid_clid", using: :btree
+  add_index "cross_maps", ["data_source_id", "name_string_id", "taxon_id"], name: "index__nsid_dsid_tid", using: :btree
 
   create_table "data_sources", force: :cascade do |t|
     t.string   "title",               limit: 255,              null: false
