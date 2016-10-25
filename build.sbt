@@ -31,7 +31,7 @@ val mockito         = "org.mockito"        %  "mockito-core"                    
 
 val commonSettings = Seq(
   version := "0.1.0-SNAPSHOT",
-  scalaVersion := "2.11.8",
+  scalaVersion in ThisBuild := "2.11.8",
   organization := "org.globalnames",
   homepage := Some(new URL("http://globalnames.org/")),
   description := "Global scientific names resolver",
