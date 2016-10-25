@@ -13,14 +13,13 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.apache.commons.io.FileUtils
 import model.Matches
-import resolver.CrossMap.{Result, Source, Target}
+import CrossMapSearcher.{Result, Target, Source}
 import slick.driver.PostgresDriver.api._
 
 import scala.collection.JavaConversions._
 import com.typesafe.config.{ConfigFactory, ConfigRenderOptions}
 import spray.json._
-import DefaultJsonProtocol._
-import Ops._
+import resolver.Ops._
 import akka.http.scaladsl.server.Route
 
 class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfig

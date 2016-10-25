@@ -17,7 +17,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import Resolver.NameRequest
 import QueryParser.SearchPart
 import model.{DataSource, Kind, Match, Matches, Name, NameString, NameStringIndex, NameStrings}
-import resolver.CrossMap.{Source, Result, Target}
+import CrossMapSearcher.{Source, Result, Target}
 import slick.driver.PostgresDriver.api._
 import spray.json.{DefaultJsonProtocol, _}
 
@@ -145,7 +145,7 @@ trait Service extends Protocols with CrossMapProtocols {
   lazy val resolver = new Resolver(database, matcher)
   lazy val facetedSearcher = new FacetedSearcher(database)
   lazy val searcher: Searcher = new Searcher(resolver, facetedSearcher)
-  lazy val crossMap = new CrossMap(database)
+  lazy val crossMap = new CrossMapSearcher(database)
 
   def resolve(search: SearchPart, take: Int, drop: Int): Future[Matches] = {
     searcher.resolve(search.contents, search.modifier, search.wildcard, take, drop)

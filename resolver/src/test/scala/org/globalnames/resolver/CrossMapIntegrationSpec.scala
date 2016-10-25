@@ -8,11 +8,11 @@ import scalaz._
 import Scalaz._
 
 class CrossMapIntegrationSpec extends SpecConfig {
-  import CrossMap._
+  import CrossMapSearcher._
 
   val conn = Database.forConfig("postgresql-test")
   val nameStrings = TableQuery[NameStrings]
-  val crossMap = new CrossMap(conn)
+  val crossMap = new CrossMapSearcher(conn)
 
   val db1Id = 4
   val db2Id = 11
