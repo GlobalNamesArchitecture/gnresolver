@@ -60,9 +60,10 @@ ActiveRecord::Schema.define(version: 20161025175634) do
   add_index "name_string_indices", ["name_string_id"], name: "index_name_string_indices_on_name_string_id", using: :btree
 
   create_table "name_strings", id: :uuid, default: nil, force: :cascade do |t|
-    t.string "name",           limit: 255, null: false
-    t.uuid   "canonical_uuid"
-    t.string "canonical",      limit: 255
+    t.string  "name",           limit: 255, null: false
+    t.uuid    "canonical_uuid"
+    t.string  "canonical",      limit: 255
+    t.boolean "surrogate"
   end
 
   add_index "name_strings", ["canonical"], name: "canonical_name_index", using: :btree
