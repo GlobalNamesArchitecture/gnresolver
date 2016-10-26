@@ -59,13 +59,14 @@ trait Protocols extends DefaultJsonProtocol with NullOptions {
     }
   }
   implicit val nameFormat = jsonFormat2(Name.apply)
-  implicit val nameStringFormat = jsonFormat2(NameString.apply)
+  implicit val nameStringFormat = jsonFormat3(NameString.apply)
   implicit val nameStringIndexFormat = jsonFormat12(NameStringIndex.apply)
   implicit val dataSourceFormat = jsonFormat3(DataSource.apply)
   implicit object MatchJsonFormat extends RootJsonFormat[Match] {
     def write(m: Match): JsObject = JsObject(
         "nameStringUuid" -> JsString(m.nameString.name.id.toString)
       , "nameString" -> JsString(m.nameString.name.value)
+      , "surrogate" -> m.nameString.surrogate.map { x => JsBoolean(x) }.getOrElse(JsNull)
       , "canonicalNameUuid" -> m.nameString.canonicalName.map { x => JsString(x.id.toString) }
                                                          .getOrElse(JsNull)
       , "canonicalName" -> m.nameString.canonicalName.map { x => JsString(x.value) }
@@ -84,17 +85,19 @@ trait Protocols extends DefaultJsonProtocol with NullOptions {
     )
 
     def read(m: JsValue): Match =
-      m.asJsObject.getFields("nameStringUuid", "nameString", "canonicalNameUuid", "canonicalName",
+      m.asJsObject.getFields("nameStringUuid", "nameString", "surrogate",
+                             "canonicalNameUuid", "canonicalName",
                              "dataSourceId", "dataSourceTitle", "kind",
                              "taxonId", "globalId", "classificationPath",
                              "classificationPathIds", "classificationPathRanks") match {
-        case Seq(JsString(nsUuid), JsString(ns), cnUuidJs, cnJs, JsNumber(dsi), JsString(dst),
-                 kindJs, JsString(taxonId), globalId,
+        case Seq(JsString(nsUuid), JsString(ns), surrogateJs, cnUuidJs, cnJs, JsNumber(dsi),
+                 JsString(dst), kindJs, JsString(taxonId), globalId,
                  classificationPath, classificationPathIds, classificationPathRanks) =>
           val canonical =
             for { cnUuidOpt <- cnUuidJs.convertTo[Option[UUID]]
                   cnOpt <- cnJs.convertTo[Option[String]] } yield Name(cnUuidOpt, cnOpt)
-          val nameString = NameString(Name(UUID.fromString(nsUuid), ns), canonical)
+          val surrogateOpt = surrogateJs.convertTo[Option[Boolean]]
+          val nameString = NameString(Name(UUID.fromString(nsUuid), ns), canonical, surrogateOpt)
           val dataSource = DataSource(dsi.toInt, dst, "")
           val nameStringIndex = {
             val cpOpt = classificationPath.convertTo[Option[String]]

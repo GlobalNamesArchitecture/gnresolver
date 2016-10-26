@@ -50,8 +50,11 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
         resolver.resolveString(valueCleaned(value, modifier), takeActual, dropActual)
       case _ =>
         val resolverFun = resolverFunction(modifier, wildcard)
+        val nameStrings = resolverFun(valueCleaned(value, modifier))
+                            .drop(dropActual).take(takeActual)
+                            .filter { ns => !ns.surrogate }
         val query = for {
-          ns <- resolverFun(valueCleaned(value, modifier)).drop(dropActual).take(takeActual)
+          ns <- nameStrings
           nsi <- nameStringIndicies.filter { nsi => nsi.nameStringId === ns.id }
           ds <- dataSources.filter { ds => ds.id === nsi.dataSourceId }
         } yield (ns, nsi, ds)

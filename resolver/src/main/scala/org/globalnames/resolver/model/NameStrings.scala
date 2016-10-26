@@ -6,7 +6,7 @@ import slick.driver.PostgresDriver.api._
 import slick.lifted.ProvenShape
 
 case class Name(id: UUID, value: String)
-case class NameString(name: Name, canonicalName: Option[Name])
+case class NameString(name: Name, canonicalName: Option[Name], surrogate: Option[Boolean])
 
 class NameStrings(tag: Tag) extends Table[NameString](tag, "name_strings") {
   import NameStrings.emptyCanonicalUuid
@@ -19,19 +19,22 @@ class NameStrings(tag: Tag) extends Table[NameString](tag, "name_strings") {
 
   def canonical: Rep[Option[String]] = column[Option[String]]("canonical")
 
-  def * : ProvenShape[NameString] = ((id, name), (canonicalUuid, canonical)).shaped <> (
-      { case (name, (canonicalNameUuid, canonicalNameValue)) =>
+  def surrogate: Rep[Option[Boolean]] = column[Option[Boolean]]("surrogate")
+
+  def * : ProvenShape[NameString] = ((id, name), (canonicalUuid, canonical), surrogate).shaped <> (
+      { case (name, (canonicalNameUuid, canonicalNameValue), surrogate) =>
         val canonicalName =
           for {
             uuid <- canonicalNameUuid
             if uuid != emptyCanonicalUuid
             value <- canonicalNameValue
           } yield Name(uuid, value)
-        NameString(Name.tupled.apply(name), canonicalName)
+        NameString(Name.tupled.apply(name), canonicalName, surrogate)
       },
       { ns: NameString =>
         Some(((ns.name.id, ns.name.value),
-              (ns.canonicalName.map { _.id }, ns.canonicalName.map { _.value })))
+              (ns.canonicalName.map { _.id }, ns.canonicalName.map { _.value }),
+              ns.surrogate))
       }
     )
 }
