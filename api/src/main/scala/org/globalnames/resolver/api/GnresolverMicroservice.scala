@@ -18,6 +18,7 @@ import Resolver.NameRequest
 import QueryParser.SearchPart
 import model.{DataSource, Kind, Match, Matches, Name, NameString, NameStringIndex, NameStrings}
 import CrossMapSearcher.{Source, Result, Target}
+import Materializer.Parameters
 import slick.driver.PostgresDriver.api._
 import spray.json.{DefaultJsonProtocol, _}
 
@@ -150,8 +151,8 @@ trait Service extends Protocols with CrossMapProtocols {
   lazy val searcher = new Searcher(database, resolver, facetedSearcher)
   lazy val crossMap = new CrossMapSearcher(database)
 
-  def resolve(search: SearchPart, take: Int, drop: Int): Future[Matches] = {
-    searcher.resolve(search.contents, search.modifier, search.wildcard, take, drop)
+  def resolve(search: SearchPart, parameters: Parameters): Future[Matches] = {
+    searcher.resolve(search.contents, search.modifier, search.wildcard, parameters)
   }
 
   val routes = {
@@ -163,13 +164,18 @@ trait Service extends Protocols with CrossMapProtocols {
           }
         } ~ path("name_resolvers") {
           val getNameResolvers =
-            get & parameters('names.as[Seq[NameRequest]], 'dataSourceIds.as[Vector[Int]] ?)
+            get & parameters('names.as[Seq[NameRequest]], 'dataSourceIds.as[Vector[Int]].?,
+                             'take ? nameStringsMaxCount, 'drop ? 0,
+                             'surrogates ? false)
           val postNameResolvers =
-            post & entity(as[Seq[NameRequest]]) & parameter('dataSourceIds.as[Vector[Int]] ?)
+            post & entity(as[Seq[NameRequest]]) &
+              parameters('dataSourceIds.as[Vector[Int]].?,
+                         'take ? nameStringsMaxCount, 'drop ? 0, 'surrogates ? false)
 
           (getNameResolvers | postNameResolvers) {
-            (names, dataSourceIds) => complete {
-              resolver.resolve(names.take(nameStringsMaxCount), dataSourceIds.orZero)
+            (names, dataSourceIds, take, drop, withSurrogates) => complete {
+              val params = Parameters(take, drop, withSurrogates)
+              resolver.resolve(names.take(take), dataSourceIds.orZero, params)
             }
           }
         } ~ path("name_strings" / JavaUUID) { uuid =>
@@ -181,14 +187,16 @@ trait Service extends Protocols with CrossMapProtocols {
             Matches.empty(remaining)
           }
         } ~ path("name_strings") {
-          (get & parameters('search_term, 'take ? nameStringsMaxCount, 'drop ? 0)) {
-            (searchTerm, take, drop) => complete {
+          (get & parameters('search_term, 'take ? nameStringsMaxCount, 'drop ? 0,
+                            'surrogates ? false)) {
+            (searchTerm, take, drop, withSurrogates) => complete {
               val search = QueryParser.result(searchTerm)
               logger.debug(s"$search")
-              resolve(search, take, drop)
+              val params = Parameters(take, drop, withSurrogates)
+              resolve(search, params)
             }
           }
-        } ~ path("names" / JavaUUID / "dataSources") { uuid =>
+        } ~ path("names_strings" / JavaUUID / "dataSources") { uuid =>
           get {
             complete {
               facetedSearcher.resolveDataSources(uuid)

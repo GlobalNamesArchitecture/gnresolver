@@ -9,6 +9,8 @@ import slick.driver.PostgresDriver.api._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+import Materializer.Parameters
+
 class FacetedSearcherSpec extends SpecConfig {
   import Searcher._
 
@@ -16,6 +18,7 @@ class FacetedSearcherSpec extends SpecConfig {
   val nameStrings = TableQuery[NameStrings]
   val faceted = new FacetedSearcher(conn)
   val searcher = new Searcher(conn, mock[Resolver], faceted)
+  val parameters = Parameters(take = 50, drop = 0, withSurrogates = false)
 
   seed("test_resolver", "FacetedSearcherSpec")
 
@@ -40,7 +43,8 @@ class FacetedSearcherSpec extends SpecConfig {
   describe("FacetedSearcher") {
     describe(".resolveCanonical") {
       it("resolves exact") {
-        whenReady(searcher.resolve("Aaadonta constricta", CanonicalModifier)) {
+        whenReady(searcher.resolve("Aaadonta constricta", CanonicalModifier,
+                                   parameters = parameters)) {
           res =>
             res.matches should have size 7
             res.matches.map { _.nameString } should contain only (
@@ -52,7 +56,8 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves exact with multiple spaces input") {
-        whenReady(searcher.resolve(" \t Aaadonta   constricta    ", CanonicalModifier)) { res =>
+        whenReady(searcher.resolve(" \t Aaadonta   constricta    ", CanonicalModifier,
+                                   parameters = parameters)) { res =>
           res.matches should have size 7
           res.matches.map { _.nameString } should contain only (
             ns66d68908fe7d524b87ec86e5447993a0,
@@ -63,19 +68,21 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves exact with wildcard inside input") {
-        whenReady(searcher.resolve("Aaadonta %constricta", CanonicalModifier)) {
-          res => res.matches shouldBe empty
+        whenReady(searcher.resolve("Aaadonta %constricta", CanonicalModifier,
+                                   parameters = parameters)) { res =>
+          res.matches shouldBe empty
         }
       }
 
       it("resolves exact with wildcard as input") {
-        whenReady(searcher.resolve("%", CanonicalModifier)) { res =>
+        whenReady(searcher.resolve("%", CanonicalModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves wildcard") {
-        whenReady(searcher.resolve("Aaadonta constricta ba", CanonicalModifier, true)) { res =>
+        whenReady(searcher.resolve("Aaadonta constricta ba", CanonicalModifier, true,
+                                   parameters = parameters)) { res =>
             res.matches should have size 2
             res.matches.map { _.nameString } should contain only (
               ns5a68f4ec6121553e88433d602089ec88,
@@ -86,13 +93,14 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("resolves no mathches when string request of length less than 4 is provided") {
         val query = "Aaa"
-        whenReady(searcher.resolve(query, CanonicalModifier, true)) { res =>
+        whenReady(searcher.resolve(query, CanonicalModifier, true,
+                                   parameters = parameters)) { res =>
           res shouldBe Matches.empty(query)
         }
       }
 
       it("returns no wildcarded matches when empty string is provided") {
-        whenReady(searcher.resolve("", CanonicalModifier, true)) { res =>
+        whenReady(searcher.resolve("", CanonicalModifier, true, parameters = parameters)) { res =>
           res shouldBe Matches.empty("")
         }
       }
@@ -100,14 +108,14 @@ class FacetedSearcherSpec extends SpecConfig {
 
     describe(".resolveAuthor") {
       it("resolves") {
-        whenReady(searcher.resolve("Semper", AuthorModifier)) { res =>
+        whenReady(searcher.resolve("Semper", AuthorModifier, parameters = parameters)) { res =>
           res.matches should have size 2
           res.matches.map { _.nameString } should contain only nsb2cf575fec5350ec96b4da94de2d926f
         }
       }
 
       it("returns no matches when empty string is provided") {
-        whenReady(searcher.resolve("", AuthorModifier)) { res =>
+        whenReady(searcher.resolve("", AuthorModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
@@ -115,20 +123,20 @@ class FacetedSearcherSpec extends SpecConfig {
 
     describe(".resolveYear") {
       it("resolves") {
-        whenReady(searcher.resolve("1874", YearModifier)) { res =>
+        whenReady(searcher.resolve("1874", YearModifier, parameters = parameters)) { res =>
           res.matches should have size 2
           res.matches.map { _.nameString } should contain only nsb2cf575fec5350ec96b4da94de2d926f
         }
       }
 
       it("returns no matches on non-existing year") {
-        whenReady(searcher.resolve("3000", YearModifier)) { res =>
+        whenReady(searcher.resolve("3000", YearModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("returns no matches when empty string is provided 1") {
-        whenReady(searcher.resolve("", YearModifier)) { res =>
+        whenReady(searcher.resolve("", YearModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
@@ -136,7 +144,8 @@ class FacetedSearcherSpec extends SpecConfig {
 
     describe(".resolveUninomial") {
       it("resolves") {
-        whenReady(searcher.resolve("Aalenirhynchia", UninomialModifier)) { res =>
+        whenReady(searcher.resolve("Aalenirhynchia", UninomialModifier,
+                                   parameters = parameters)) { res =>
           res.matches should have size 3
           res.matches.map { _.nameString } should contain only (
             ns05375e93f74c5bf488151cc363c1b98c,
@@ -147,7 +156,7 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("returns no matches when empty string is provided") {
-        whenReady(searcher.resolve("", UninomialModifier)) { res =>
+        whenReady(searcher.resolve("", UninomialModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
@@ -155,7 +164,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
     describe(".resolveGenus") {
       it("resolves") {
-        whenReady(searcher.resolve("Aabacharis", GenusModifier)) { res =>
+        whenReady(searcher.resolve("Aabacharis", GenusModifier, parameters = parameters)) { res =>
           res.matches should have size 6
           res.matches.map { _.nameString } should contain only (
             nsaebf444c6b645e338e6599f866538ecd,
@@ -166,7 +175,8 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves lowercase") {
-        whenReady(searcher.resolve("aalenirhynchia", UninomialModifier)) { res =>
+        whenReady(searcher.resolve("aalenirhynchia", UninomialModifier,
+                                   parameters = parameters)) { res =>
           res.matches should have size 3
           res.matches.map { _.nameString } should contain only (
             ns05375e93f74c5bf488151cc363c1b98c,
@@ -177,19 +187,21 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves binomial") {
-        whenReady(searcher.resolve("Aalenirhynchia ab", UninomialModifier)) { res =>
+        whenReady(searcher.resolve("Aalenirhynchia ab", UninomialModifier,
+                                   parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("returns no matches on non-existing input") {
-        whenReady(searcher.resolve("Aalenirhynchia1", UninomialModifier)) { res =>
+        whenReady(searcher.resolve("Aalenirhynchia1", UninomialModifier,
+                                   parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("returns no matches when empty string is provided") {
-        whenReady(searcher.resolve("", GenusModifier)) { res =>
+        whenReady(searcher.resolve("", GenusModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
@@ -197,7 +209,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
     describe(".resolveSpecies") {
       it("resolves") {
-        whenReady(searcher.resolve("hansoni", SpeciesModifier)) { res =>
+        whenReady(searcher.resolve("hansoni", SpeciesModifier, parameters = parameters)) { res =>
           res.matches should have size 6
           res.matches.map { _.nameString } should contain only (
             ns3b963c1cc1265fc1998df42c4210216a,
@@ -208,7 +220,7 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("returns no matches when empty string is provided") {
-        whenReady(searcher.resolve("", SpeciesModifier)) { res =>
+        whenReady(searcher.resolve("", SpeciesModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
@@ -216,7 +228,8 @@ class FacetedSearcherSpec extends SpecConfig {
 
     describe(".resolveSubspecies") {
       it("resolves") {
-        whenReady(searcher.resolve("Abacantha", SubspeciesModifier)) { res =>
+        whenReady(searcher.resolve("Abacantha", SubspeciesModifier,
+                                   parameters = parameters)) { res =>
           res.matches should have size 2
           res.matches.map { _.nameString } should contain only (
             nsd0cf534d0785576b87a8960e5e6ce374,
@@ -226,7 +239,7 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("returns no matches when empty string is provided") {
-        whenReady(searcher.resolve("", SubspeciesModifier)) { res =>
+        whenReady(searcher.resolve("", SubspeciesModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
@@ -234,32 +247,34 @@ class FacetedSearcherSpec extends SpecConfig {
 
     describe(".resolveNameStrings") {
       it("resolves exact") {
-        whenReady(searcher.resolve("Aaadonta constricta babelthuapi", NameStringModifier)) { res =>
+        whenReady(searcher.resolve("Aaadonta constricta babelthuapi", NameStringModifier,
+                                   parameters = parameters)) { res =>
             res.matches.map { _.nameString } should contain only ns5a68f4ec6121553e88433d602089ec88
         }
       }
 
       it("returns no matches when empty string is provided") {
-        whenReady(searcher.resolve("", NameStringModifier)) { res =>
+        whenReady(searcher.resolve("", NameStringModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves exact with non-existing input") {
-        whenReady(searcher.resolve("Pararara", CanonicalModifier)) { res =>
+        whenReady(searcher.resolve("Pararara", CanonicalModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves no matches when empty string is provided") {
-        whenReady(searcher.resolve("", CanonicalModifier)) { res =>
+        whenReady(searcher.resolve("", CanonicalModifier, parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves wildcard") {
         val query = "Aaadonta constricta komak"
-        whenReady(searcher.resolve(query, NameStringModifier, true)) { res =>
+        whenReady(searcher.resolve(query, NameStringModifier, true,
+                                   parameters = parameters)) { res =>
           res.matches should have size 2
           res.matches.map { _.nameString } should contain only (
             ns51b7b1b207ba5a0ea65dc5ca402b58de,
@@ -270,19 +285,21 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("returns no wildcarded matches when empty string is provided") {
-        whenReady(searcher.resolve("", NameStringModifier, true)) { res =>
+        whenReady(searcher.resolve("", NameStringModifier, true, parameters = parameters)) { res =>
           res shouldBe Matches.empty("")
         }
       }
 
       it("resolves nothing wildcard with non-existing stirng") {
-        whenReady(searcher.resolve("Pararara", CanonicalModifier, true)) { res =>
+        whenReady(searcher.resolve("Pararara", CanonicalModifier, true,
+                                   parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves wildcard with wildcard in begin of input") {
-        whenReady(searcher.resolve("%Aaadonta constricta ba", CanonicalModifier, true)) { res =>
+        whenReady(searcher.resolve("%Aaadonta constricta ba", CanonicalModifier, true,
+                                   parameters = parameters)) { res =>
           res.matches should have size 2
           res.matches.map { _.nameString } should contain only (
             ns073bab6018165b5cb01887b4193db6f7,
@@ -292,14 +309,16 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves wildcard with wildcard in middle of input") {
-        whenReady(searcher.resolve("Aaadonta % constricta ba", CanonicalModifier, true)) { res =>
+        whenReady(searcher.resolve("Aaadonta % constricta ba", CanonicalModifier, true,
+                                   parameters = parameters)) { res =>
           res.matches shouldBe empty
         }
       }
 
       it("resolves no matches when string request of length less than 4 is provided") {
         val query = "Aaa"
-        whenReady(searcher.resolve(query, NameStringModifier, true)) { res =>
+        whenReady(searcher.resolve(query, NameStringModifier, true,
+                                   parameters = parameters)) { res =>
           res shouldBe Matches.empty(query)
         }
       }
@@ -307,7 +326,8 @@ class FacetedSearcherSpec extends SpecConfig {
 
     describe(".resolveExact") {
       it("resolves") {
-        whenReady(searcher.resolve("Aalenirhynchia", ExactModifier)) { res =>
+        whenReady(searcher.resolve("Aalenirhynchia", ExactModifier,
+                                   parameters = parameters)) { res =>
           res.matches should have size 3
           res.matches.map { _.nameString } should contain only (
             ns05375e93f74c5bf488151cc363c1b98c,

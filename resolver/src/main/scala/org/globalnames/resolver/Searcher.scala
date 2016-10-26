@@ -8,11 +8,10 @@ import Searcher._
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits.global
 
-case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSearcher) {
-  protected val nameStringIndicies = TableQuery[NameStringIndices]
-  protected val dataSources = TableQuery[DataSources]
+case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSearcher)
+  extends Materializer {
+  import Materializer.Parameters
 
   private def valueCleaned(value: String, modifier: Modifier): String = {
     val trimmed = value.replaceAll("\\s{2,}", " ").replaceAll("\\%", " ").trim
@@ -23,8 +22,7 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
   }
 
   private def resolverFunction(modifier: Modifier, wildcard: Boolean):
-      (String) => Query[NameStrings, NameString, Seq] =
-    modifier match {
+      (String) => Query[NameStrings, NameString, Seq] = modifier match {
       case ExactModifier => facetedSearcher.resolveExact
       case NameStringModifier =>
         if (wildcard) facetedSearcher.resolveNameStringsLike
@@ -41,30 +39,13 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
     }
 
   def resolve(value: String, modifier: Modifier, wildcard: Boolean = false,
-              take: Int = 50, drop: Int = 0): Future[Matches] = {
-    val takeActual = take.min(50).max(0)
-    val dropActual = drop.max(0)
-
+              parameters: Parameters): Future[Matches] = {
     modifier match {
       case NoModifier =>
-        resolver.resolveString(valueCleaned(value, modifier), takeActual, dropActual)
+        resolver.resolveString(valueCleaned(value, modifier), parameters)
       case _ =>
-        val resolverFun = resolverFunction(modifier, wildcard)
-        val nameStrings = resolverFun(valueCleaned(value, modifier))
-                            .drop(dropActual).take(takeActual)
-                            .filter { ns => !ns.surrogate }
-        val query = for {
-          ns <- nameStrings
-          nsi <- nameStringIndicies.filter { nsi => nsi.nameStringId === ns.id }
-          ds <- dataSources.filter { ds => ds.id === nsi.dataSourceId }
-        } yield (ns, nsi, ds)
-        val queryCount = query.size
-        for {
-          portion <- db.run(query.result)
-          count <- db.run(queryCount.result)
-        } yield Matches(count,
-                        portion.map { case (ns, nsi, ds) => Match(ns, ds, nsi) },
-                        value)
+        val nameStrings = resolverFunction(modifier, wildcard)(valueCleaned(value, modifier))
+        nameStringsMatches(nameStrings, parameters.copy(query = value))
     }
   }
 }

@@ -9,11 +9,14 @@ import slick.driver.PostgresDriver.api._
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
+import Materializer.Parameters
+
 class ResolverIntegrationSpec extends SpecConfig {
   val conn = Database.forConfig("postgresql-test")
   val nameStrings = TableQuery[NameStrings]
   var matcher: Matcher = _
   var resolver: Resolver = _
+  val parameters = Parameters(take = 50, drop = 0, withSurrogates = false)
 
   seed("test_resolver", "ResolverIntegrationSpec")
 
@@ -34,10 +37,9 @@ class ResolverIntegrationSpec extends SpecConfig {
   describe("Resolver") {
 
     describe(".resolve") {
-
       it("exact matches by name-string") {
         whenReady(resolver.resolveStrings(
-                  Seq("Pteroplatus arrogans BUQUET Jean Baptiste Lucien, 1840"))) { res =>
+                Seq("Pteroplatus arrogans BUQUET Jean Baptiste Lucien, 1840"), parameters)) { res =>
           res should have size 1
           res.head.matches.head.nameString.name.id shouldBe
             UUID.fromString("405b2394-d89f-52df-a5bd-efd195f3b33f")
@@ -46,7 +48,7 @@ class ResolverIntegrationSpec extends SpecConfig {
       }
 
       it("exact matches by canonical form") {
-        whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogans"))) { res =>
+        whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogans"), parameters)) { res =>
           res should have size 1
           res.head.matches.head.nameString.canonicalName.value.id shouldBe
             UUID.fromString("9669d573-ff19-59fa-87c3-258a9058d6d2")
@@ -55,7 +57,7 @@ class ResolverIntegrationSpec extends SpecConfig {
       }
 
       it("fuzzy matches by canonical form") {
-        whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogaxx"))) { res =>
+        whenReady(resolver.resolveStrings(Seq("Pteroplatus arrogaxx"), parameters)) { res =>
           res should have size 1
           res.head.matches.head.nameString.canonicalName.value.value shouldBe "Pteroplatus arrogans"
           res.head.matches.head.kind shouldBe Kind.Fuzzy
@@ -63,7 +65,7 @@ class ResolverIntegrationSpec extends SpecConfig {
       }
 
       it("handles capitalization of request") {
-        whenReady(resolver.resolveStrings(Seq("pteroplatus arrogaxx"))) { res =>
+        whenReady(resolver.resolveStrings(Seq("pteroplatus arrogaxx"), parameters)) { res =>
           res should have size 1
           res.head.suppliedNameString shouldBe "Pteroplatus arrogaxx"
         }

@@ -13,20 +13,17 @@ import scala.concurrent.Future
 import scalaz._
 import Scalaz._
 
-class Resolver(db: Database, matcher: Matcher) extends SearcherCommons {
+class Resolver(val db: Database, matcher: Matcher) extends Materializer {
   import Resolver.NameRequest
+  import Materializer.Parameters
 
   private val gen = UuidGenerator()
-  private val nameStrings = TableQuery[NameStrings]
 
   private def exactNamesQuery(nameUuid: Rep[UUID], canonicalNameUuid: Rep[UUID]) = {
-    val exactNamesMaxCount = 50
-    joinOnDatasources(nameStrings.filter { nameString =>
+    nameStrings.filter { nameString =>
       nameString.id === nameUuid || nameString.canonicalUuid === canonicalNameUuid
-    }).take(exactNamesMaxCount)
+    }
   }
-
-  private val exactNamesQueryCompiled = Compiled(exactNamesQuery _)
 
   private def gnmatchCanonicals(
       canonicalNamePartsNonEmpty: Seq[(String, Array[String], Option[LocalId])]) = {
@@ -48,7 +45,7 @@ class Resolver(db: Database, matcher: Matcher) extends SearcherCommons {
   }
 
   private def fuzzyMatch(canonicalNameParts: Seq[(String, Array[String], Option[LocalId])],
-                         dataSourceIds: Seq[Int]): Future[Seq[Matches]] = {
+                         dataSourceIds: Seq[Int], parameters: Parameters): Future[Seq[Matches]] = {
     val canonicalNamePartsNonEmpty = canonicalNameParts.filter {
       case (_, parts, _) => parts.nonEmpty
     }
@@ -59,30 +56,32 @@ class Resolver(db: Database, matcher: Matcher) extends SearcherCommons {
       val unfoundFuzzyResult =
         fuzzyMatch(unfoundFuzzyMatches.map { case (name, parts, _, localId) =>
           (name, parts.dropRight(1), localId)
-        }, dataSourceIds)
+        }, dataSourceIds, parameters)
 
       val fuzzyNameStringsMaxCount = 50
-      val queryFoundFuzzy = DBIO.sequence(foundFuzzyMatches.map { case (_, _, candUuids, _) =>
-        joinOnDatasources(nameStrings.filter { ns => ns.canonicalUuid.inSetBind(candUuids) })
-                   .take(fuzzyNameStringsMaxCount)
-                   .result
-      })
+      val queryFoundFuzzy = nameStringsSequenceMatches(
+        foundFuzzyMatches.map { case (verbatim, _, candUuids, _) =>
+          val ns = nameStrings.filter { ns => ns.canonicalUuid.inSetBind(candUuids) }
+          val params = parameters.copy(query = verbatim, take = fuzzyNameStringsMaxCount,
+                                       kind = Kind.Fuzzy)
+          (ns, params)
+        })
 
-      val foundFuzzyResult = db.run(queryFoundFuzzy).flatMap { fuzzyMatches =>
+      val foundFuzzyResult = queryFoundFuzzy.flatMap { fuzzyMatches =>
         val (matched, unmatched) =
-          foundFuzzyMatches.zip(fuzzyMatches).partition { case (_, matches) => matches.nonEmpty }
-        val matchedResult = matched.map { case ((name, _, _, localId), matches) =>
-          val matchesInDataSources = matches
-            .filter { case (ns, nsi, ds) =>
-              dataSourceIds.isEmpty || dataSourceIds.contains(nsi.dataSourceId)
-            }.map { case (ns, nsi, ds) => Match(ns, ds, nsi, Kind.Fuzzy) }
-          Matches(matchesInDataSources.size, matchesInDataSources, name, localId)
+          foundFuzzyMatches.zip(fuzzyMatches).partition { case (_, m) => m.matches.nonEmpty }
+        val matchedResult = matched.map { case ((name, _, _, localId), m) =>
+          val matchesInDataSources = m.matches
+            .filter { m =>
+              dataSourceIds.isEmpty || dataSourceIds.contains(m.nameStringIndex.dataSourceId)
+            }
+          m.copy(matches = matchesInDataSources, localId = localId)
         }
         val matchedFuzzyResult = {
           val unmatchedParts = unmatched.map { case ((name, parts, _, localId), _) =>
             (name, parts.dropRight(1), localId)
           }
-          fuzzyMatch(unmatchedParts, dataSourceIds)
+          fuzzyMatch(unmatchedParts, dataSourceIds, parameters)
         }
         matchedFuzzyResult.map { mfr => matchedResult ++ mfr }
       }
@@ -91,15 +90,17 @@ class Resolver(db: Database, matcher: Matcher) extends SearcherCommons {
     }
   }
 
-  def resolveString(name: String, take: Int, drop: Int): Future[Matches] = {
-    resolveStrings(Seq(name)).map { _.head }
+  def resolveString(name: String, parameters: Parameters): Future[Matches] = {
+    resolveStrings(Seq(name), parameters).map { _.head }
   }
 
-  def resolveStrings(names: Seq[String]): Future[Seq[Matches]] = {
-    resolve(names.map { n => NameRequest(n, None) }, Vector())
+  def resolveStrings(names: Seq[String], parameters: Parameters): Future[Seq[Matches]] = {
+    val nrs = names.map { n => NameRequest(n, None) }
+    resolve(nrs, Vector(), parameters)
   }
 
-  def resolve(names: Seq[NameRequest], dataSourceIds: Vector[Int]): Future[Seq[Matches]] = {
+  def resolve(names: Seq[NameRequest], dataSourceIds: Vector[Int],
+              parameters: Parameters): Future[Seq[Matches]] = {
     val namesCapital = names.map { n => NameRequest(capitalize(n.value), n.localId) }
 
     val nameStringsPerFuture = 200
@@ -110,36 +111,37 @@ class Resolver(db: Database, matcher: Matcher) extends SearcherCommons {
 
     scientificNamesFuture.flatMap { scientificNamesIds =>
       val exactMatches = scientificNamesIds.grouped(scientificNamesIds.size / 50 + 1).map { snIds =>
-        val qry =
-          DBIO.sequence(snIds.map { case (sn, _) =>
-            val canUuid: UUID = sn.canonizedUuid().map { _.id }.getOrElse(gen.generate(""))
-            exactNamesQueryCompiled((sn.input.id, canUuid)).result
-          })
-        db.run(qry)
+        val qry = snIds.map { case (sn, _) =>
+          val canUuid: UUID = sn.canonizedUuid().map { _.id }.getOrElse(gen.generate(""))
+          val ns = exactNamesQuery(sn.input.id, canUuid)
+          val pms = parameters.copy(query = sn.input.verbatim)
+          (ns, pms)
+        }
+        nameStringsSequenceMatches(qry)
       }
 
       Future.sequence(exactMatches).flatMap { exactMatchesChunks =>
         val exactMatches = exactMatchesChunks.flatten.toList
 
         val (matched, unmatched) = exactMatches.zip(scientificNamesIds).partition {
-          case (matchedNameStrings, _) => matchedNameStrings.nonEmpty
+          case (m, _) => m.matches.nonEmpty
         }
 
         val parts = unmatched.map { case (_, (sn, localId)) =>
           (sn.input.verbatim, sn.canonized().orZero.split(' '), localId)
         }
-        val fuzzyMatches = fuzzyMatch(parts, dataSourceIds)
+        val fuzzyMatches = fuzzyMatch(parts, dataSourceIds, parameters)
 
-        val matchesResult = matched.map { case (matchedNameStrings, (sn, localId)) =>
-          val matches = matchedNameStrings
-              .filter { case (ns, nsi, ds) =>
-                dataSourceIds.isEmpty || dataSourceIds.contains(nsi.dataSourceId)
-              }.map { case (ns, nsi, ds) =>
-                val kind: Kind = if (ns.name.id == sn.input.id) Kind.ExactNameMatchByUUID
-                                 else Kind.ExactCanonicalNameMatchByUUID
-                Match(ns, ds, nsi, kind)
+        val matchesResult = matched.map { case (mtch, (sn, localId)) =>
+          val ms = mtch.matches
+              .filter { m =>
+                dataSourceIds.isEmpty || dataSourceIds.contains(m.nameStringIndex.dataSourceId)
+              }.map { m =>
+                val k: Kind = if (m.nameString.name.id == sn.input.id) Kind.ExactNameMatchByUUID
+                              else Kind.ExactCanonicalNameMatchByUUID
+                m.copy(kind = k)
               }
-          Matches(matches.size, matches, sn.input.verbatim, localId)
+          mtch.copy(matches = ms, localId = localId)
         }
 
         fuzzyMatches.map { fm => fm ++ matchesResult }

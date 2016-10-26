@@ -6,18 +6,12 @@ import java.util.UUID
 import resolver.model._
 import slick.driver.PostgresDriver.api._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class FacetedSearcher(db: Database) extends SearcherCommons {
+class FacetedSearcher(val db: Database) extends Materializer {
+  import Materializer.Parameters
+
   private val gen = UuidGenerator()
-  private val nameStrings = TableQuery[NameStrings]
-  private val authorWords = TableQuery[AuthorWords]
-  private val uninomialWords = TableQuery[UninomialWords]
-  private val genusWords = TableQuery[GenusWords]
-  private val speciesWords = TableQuery[SpeciesWords]
-  private val subspeciesWords = TableQuery[SubspeciesWords]
-  private val yearWords = TableQuery[YearWords]
 
   private[resolver] def resolveCanonical(canonicalName: String) = {
     val canonicalNameUuid = gen.generate(canonicalName)
@@ -93,9 +87,8 @@ class FacetedSearcher(db: Database) extends SearcherCommons {
   }
 
   def findNameStringByUuid(uuid: UUID): Future[Matches] = {
-    val query = joinOnDatasources(nameStrings.filter { ns => ns.id === uuid }.take(1))
-    db.run(query.result).map { xs =>
-      Matches(xs.size, xs.map { case (ns, nsi, ds) => Match(ns, ds, nsi) }, uuid.toString)
-    }
+    nameStringsMatches(nameStrings.filter { ns => ns.id === uuid },
+                       Parameters(take = 1, drop = 0, withSurrogates = true,
+                                  query = uuid.toString))
   }
 }
