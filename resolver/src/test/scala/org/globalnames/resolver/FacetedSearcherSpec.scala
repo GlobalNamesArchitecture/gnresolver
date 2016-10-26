@@ -15,7 +15,7 @@ class FacetedSearcherSpec extends SpecConfig {
   val conn = Database.forConfig("postgresql-test")
   val nameStrings = TableQuery[NameStrings]
   val faceted = new FacetedSearcher(conn)
-  val searcher = new Searcher(mock[Resolver], faceted)
+  val searcher = new Searcher(conn, mock[Resolver], faceted)
 
   seed("test_resolver", "FacetedSearcherSpec")
 
@@ -87,13 +87,13 @@ class FacetedSearcherSpec extends SpecConfig {
       it("resolves no mathches when string request of length less than 4 is provided") {
         val query = "Aaa"
         whenReady(searcher.resolve(query, CanonicalModifier, true)) { res =>
-          res shouldBe Matches.empty(query + "%")
+          res shouldBe Matches.empty(query)
         }
       }
 
       it("returns no wildcarded matches when empty string is provided") {
         whenReady(searcher.resolve("", CanonicalModifier, true)) { res =>
-          res shouldBe Matches.empty("%")
+          res shouldBe Matches.empty("")
         }
       }
     }
@@ -265,13 +265,13 @@ class FacetedSearcherSpec extends SpecConfig {
             ns51b7b1b207ba5a0ea65dc5ca402b58de,
             nsedd01cc80e7a53708d90173d24c9341c
           )
-          res.suppliedNameString shouldBe (query + "%")
+          res.suppliedNameString shouldBe query
         }
       }
 
       it("returns no wildcarded matches when empty string is provided") {
         whenReady(searcher.resolve("", NameStringModifier, true)) { res =>
-          res shouldBe Matches.empty("%")
+          res shouldBe Matches.empty("")
         }
       }
 
@@ -300,7 +300,7 @@ class FacetedSearcherSpec extends SpecConfig {
       it("resolves no matches when string request of length less than 4 is provided") {
         val query = "Aaa"
         whenReady(searcher.resolve(query, NameStringModifier, true)) { res =>
-          res shouldBe Matches.empty(query + "%")
+          res shouldBe Matches.empty(query)
         }
       }
     }

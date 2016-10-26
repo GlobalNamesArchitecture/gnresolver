@@ -144,7 +144,7 @@ trait Service extends Protocols with CrossMapProtocols {
   val matcher: Matcher
   lazy val resolver = new Resolver(database, matcher)
   lazy val facetedSearcher = new FacetedSearcher(database)
-  lazy val searcher: Searcher = new Searcher(resolver, facetedSearcher)
+  lazy val searcher = new Searcher(database, resolver, facetedSearcher)
   lazy val crossMap = new CrossMapSearcher(database)
 
   def resolve(search: SearchPart, take: Int, drop: Int): Future[Matches] = {
