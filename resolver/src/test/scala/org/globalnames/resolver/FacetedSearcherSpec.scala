@@ -18,7 +18,7 @@ class FacetedSearcherSpec extends SpecConfig {
   val nameStrings = TableQuery[NameStrings]
   val faceted = new FacetedSearcher(conn)
   val searcher = new Searcher(conn, mock[Resolver], faceted)
-  val parameters = Parameters(take = 50, drop = 0, withSurrogates = false)
+  val parameters = Parameters(take = 50, drop = 0, withSurrogates = false, withVernaculars = false)
 
   seed("test_resolver", "FacetedSearcherSpec")
 

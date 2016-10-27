@@ -16,7 +16,7 @@ class ResolverIntegrationSpec extends SpecConfig {
   val nameStrings = TableQuery[NameStrings]
   var matcher: Matcher = _
   var resolver: Resolver = _
-  val parameters = Parameters(take = 50, drop = 0, withSurrogates = false)
+  val parameters = Parameters(take = 50, drop = 0, withSurrogates = false, withVernaculars = false)
 
   seed("test_resolver", "ResolverIntegrationSpec")
 

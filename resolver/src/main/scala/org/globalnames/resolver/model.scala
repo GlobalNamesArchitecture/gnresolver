@@ -14,6 +14,7 @@ package object model {
   type LocalId = Int
 
   case class Match(nameString: NameString, dataSource: DataSource, nameStringIndex: NameStringIndex,
+                   vernacularStrings: Seq[(VernacularString, VernacularStringIndex)],
                    kind: Kind = Kind.None)
 
   case class Matches(total: Long, matches: Seq[Match],

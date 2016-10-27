@@ -82,6 +82,8 @@ trait Protocols extends DefaultJsonProtocol with NullOptions {
                                                                           .getOrElse(JsNull)
       , "classificationPathRanks" -> m.nameStringIndex.classificationPathRanks
                                                       .map { x => JsString(x) }.getOrElse(JsNull)
+      , "vernacular" ->
+        JsArray(m.vernacularStrings.map { case (v, vs) => JsString(v.name) }.toVector)
       , "kind" -> KindJsonFormat.write(m.kind)
     )
 
@@ -112,7 +114,7 @@ trait Protocols extends DefaultJsonProtocol with NullOptions {
                             classificationPathIds = cpiOpt,
                             classificationPathRanks = cprOpt)
           }
-          Match(nameString, dataSource, nameStringIndex, kindJs.convertTo[Kind])
+          Match(nameString, dataSource, nameStringIndex, Seq(), kindJs.convertTo[Kind])
         case _ => deserializationError("Match expected")
       }
   }
@@ -166,15 +168,16 @@ trait Service extends Protocols with CrossMapProtocols {
           val getNameResolvers =
             get & parameters('names.as[Seq[NameRequest]], 'dataSourceIds.as[Vector[Int]].?,
                              'take ? nameStringsMaxCount, 'drop ? 0,
-                             'surrogates ? false)
+                             'surrogates ? false, 'vernaculars ? false)
           val postNameResolvers =
             post & entity(as[Seq[NameRequest]]) &
               parameters('dataSourceIds.as[Vector[Int]].?,
-                         'take ? nameStringsMaxCount, 'drop ? 0, 'surrogates ? false)
+                         'take ? nameStringsMaxCount, 'drop ? 0, 'surrogates ? false,
+                         'vernaculars ? false)
 
           (getNameResolvers | postNameResolvers) {
-            (names, dataSourceIds, take, drop, withSurrogates) => complete {
-              val params = Parameters(take, drop, withSurrogates)
+            (names, dataSourceIds, take, drop, withSurrogates, withVernaculars) => complete {
+              val params = Parameters(take, drop, withSurrogates, withVernaculars)
               resolver.resolve(names.take(take), dataSourceIds.orZero, params)
             }
           }
@@ -188,11 +191,11 @@ trait Service extends Protocols with CrossMapProtocols {
           }
         } ~ path("name_strings") {
           (get & parameters('search_term, 'take ? nameStringsMaxCount, 'drop ? 0,
-                            'surrogates ? false)) {
-            (searchTerm, take, drop, withSurrogates) => complete {
+                            'surrogates ? false, 'vernaculars ? false)) {
+            (searchTerm, take, drop, withSurrogates, withVernaculars) => complete {
               val search = QueryParser.result(searchTerm)
               logger.debug(s"$search")
-              val params = Parameters(take, drop, withSurrogates)
+              val params = Parameters(take, drop, withSurrogates, withVernaculars)
               resolve(search, params)
             }
           }
