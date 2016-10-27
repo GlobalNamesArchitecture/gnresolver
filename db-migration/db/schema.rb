@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161025175634) do
+ActiveRecord::Schema.define(version: 20161026175634) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -110,5 +110,21 @@ ActiveRecord::Schema.define(version: 20161025175634) do
   end
 
   add_index "name_strings__year", ["year"], name: "index_name_strings__year_on_year", using: :btree
+
+  create_table "vernacular_string_indices", id: false, force: :cascade do |t|
+    t.integer "data_source_id",                   null: false
+    t.string  "taxon_id",             limit: 255, null: false
+    t.uuid    "vernacular_string_id",             null: false
+    t.string  "language",             limit: 255, null: false
+    t.string  "locality",             limit: 255, null: false
+    t.string  "country_code",         limit: 255, null: false
+  end
+
+  add_index "vernacular_string_indices", ["data_source_id", "taxon_id"], name: "index__dsid_tid", using: :btree
+  add_index "vernacular_string_indices", ["vernacular_string_id"], name: "index__vsid", using: :btree
+
+  create_table "vernacular_strings", id: :uuid, default: nil, force: :cascade do |t|
+    t.string "name", limit: 255, null: false
+  end
 
 end
