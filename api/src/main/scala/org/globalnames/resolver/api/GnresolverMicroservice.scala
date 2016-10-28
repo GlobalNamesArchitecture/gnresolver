@@ -224,8 +224,21 @@ object GnresolverMicroservice extends App with Service {
   override implicit val executor = system.dispatcher
   override implicit val materializer = ActorMaterializer()
 
-  override val config = ConfigFactory.load()
   override val logger = Logging(system, getClass)
+  override val config = {
+    val loggerPath = for {
+      prop <- util.Properties.propOrNone("config")
+      path <- new File(prop).exists().option { prop }
+    } yield path
+
+    loggerPath match {
+      case Some(lp) =>
+        logger.info(s"Loading config from $lp")
+        val customConfig = ConfigFactory.parseFile(new File(lp))
+        ConfigFactory.load(customConfig)
+      case None => logger.info("Loading default config"); ConfigFactory.load()
+    }
+  }
   override val database = Database.forConfig("postgresql")
   override val matcher = {
     logger.info("Matcher: restoring")
