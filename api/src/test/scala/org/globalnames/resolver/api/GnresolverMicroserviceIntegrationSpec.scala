@@ -64,8 +64,9 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
                            obj.render(ConfigRenderOptions.concise).parseJson
                          }
       describe(s"$description ($testFilePath)") {
-        for { url <- conf.getStringList("request.urls")
-              method <- conf.getStringList("request.methods") } {
+        for { request <- conf.getConfigList("requests")
+              (method, urls) = (request.getString("method"), request.getStringList("urls"))
+              url <- urls } {
           test(description, method, url, statusCode, responseBody)
         }
       }
