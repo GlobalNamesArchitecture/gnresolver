@@ -7,20 +7,25 @@ import java.nio.file.Paths
 
 import akka.event.Logging
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import akka.http.scaladsl.model.Uri
+import akka.http.scaladsl.model.Uri.Query
 import akka.http.scaladsl.model.ContentTypes._
 import akka.http.scaladsl.model.{HttpEntity, StatusCode}
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.apache.commons.io.FileUtils
 import model.Matches
-import CrossMapSearcher.{Result, Target, Source}
+import CrossMapSearcher.{Result, Source, Target}
 import slick.driver.PostgresDriver.api._
 
 import scala.collection.JavaConversions._
-import com.typesafe.config.{ConfigFactory, ConfigRenderOptions}
+import com.typesafe.config.{ConfigFactory, Config, ConfigRenderOptions}
 import spray.json._
 import resolver.Ops._
 import akka.http.scaladsl.server.Route
+
+import scalaz._
+import Scalaz._
 
 class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfig
                                                with Service with ScalatestRouteTest {
@@ -33,19 +38,33 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
   describe("GnresolverMicroservice") {
     seed("test_api", "GnresolverMicroserviceIntegrationSpec")
 
-    def test(description: String, method: String, url: String,
+    def test(description: String, requestConfig: Config,
              statusCode: StatusCode, responseBody: Option[JsValue]): Unit = {
-        it(s"$method $url ~> $statusCode") {
+      val method = requestConfig.getString("method")
+      for (url <- requestConfig.getStringList("urls")) {
+        val parameters = requestConfig.getOptionalObject("parameters").map { p =>
+          p.entrySet().map { entry =>
+            (entry.getKey, entry.getValue.render(ConfigRenderOptions.concise))
+          }.toSeq
+        }.getOrElse(Seq())
         val request = method match {
-          case "GET" => Get(url)
-          case "POST" => Post(url)
+          case "GET" =>
+            Get(Uri(url).withQuery(Query(parameters: _*)))
+          case "POST" =>
+            val data = requestConfig.getOptionalConfigValue("data").map { dataConf =>
+              dataConf.render(ConfigRenderOptions.concise)
+            }.orZero
+            Post(Uri(url).withQuery(Uri.Query(parameters: _*)),
+                 HttpEntity(`application/json`, data))
           case meth => fail(s"Method is not supported in testing: $meth")
         }
 
-        request ~> Route.seal(routes) ~> check {
-          status shouldBe statusCode
-          if (responseBody.isDefined) {
-            responseAs[String].parseJson shouldBe responseBody.value
+        it(s"${request.method} ${request.uri} ~> $statusCode") {
+          request ~> Route.seal(routes) ~> check {
+            status shouldBe statusCode
+            if (responseBody.isDefined) {
+              responseAs[String].parseJson shouldBe responseBody.value
+            }
           }
         }
       }
@@ -60,14 +79,12 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
 
       val description = conf.getString("description")
       val statusCode: StatusCode = conf.getInt("response.status")
-      val responseBody = conf.getOptionalObject("response.body").map { obj =>
-                           obj.render(ConfigRenderOptions.concise).parseJson
+      val responseBody = conf.getOptionalConfigValue("response.body").map { conf =>
+                           conf.render(ConfigRenderOptions.concise).parseJson
                          }
       describe(s"$description ($testFilePath)") {
-        for { request <- conf.getConfigList("requests")
-              (method, urls) = (request.getString("method"), request.getStringList("urls"))
-              url <- urls } {
-          test(description, method, url, statusCode, responseBody)
+        for { request <- conf.getConfigList("requests") } {
+          test(description, request, statusCode, responseBody)
         }
       }
     }
@@ -75,20 +92,6 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
     describe("/name_resolvers") {
       describe("access by 'names' parameter") {
         describe("GET method") {
-          it("returns records for known names") {
-            Get("""/api/name_resolvers?""" +
-                """names=[{"value":"Favorinus+horridus"}]""") ~>
-            routes ~> check {
-              status shouldBe OK
-              val response = responseAs[Seq[Matches]]
-              response should have size 1
-
-              response(0).total shouldBe 1
-              response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
-              response(0).localId shouldBe None
-            }
-          }
-
           it("filters results by 'local_id' setting") {
             val localId = 7
             val url = """/api/name_resolvers?""" +
@@ -122,21 +125,6 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
         }
 
         describe("POST method") {
-          it("returns records for known names") {
-            Post("/api/name_resolvers", HttpEntity(`application/json`,
-              """[{"value":"Favorinus horridus"}]""")) ~>
-              routes ~> check {
-              status shouldBe OK
-              val response = responseAs[Seq[Matches]]
-              response should have size 1
-
-              response(0).total shouldBe 1
-              response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
-              response(0).localId shouldBe None
-            }
-          }
-
-
           it("filters results by 'local_id' setting") {
             val localId = 7
 
