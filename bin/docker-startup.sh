@@ -24,4 +24,9 @@ rake db:seed RACK_ENV=development --trace
 cd ..
 
 echo "Starting GNResolver API server"
-sbt "~;test:compile;scalastyle;test;api/reStart"
+
+if [ "$RUN_MODE" = "tests" ]; then
+  sbt "~;test:compile;scalastyle;test;api/reStart"
+else
+  sbt "~api/reStart"
+fi
