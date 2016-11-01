@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161026175634) do
+ActiveRecord::Schema.define(version: 20161031210429) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -115,9 +115,9 @@ ActiveRecord::Schema.define(version: 20161026175634) do
     t.integer "data_source_id",                   null: false
     t.string  "taxon_id",             limit: 255, null: false
     t.uuid    "vernacular_string_id",             null: false
-    t.string  "language",             limit: 255, null: false
-    t.string  "locality",             limit: 255, null: false
-    t.string  "country_code",         limit: 255, null: false
+    t.string  "language",             limit: 255
+    t.string  "locality",             limit: 255
+    t.string  "country_code",         limit: 255
   end
 
   add_index "vernacular_string_indices", ["data_source_id", "taxon_id"], name: "index__dsid_tid", using: :btree
