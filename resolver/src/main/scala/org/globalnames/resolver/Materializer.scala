@@ -25,28 +25,16 @@ trait Materializer {
 
   private def wrapNameStringQuery(nameStringsQuery: Query[NameStrings, NameString, Seq],
                                   parameters: Parameters) = {
-    val nameStringsQuery1 =
+    val nameStringsQuerySurrogates =
       if (parameters.withSurrogates) nameStringsQuery
       else nameStringsQuery.filter { !_.surrogate }
     val query = for {
-      ns <- nameStringsQuery1
+      ns <- nameStringsQuerySurrogates.drop(parameters.drop).take(parameters.take)
       nsi <- nameStringIndicies.filter { nsi => nsi.nameStringId === ns.id }
       ds <- dataSources.filter { ds => ds.id === nsi.dataSourceId }
     } yield (ns, nsi, ds)
     val queryCount = query.countDistinct
     (query, queryCount)
-  }
-
-  private def wrapVernaculars(query: Query[(NameStrings, NameStringIndices, DataSources),
-                                           (NameString, NameStringIndex, DataSource), Seq]) = {
-    val query1 = for {
-      (ns, nsi, ds) <- query
-      vsi <- vernacularStringIndices.filter { vsi =>
-        vsi.dataSourceId === nsi.dataSourceId && vsi.taxonId === nsi.taxonId
-      }
-      vs <- vernacularStrings.filter { vs => vs.id === vsi.vernacularStringId }
-    } yield (vs, vsi)
-    query1
   }
 
   private def vernacularsGet(portion: Seq[(NameString, NameStringIndex, DataSource)],
@@ -74,7 +62,7 @@ trait Materializer {
         parameters: Parameters): Future[Matches] = {
     val (query, queryCount) = wrapNameStringQuery(nameStringsQuery, parameters)
     for {
-      portion <- db.run(query.drop(parameters.dropActual).take(parameters.takeActual).result)
+      portion <- db.run(query.result)
       count <- db.run(queryCount.result)
       vernaculars <- vernacularsGet(portion, parameters)
     } yield {
