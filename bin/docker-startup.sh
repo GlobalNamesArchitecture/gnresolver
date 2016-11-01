@@ -26,7 +26,7 @@ cd ..
 echo "Starting GNResolver API server"
 
 if [ "$RUN_MODE" = "tests" ]; then
-  sbt "~;test:compile;scalastyle;test;api/reStart"
+  sbt "~;test:compile;test:scalastyle;test;api/reStart"
 else
   sbt "~api/reStart"
 fi
