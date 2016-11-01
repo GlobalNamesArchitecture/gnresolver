@@ -5,6 +5,7 @@ services:
     ports:
       - "0.0.0.0:9001:9001"
     environment:
+      RUN_MODE: tests
       RACK_ENV: development
       DB_HOST: pg
       DB_DATABASE: development
