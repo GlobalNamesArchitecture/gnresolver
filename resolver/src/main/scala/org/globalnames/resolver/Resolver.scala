@@ -91,7 +91,9 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
   }
 
   def resolveString(name: String, parameters: Parameters): Future[Matches] = {
-    resolveStrings(Seq(name), parameters).map { _.head }
+    resolveStrings(Seq(name), parameters).map { x =>
+      x.headOption.getOrElse(Matches.empty(name))
+    }
   }
 
   def resolveStrings(names: Seq[String], parameters: Parameters): Future[Seq[Matches]] = {

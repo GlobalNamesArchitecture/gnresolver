@@ -19,7 +19,7 @@ import CrossMapSearcher.{Result, Source, Target}
 import slick.driver.PostgresDriver.api._
 
 import scala.collection.JavaConversions._
-import com.typesafe.config.{ConfigFactory, Config, ConfigRenderOptions}
+import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigValueType}
 import spray.json._
 import resolver.Ops._
 import akka.http.scaladsl.server.Route
@@ -44,7 +44,11 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       for (url <- requestConfig.getStringList("urls")) {
         val parameters = requestConfig.getOptionalObject("parameters").map { p =>
           p.entrySet().map { entry =>
-            (entry.getKey, entry.getValue.render(ConfigRenderOptions.concise))
+            val valueStr = entry.getValue.valueType match {
+              case ConfigValueType.STRING => entry.getValue.unwrapped().asInstanceOf[String]
+              case _ => entry.getValue.render(ConfigRenderOptions.concise)
+            }
+            (entry.getKey, valueStr)
           }.toSeq
         }.getOrElse(Seq())
         val request = method match {
