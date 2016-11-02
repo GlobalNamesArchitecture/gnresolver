@@ -354,7 +354,7 @@ class FacetedSearcherSpec extends SpecConfig {
     describe(".findNameStringByUuid") {
       it("resolves") {
         whenReady(faceted.findNameStringByUuid(
-          UUID.fromString("073bab60-1816-5b5c-b018-87b4193db6f7"))) { res =>
+          UUID.fromString("073bab60-1816-5b5c-b018-87b4193db6f7"), false)) { res =>
             res.matches.map { _.nameString } should contain only ns073bab6018165b5cb01887b4193db6f7
         }
       }

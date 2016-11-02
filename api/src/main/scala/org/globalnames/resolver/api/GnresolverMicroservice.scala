@@ -182,8 +182,10 @@ trait Service extends Protocols with CrossMapProtocols {
             }
           }
         } ~ path("name_strings" / JavaUUID) { uuid =>
-          complete {
-            facetedSearcher.findNameStringByUuid(uuid)
+          (get & parameters('vernaculars ? false)) { vernaculars =>
+            complete {
+              facetedSearcher.findNameStringByUuid(uuid, vernaculars)
+            }
           }
         } ~ path("name_strings" / Remaining) { remaining =>
           complete {

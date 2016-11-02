@@ -86,9 +86,9 @@ class FacetedSearcher(val db: Database) extends Materializer {
     db.run(query.result)
   }
 
-  def findNameStringByUuid(uuid: UUID): Future[Matches] = {
+  def findNameStringByUuid(uuid: UUID, withVernaculars: Boolean): Future[Matches] = {
     nameStringsMatches(nameStrings.filter { ns => ns.id === uuid },
                        Parameters(take = 1, drop = 0, withSurrogates = true,
-                                  withVernaculars = true, query = uuid.toString))
+                                  withVernaculars, query = uuid.toString))
   }
 }
