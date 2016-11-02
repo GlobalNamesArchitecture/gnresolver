@@ -38,7 +38,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
   describe("GnresolverMicroservice") {
     seed("test_api", "GnresolverMicroserviceIntegrationSpec")
 
-    def test(description: String, requestConfig: Config,
+    def test(pendingTest: Boolean, description: String, requestConfig: Config,
              statusCode: StatusCode, responseBody: Option[JsValue]): Unit = {
       val method = requestConfig.getString("method")
       for (url <- requestConfig.getStringList("urls")) {
@@ -64,6 +64,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
         }
 
         it(s"${request.method} ${request.uri} ~> $statusCode") {
+          if (pendingTest) pending
           request ~> Route.seal(routes) ~> check {
             status shouldBe statusCode
             if (responseBody.isDefined) {
@@ -86,9 +87,10 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       val responseBody = conf.getOptionalConfigValue("response.body").map { conf =>
                            conf.render(ConfigRenderOptions.concise).parseJson
                          }
+      val pending = conf.getOptionalBoolean("pending").getOrElse(false)
       describe(s"$description ($testFilePath)") {
         for { request <- conf.getConfigList("requests") } {
-          test(description, request, statusCode, responseBody)
+          test(pending, description, request, statusCode, responseBody)
         }
       }
     }
