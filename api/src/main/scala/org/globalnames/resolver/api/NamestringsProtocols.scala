@@ -6,10 +6,49 @@ import java.util.UUID
 
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import Resolver.NameRequest
-import model.{DataSource, Kind, Match, Matches, Name, NameString, NameStringIndex}
+import model.{DataSource, Kind, Matches, NameStringIndex, LocalId}
 import spray.json.{DefaultJsonProtocol, _}
 
 trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
+  implicit def uuidFormat: JsonFormat[UUID] = new JsonFormat[UUID] {
+    def write(uuid: UUID) = JsString(uuid.toString)
+
+    def read(value: JsValue) = value match {
+      case JsString(x) => UUID.fromString(x)
+      case _ => deserializationError("String expected")
+    }
+  }
+
+  case class Response(page: Int, perPage: Int, total: Long, localId: Option[LocalId],
+                      suppliedNameString: String, matches: Seq[ResponseItem])
+
+  case class ResponseItem(nameStringUuid: UUID, nameString: String,
+                          canonicalNameUuid: Option[UUID], canonicalName: Option[String],
+                          surrogate: Option[Boolean],
+                          dataSourceId: Int, dataSourceTitle: String,
+                          taxonId: String, globalId: Option[String],
+                          classificationPath: Option[String], classificationPathIds: Option[String],
+                          classificationPathRanks: Option[String],
+                          vernacular: Seq[String],
+                          kind: Kind)
+
+  def result(matches: Matches, page: Int, perPage: Int): Response = {
+    val items = matches.matches.map { m =>
+      ResponseItem(m.nameString.name.id, m.nameString.name.value,
+        m.nameString.canonicalName.map { _.id }, m.nameString.canonicalName.map { _.value },
+        m.nameString.surrogate,
+        m.dataSource.id, m.dataSource.title,
+        m.nameStringIndex.taxonId, m.nameStringIndex.globalId,
+        m.nameStringIndex.classificationPath, m.nameStringIndex.classificationPathIds,
+        m.nameStringIndex.classificationPathRanks,
+        m.vernacularStrings.map { _._1.name },
+        m.kind)
+    }
+    Response(page, perPage, matches.total, matches.localId, matches.suppliedNameString, items)
+  }
+
+  implicit val responseItemFormat = jsonFormat14(ResponseItem.apply)
+  implicit val responseFormat = jsonFormat6(Response.apply)
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
     def write(x: UUID): JsString = JsString(x.toString)
     def read(value: JsValue): UUID = value match {
@@ -17,8 +56,9 @@ trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
       case x => deserializationError("Expected UUID as JsString, but got " + x)
     }
   }
-  implicit object KindJsonFormat extends RootJsonFormat[Kind] {
+  implicit def kindFormat: JsonFormat[Kind] = new JsonFormat[Kind] {
     def write(x: Kind): JsString = JsString(x.toString)
+
     def read(value: JsValue): Kind = value match {
       case JsString(js) => js match {
         case "None" => Kind.None
@@ -30,66 +70,8 @@ trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
       case x => deserializationError("Expected Kind as JsString, but got " + x)
     }
   }
-  implicit val nameFormat = jsonFormat2(Name.apply)
-  implicit val nameStringFormat = jsonFormat3(NameString.apply)
   implicit val nameStringIndexFormat = jsonFormat12(NameStringIndex.apply)
   implicit val dataSourceFormat = jsonFormat3(DataSource.apply)
-  implicit object MatchJsonFormat extends RootJsonFormat[Match] {
-    def write(m: Match): JsObject = JsObject(
-        "nameStringUuid" -> JsString(m.nameString.name.id.toString)
-      , "nameString" -> JsString(m.nameString.name.value)
-      , "surrogate" -> m.nameString.surrogate.map { x => JsBoolean(x) }.getOrElse(JsNull)
-      , "canonicalNameUuid" -> m.nameString.canonicalName.map { x => JsString(x.id.toString) }
-        .getOrElse(JsNull)
-      , "canonicalName" -> m.nameString.canonicalName.map { x => JsString(x.value) }
-        .getOrElse(JsNull)
-      , "dataSourceId" -> JsNumber(m.dataSource.id)
-      , "dataSourceTitle" -> JsString(m.dataSource.title)
-      , "taxonId" -> JsString(m.nameStringIndex.taxonId)
-      , "globalId" -> m.nameStringIndex.globalId.map { x => JsString(x) }.getOrElse(JsNull)
-      , "classificationPath" -> m.nameStringIndex.classificationPath.map { x => JsString(x) }
-        .getOrElse(JsNull)
-      , "classificationPathIds" -> m.nameStringIndex.classificationPathIds.map { x => JsString(x) }
-        .getOrElse(JsNull)
-      , "classificationPathRanks" -> m.nameStringIndex.classificationPathRanks
-        .map { x => JsString(x) }.getOrElse(JsNull)
-      , "vernacular" ->
-        JsArray(m.vernacularStrings.map { case (v, vs) => JsString(v.name) }.toVector)
-      , "kind" -> KindJsonFormat.write(m.kind)
-    )
-
-    def read(m: JsValue): Match =
-      m.asJsObject.getFields("nameStringUuid", "nameString", "surrogate",
-        "canonicalNameUuid", "canonicalName",
-        "dataSourceId", "dataSourceTitle", "kind",
-        "taxonId", "globalId", "classificationPath",
-        "classificationPathIds", "classificationPathRanks") match {
-        case Seq(JsString(nsUuid), JsString(ns), surrogateJs, cnUuidJs, cnJs, JsNumber(dsi),
-        JsString(dst), kindJs, JsString(taxonId), globalId,
-        classificationPath, classificationPathIds, classificationPathRanks) =>
-          val canonical =
-            for { cnUuidOpt <- cnUuidJs.convertTo[Option[UUID]]
-                  cnOpt <- cnJs.convertTo[Option[String]] } yield Name(cnUuidOpt, cnOpt)
-          val surrogateOpt = surrogateJs.convertTo[Option[Boolean]]
-          val nameString = NameString(Name(UUID.fromString(nsUuid), ns), canonical, surrogateOpt)
-          val dataSource = DataSource(dsi.toInt, dst, "")
-          val nameStringIndex = {
-            val cpOpt = classificationPath.convertTo[Option[String]]
-            val cpiOpt = classificationPathIds.convertTo[Option[String]]
-            val cprOpt = classificationPathRanks.convertTo[Option[String]]
-            NameStringIndex(dataSource.id, nameString.name.id, url = None,
-              taxonId = taxonId, globalId = globalId.convertTo[Option[String]],
-              localId = None, nomenclaturalCodeId = None,
-              rank = None, acceptedTaxonId = None,
-              classificationPath = cpOpt,
-              classificationPathIds = cpiOpt,
-              classificationPathRanks = cprOpt)
-          }
-          Match(nameString, dataSource, nameStringIndex, Seq(), kindJs.convertTo[Kind])
-        case _ => deserializationError("Match expected")
-      }
-  }
-  implicit val matchesFormat = jsonFormat4(Matches.apply)
   implicit val nameRequestFormat = jsonFormat2(NameRequest.apply)
 
   implicit def unmarshalStringJson2NameRequest: Unmarshaller[String, Seq[NameRequest]] =

@@ -62,19 +62,23 @@ trait Service extends NamestringsProtocols with CrossMapProtocols {
           (getNameResolvers | postNameResolvers) {
             (names, dataSourceIds, perPage, page, withSurrogates, withVernaculars) => complete {
               val params = Parameters(page, perPage, withSurrogates, withVernaculars)
-              resolver.resolve(names.take(nameStringsMaxCount), dataSourceIds.orZero, params)
+              val matches = resolver.resolve(names.take(nameStringsMaxCount),
+                                             dataSourceIds.orZero, params)
+              matches.map { ms => ms.map { m => result(m, page, perPage) } }
             }
           }
         } ~ path("name_strings" / JavaUUID) { uuid =>
           (get & parameters('page ? 0, 'per_page ? 50, 'vernaculars ? false)) {
             (page, perPage, vernaculars) => complete {
               val params = Parameters(page, perPage, withSurrogates = false, vernaculars)
-              facetedSearcher.findNameStringByUuid(uuid, params)
+              facetedSearcher.findNameStringByUuid(uuid, params).map { m =>
+                result(m, page, perPage)
+              }
             }
           }
         } ~ path("name_strings" / Remaining) { remaining =>
           complete {
-            Matches.empty(remaining)
+            result(Matches.empty(remaining), 0, 0)
           }
         } ~ path("name_strings") {
           (get & parameters('search_term, 'per_page ? nameStringsMaxCount, 'page ? 0,
@@ -83,7 +87,7 @@ trait Service extends NamestringsProtocols with CrossMapProtocols {
               val search = QueryParser.result(searchTerm)
               logger.debug(s"$search")
               val params = Parameters(page, perPage, withSurrogates, withVernaculars)
-              resolve(search, params)
+              resolve(search, params).map { m => result(m, page, perPage) }
             }
           }
         } ~ path("names_strings" / JavaUUID / "dataSources") { uuid =>
