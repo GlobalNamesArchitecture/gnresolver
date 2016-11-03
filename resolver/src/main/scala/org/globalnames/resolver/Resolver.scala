@@ -62,7 +62,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
       val queryFoundFuzzy = nameStringsSequenceMatches(
         foundFuzzyMatches.map { case (verbatim, _, candUuids, _) =>
           val ns = nameStrings.filter { ns => ns.canonicalUuid.inSetBind(candUuids) }
-          val params = parameters.copy(query = verbatim, take = fuzzyNameStringsMaxCount,
+          val params = parameters.copy(query = verbatim, perPage = fuzzyNameStringsMaxCount,
                                        kind = Kind.Fuzzy)
           (ns, params)
         })

@@ -29,12 +29,12 @@ trait Materializer {
       if (parameters.withSurrogates) nameStringsQuery
       else nameStringsQuery.filter { !_.surrogate }
     val query = for {
-      ns <- nameStringsQuerySurrogates.drop(parameters.drop).take(parameters.take)
+      ns <- nameStringsQuerySurrogates
       nsi <- nameStringIndicies.filter { nsi => nsi.nameStringId === ns.id }
       ds <- dataSources.filter { ds => ds.id === nsi.dataSourceId }
     } yield (ns, nsi, ds)
-    val queryCount = query.countDistinct
-    (query, queryCount)
+    val queryCount = query.size
+    (query.drop(parameters.drop).take(parameters.take), queryCount)
   }
 
   private def vernacularsGet(portion: Seq[(NameString, NameStringIndex, DataSource)],
@@ -79,7 +79,7 @@ trait Materializer {
           Future[Seq[Matches]] = {
     val (queryCount, query) = nameStringsQueries.map { case (nsq, parameters) =>
       val (res, count) = wrapNameStringQuery(nsq, parameters)
-      (count.result, res.drop(parameters.dropActual).take(parameters.takeActual).result)
+      (count.result, res.drop(parameters.drop).take(parameters.take).result)
     }.unzip
     for {
       portions <- db.run(DBIO.sequence(query))
@@ -103,10 +103,11 @@ trait Materializer {
 }
 
 object Materializer {
-  case class Parameters(take: Int, drop: Int, withSurrogates: Boolean, withVernaculars: Boolean,
+  case class Parameters(page: Int, perPage: Int,
+                        withSurrogates: Boolean, withVernaculars: Boolean,
                         query: String = "",
                         localId: Option[LocalId] = None, kind: Kind = Kind.None) {
-    val takeActual = take.min(1000).max(0)
-    val dropActual = drop.max(0)
+    val take: Int = perPage.min(1000).max(0)
+    val drop: Int = (page * perPage).max(0)
   }
 }

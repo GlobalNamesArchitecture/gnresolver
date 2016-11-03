@@ -122,7 +122,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
                 val response = responseAs[Seq[Matches]]
                 response should have size 1
 
-                response(0).total shouldBe 1
+                response(0).total shouldBe 2
                 response(0).matches(0).nameString.name.value shouldBe
                   "Galeodila somalica Caporiacco 1945"
                 response(0).matches(0).dataSource.id shouldBe 7
@@ -154,7 +154,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
               val response = responseAs[Seq[Matches]]
               response should have size 1
 
-              response(0).total shouldBe 1
+              response(0).total shouldBe 2
               response(0).matches(0).nameString.name.value shouldBe
                 "Galeodila somalica Caporiacco 1945"
               response(0).matches(0).dataSource.id shouldBe 7

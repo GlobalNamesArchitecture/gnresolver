@@ -51,24 +51,25 @@ trait Service extends NamestringsProtocols with CrossMapProtocols {
         } ~ path("name_resolvers") {
           val getNameResolvers =
             get & parameters('names.as[Seq[NameRequest]], 'dataSourceIds.as[Vector[Int]].?,
-                             'take ? nameStringsMaxCount, 'drop ? 0,
+                             'per_page ? nameStringsMaxCount, 'page ? 0,
                              'surrogates ? false, 'vernaculars ? false)
           val postNameResolvers =
             post & entity(as[Seq[NameRequest]]) &
               parameters('dataSourceIds.as[Vector[Int]].?,
-                         'take ? nameStringsMaxCount, 'drop ? 0, 'surrogates ? false,
+                         'per_page ? nameStringsMaxCount, 'page ? 0, 'surrogates ? false,
                          'vernaculars ? false)
 
           (getNameResolvers | postNameResolvers) {
-            (names, dataSourceIds, take, drop, withSurrogates, withVernaculars) => complete {
-              val params = Parameters(take, drop, withSurrogates, withVernaculars)
-              resolver.resolve(names.take(take), dataSourceIds.orZero, params)
+            (names, dataSourceIds, perPage, page, withSurrogates, withVernaculars) => complete {
+              val params = Parameters(page, perPage, withSurrogates, withVernaculars)
+              resolver.resolve(names.take(nameStringsMaxCount), dataSourceIds.orZero, params)
             }
           }
         } ~ path("name_strings" / JavaUUID) { uuid =>
-          (get & parameters('vernaculars ? false)) { vernaculars =>
-            complete {
-              facetedSearcher.findNameStringByUuid(uuid, vernaculars)
+          (get & parameters('page ? 0, 'per_page ? 50, 'vernaculars ? false)) {
+            (page, perPage, vernaculars) => complete {
+              val params = Parameters(page, perPage, withSurrogates = false, vernaculars)
+              facetedSearcher.findNameStringByUuid(uuid, params)
             }
           }
         } ~ path("name_strings" / Remaining) { remaining =>
@@ -76,12 +77,12 @@ trait Service extends NamestringsProtocols with CrossMapProtocols {
             Matches.empty(remaining)
           }
         } ~ path("name_strings") {
-          (get & parameters('search_term, 'take ? nameStringsMaxCount, 'drop ? 0,
+          (get & parameters('search_term, 'per_page ? nameStringsMaxCount, 'page ? 0,
                             'surrogates ? false, 'vernaculars ? false)) {
-            (searchTerm, take, drop, withSurrogates, withVernaculars) => complete {
+            (searchTerm, perPage, page, withSurrogates, withVernaculars) => complete {
               val search = QueryParser.result(searchTerm)
               logger.debug(s"$search")
-              val params = Parameters(take, drop, withSurrogates, withVernaculars)
+              val params = Parameters(page, perPage, withSurrogates, withVernaculars)
               resolve(search, params)
             }
           }

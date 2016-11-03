@@ -16,15 +16,15 @@ class ResolverIntegrationSpec extends SpecConfig {
   val nameStrings = TableQuery[NameStrings]
   var matcher: Matcher = _
   var resolver: Resolver = _
-  val parameters = Parameters(take = 50, drop = 0, withSurrogates = false, withVernaculars = false)
+  val parameters = Parameters(page = 0, perPage = 50,
+                              withSurrogates = false, withVernaculars = false)
 
   seed("test_resolver", "ResolverIntegrationSpec")
 
   override def beforeAll(): Unit = {
     super.beforeAll()
 
-    val canonicalNamesQuery =
-      nameStrings.filter { _.canonical.isDefined }.map { _.canonical.get }
+    val canonicalNamesQuery = nameStrings.filter { _.canonical.isDefined }.map { _.canonical.get }
     val canonicalNames = Await.result(conn.run(canonicalNamesQuery.result), 5.seconds)
     matcher = Matcher(canonicalNames, maxDistance = 2)
     resolver = new Resolver(conn, matcher)

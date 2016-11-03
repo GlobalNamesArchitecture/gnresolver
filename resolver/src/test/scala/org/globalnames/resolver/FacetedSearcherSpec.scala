@@ -18,7 +18,8 @@ class FacetedSearcherSpec extends SpecConfig {
   val nameStrings = TableQuery[NameStrings]
   val faceted = new FacetedSearcher(conn)
   val searcher = new Searcher(conn, mock[Resolver], faceted)
-  val parameters = Parameters(take = 50, drop = 0, withSurrogates = false, withVernaculars = false)
+  val parameters = Parameters(page = 0, perPage = 50,
+                              withSurrogates = false, withVernaculars = false)
 
   seed("test_resolver", "FacetedSearcherSpec")
 
@@ -354,7 +355,7 @@ class FacetedSearcherSpec extends SpecConfig {
     describe(".findNameStringByUuid") {
       it("resolves") {
         whenReady(faceted.findNameStringByUuid(
-          UUID.fromString("073bab60-1816-5b5c-b018-87b4193db6f7"), false)) { res =>
+          UUID.fromString("073bab60-1816-5b5c-b018-87b4193db6f7"), parameters)) { res =>
             res.matches.map { _.nameString } should contain only ns073bab6018165b5cb01887b4193db6f7
         }
       }
