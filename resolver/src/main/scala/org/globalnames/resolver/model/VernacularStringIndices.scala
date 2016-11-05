@@ -6,7 +6,8 @@ import slick.driver.PostgresDriver.api._
 import slick.lifted.ProvenShape
 
 case class VernacularStringIndex(dataSourceId: Int, taxonId: String, vernacularStringId: UUID,
-                                 language: String, locality: String, countryCode: String)
+                                 language: Option[String], locality: Option[String],
+                                 countryCode: Option[String])
 
 class VernacularStringIndices(tag: Tag)
   extends Table[VernacularStringIndex](tag, "vernacular_string_indices") {
@@ -17,11 +18,11 @@ class VernacularStringIndices(tag: Tag)
 
   def vernacularStringId: Rep[UUID] = column[UUID]("vernacular_string_id")
 
-  def language: Rep[String] = column[String]("language")
+  def language: Rep[Option[String]] = column[Option[String]]("language")
 
-  def locality: Rep[String] = column[String]("locality")
+  def locality: Rep[Option[String]] = column[Option[String]]("locality")
 
-  def countryCode: Rep[String] = column[String]("country_code")
+  def countryCode: Rep[Option[String]] = column[Option[String]]("country_code")
 
   def * : ProvenShape[VernacularStringIndex] =
     (dataSourceId, taxonId, vernacularStringId, language, locality, countryCode) <>
