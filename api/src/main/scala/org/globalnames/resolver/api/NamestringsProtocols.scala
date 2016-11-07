@@ -19,6 +19,11 @@ trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
     }
   }
 
+  case class VernacularResponseItem(name: String, language: Option[String],
+                                    locality: Option[String], countryCode: Option[String])
+
+  case class VernacularResponse(dataSourceId: Int, values: Seq[VernacularResponseItem])
+
   case class Response(page: Int, perPage: Int, total: Long, localId: Option[LocalId],
                       suppliedNameString: String, matches: Seq[ResponseItem])
 
@@ -29,11 +34,17 @@ trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
                           taxonId: String, globalId: Option[String],
                           classificationPath: Option[String], classificationPathIds: Option[String],
                           classificationPathRanks: Option[String],
-                          vernacular: Seq[String],
+                          vernaculars: Seq[VernacularResponse],
                           kind: Kind)
 
   def result(matches: Matches, page: Int, perPage: Int): Response = {
     val items = matches.matches.map { m =>
+      val vernaculars = m.vernacularStrings.groupBy { _._2.dataSourceId }.map { case (dsi, xs) =>
+        val vris = xs.map { case (vs, vsi) =>
+          VernacularResponseItem(vs.name, vsi.language, vsi.locality, vsi.countryCode) }
+        VernacularResponse(dsi, vris)
+      }.toSeq
+
       ResponseItem(m.nameString.name.id, m.nameString.name.value,
         m.nameString.canonicalName.map { _.id }, m.nameString.canonicalName.map { _.value },
         m.nameString.surrogate,
@@ -41,12 +52,14 @@ trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
         m.nameStringIndex.taxonId, m.nameStringIndex.globalId,
         m.nameStringIndex.classificationPath, m.nameStringIndex.classificationPathIds,
         m.nameStringIndex.classificationPathRanks,
-        m.vernacularStrings.map { _._1.name },
+        vernaculars,
         m.kind)
     }
     Response(page, perPage, matches.total, matches.localId, matches.suppliedNameString, items)
   }
 
+  implicit val vernacularResponseItemFormat = jsonFormat4(VernacularResponseItem.apply)
+  implicit val vernacularResponseFormat = jsonFormat2(VernacularResponse.apply)
   implicit val responseItemFormat = jsonFormat14(ResponseItem.apply)
   implicit val responseFormat = jsonFormat6(Response.apply)
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
