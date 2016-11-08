@@ -40,6 +40,6 @@ class NameStrings(tag: Tag) extends Table[NameString](tag, "name_strings") {
 }
 
 object NameStrings {
-  private[model] val emptyCanonicalUuid =
+  private[resolver] val emptyCanonicalUuid =
     UUID.fromString("a9456e61-bd30-53bc-8588-accb913cc64a")
 }

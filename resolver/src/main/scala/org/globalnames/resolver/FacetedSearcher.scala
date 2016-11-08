@@ -15,7 +15,9 @@ class FacetedSearcher(val db: Database) extends Materializer {
 
   private[resolver] def resolveCanonical(canonicalName: String) = {
     val canonicalNameUuid = gen.generate(canonicalName)
-    nameStrings.filter { x => x.canonicalUuid === canonicalNameUuid }
+    nameStrings.filter { ns =>
+      ns.canonicalUuid =!= NameStrings.emptyCanonicalUuid && ns.canonicalUuid === canonicalNameUuid
+    }
   }
 
   private[resolver] def resolveCanonicalLike(canonicalName: String) = {

@@ -20,8 +20,10 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
   private val gen = UuidGenerator()
 
   private def exactNamesQuery(nameUuid: Rep[UUID], canonicalNameUuid: Rep[UUID]) = {
-    nameStrings.filter { nameString =>
-      nameString.id === nameUuid || nameString.canonicalUuid === canonicalNameUuid
+    nameStrings.filter { ns =>
+      ns.id === nameUuid ||
+        (ns.canonicalUuid =!= NameStrings.emptyCanonicalUuid &&
+          ns.canonicalUuid === canonicalNameUuid)
     }
   }
 
@@ -61,7 +63,10 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
       val fuzzyNameStringsMaxCount = 50
       val queryFoundFuzzy = nameStringsSequenceMatches(
         foundFuzzyMatches.map { case (verbatim, _, candUuids, _) =>
-          val ns = nameStrings.filter { ns => ns.canonicalUuid.inSetBind(candUuids) }
+          val ns = nameStrings.filter { ns =>
+            ns.canonicalUuid =!= NameStrings.emptyCanonicalUuid &&
+              ns.canonicalUuid.inSetBind(candUuids)
+          }
           val params = parameters.copy(query = verbatim, perPage = fuzzyNameStringsMaxCount,
                                        kind = Kind.Fuzzy)
           (ns, params)

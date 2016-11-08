@@ -27,7 +27,7 @@ trait Materializer {
                                   parameters: Parameters) = {
     val nameStringsQuerySurrogates =
       if (parameters.withSurrogates) nameStringsQuery
-      else nameStringsQuery.filter { !_.surrogate }
+      else nameStringsQuery.filter { ns => ns.surrogate.isEmpty || !ns.surrogate }
     val query = for {
       ns <- nameStringsQuerySurrogates
       nsi <- nameStringIndicies.filter { nsi => nsi.nameStringId === ns.id }
