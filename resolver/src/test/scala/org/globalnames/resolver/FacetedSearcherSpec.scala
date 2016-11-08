@@ -93,10 +93,9 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves no mathches when string request of length less than 4 is provided") {
-        val query = "Aaa"
-        whenReady(searcher.resolve(query, CanonicalModifier, true,
+        whenReady(searcher.resolve("Aaa", CanonicalModifier, true,
                                    parameters = parameters)) { res =>
-          res shouldBe Matches.empty(query)
+          res shouldBe Matches.empty("")
         }
       }
 
@@ -273,15 +272,13 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves wildcard") {
-        val query = "Aaadonta constricta komak"
-        whenReady(searcher.resolve(query, NameStringModifier, true,
+        whenReady(searcher.resolve("Aaadonta constricta komak", NameStringModifier, true,
                                    parameters = parameters)) { res =>
           res.matches should have size 2
           res.matches.map { _.nameString } should contain only (
             ns51b7b1b207ba5a0ea65dc5ca402b58de,
             nsedd01cc80e7a53708d90173d24c9341c
           )
-          res.suppliedNameString shouldBe query
         }
       }
 
@@ -317,10 +314,9 @@ class FacetedSearcherSpec extends SpecConfig {
       }
 
       it("resolves no matches when string request of length less than 4 is provided") {
-        val query = "Aaa"
-        whenReady(searcher.resolve(query, NameStringModifier, true,
+        whenReady(searcher.resolve("Aaa", NameStringModifier, true,
                                    parameters = parameters)) { res =>
-          res shouldBe Matches.empty(query)
+          res shouldBe Matches.empty("")
         }
       }
     }

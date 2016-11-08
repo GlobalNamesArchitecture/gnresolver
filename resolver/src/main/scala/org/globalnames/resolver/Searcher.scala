@@ -45,7 +45,7 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
         resolver.resolveString(valueCleaned(value, modifier), parameters)
       case _ =>
         val nameStrings = resolverFunction(modifier, wildcard)(valueCleaned(value, modifier))
-        nameStringsMatches(nameStrings, parameters.copy(query = value))
+        nameStringsMatches(nameStrings, parameters)
     }
   }
 }
