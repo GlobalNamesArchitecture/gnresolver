@@ -68,7 +68,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
               ns.canonicalUuid.inSetBind(candUuids)
           }
           val params = parameters.copy(query = verbatim, perPage = fuzzyNameStringsMaxCount,
-                                       kind = Kind.Fuzzy)
+                                       matchType = MatchType.Fuzzy)
           (ns, params)
         })
 
@@ -144,9 +144,10 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
               .filter { m =>
                 dataSourceIds.isEmpty || dataSourceIds.contains(m.nameStringIndex.dataSourceId)
               }.map { m =>
-                val k: Kind = if (m.nameString.name.id == sn.input.id) Kind.ExactNameMatchByUUID
-                              else Kind.ExactCanonicalNameMatchByUUID
-                m.copy(kind = k)
+                val mt: MatchType =
+                  if (m.nameString.name.id == sn.input.id) MatchType.ExactNameMatchByUUID
+                  else MatchType.ExactCanonicalNameMatchByUUID
+                m.copy(matchType = mt)
               }
           mtch.copy(matches = ms, localId = localId)
         }

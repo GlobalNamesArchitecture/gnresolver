@@ -68,7 +68,7 @@ trait Materializer {
     } yield {
       Matches(count,
         portion.zip(vernaculars).map { case ((ns, nsi, ds), vs) =>
-          Match(ns, ds, nsi, vs, parameters.kind)
+          Match(ns, ds, nsi, vs, parameters.matchType)
         },
         suppliedNameString = parameters.query)
     }
@@ -89,7 +89,7 @@ trait Materializer {
           val l = vernacularsGet(portion, parameters).map { vss =>
             Matches(count,
               portion.zip(vss).map { case ((ns, nsi, ds), vs) =>
-                Match(ns, ds, nsi, vs, parameters.kind)
+                Match(ns, ds, nsi, vs, parameters.matchType)
               },
               localId = parameters.localId,
               suppliedNameString = parameters.query)
@@ -106,7 +106,7 @@ object Materializer {
   case class Parameters(page: Int, perPage: Int,
                         withSurrogates: Boolean, withVernaculars: Boolean,
                         query: String = "",
-                        localId: Option[LocalId] = None, kind: Kind = Kind.None) {
+                        localId: Option[LocalId] = None, matchType: MatchType = MatchType.None) {
     val take: Int = perPage.min(1000).max(0)
     val drop: Int = (page * perPage).max(0)
   }

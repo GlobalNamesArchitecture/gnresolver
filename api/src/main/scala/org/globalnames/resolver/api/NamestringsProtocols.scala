@@ -6,7 +6,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import Resolver.NameRequest
-import model.{DataSource, Kind, Matches, NameStringIndex, LocalId}
+import model.{DataSource, MatchType, Matches, NameStringIndex, LocalId}
 import spray.json.{DefaultJsonProtocol, _}
 
 trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
@@ -35,7 +35,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
                           classificationPath: Option[String], classificationPathIds: Option[String],
                           classificationPathRanks: Option[String],
                           vernaculars: Seq[VernacularResponse],
-                          kind: Kind)
+                          matchType: MatchType)
 
   def result(matches: Matches, page: Int, perPage: Int): Response = {
     val items = matches.matches.map { m =>
@@ -53,7 +53,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
         m.nameStringIndex.classificationPath, m.nameStringIndex.classificationPathIds,
         m.nameStringIndex.classificationPathRanks,
         vernaculars,
-        m.kind)
+        m.matchType)
     }
     Response(page, perPage, matches.total, matches.localId, matches.suppliedNameString, items)
   }
@@ -69,18 +69,18 @@ trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
       case x => deserializationError("Expected UUID as JsString, but got " + x)
     }
   }
-  implicit def kindFormat: JsonFormat[Kind] = new JsonFormat[Kind] {
-    def write(x: Kind): JsString = JsString(x.toString)
+  implicit def matchTypeFormat: JsonFormat[MatchType] = new JsonFormat[MatchType] {
+    def write(x: MatchType): JsString = JsString(x.toString)
 
-    def read(value: JsValue): Kind = value match {
+    def read(value: JsValue): MatchType = value match {
       case JsString(js) => js match {
-        case "None" => Kind.None
-        case "Fuzzy" => Kind.Fuzzy
-        case "ExactNameMatchByUUID" => Kind.ExactNameMatchByUUID
-        case "ExactCanonicalNameMatchByUUID" => Kind.ExactCanonicalNameMatchByUUID
-        case x => deserializationError("Expected Kind as JsString, but got " + x)
+        case "None" => MatchType.None
+        case "Fuzzy" => MatchType.Fuzzy
+        case "ExactNameMatchByUUID" => MatchType.ExactNameMatchByUUID
+        case "ExactCanonicalNameMatchByUUID" => MatchType.ExactCanonicalNameMatchByUUID
+        case x => deserializationError("Expected MatchType as JsString, but got " + x)
       }
-      case x => deserializationError("Expected Kind as JsString, but got " + x)
+      case x => deserializationError("Expected MatchType as JsString, but got " + x)
     }
   }
   implicit val nameStringIndexFormat = jsonFormat12(NameStringIndex.apply)

@@ -3,19 +3,19 @@ package resolver
 
 package object model {
 
-  sealed trait Kind
-  object Kind {
-    case object None extends Kind
-    case object ExactNameMatchByUUID extends Kind
-    case object ExactCanonicalNameMatchByUUID extends Kind
-    case object Fuzzy extends Kind
+  sealed trait MatchType
+  object MatchType {
+    case object None extends MatchType
+    case object ExactNameMatchByUUID extends MatchType
+    case object ExactCanonicalNameMatchByUUID extends MatchType
+    case object Fuzzy extends MatchType
   }
 
   type LocalId = Int
 
   case class Match(nameString: NameString, dataSource: DataSource, nameStringIndex: NameStringIndex,
                    vernacularStrings: Seq[(VernacularString, VernacularStringIndex)],
-                   kind: Kind = Kind.None)
+                   matchType: MatchType = MatchType.None)
 
   case class Matches(total: Long, matches: Seq[Match],
                      suppliedNameString: String = "", localId: Option[LocalId] = None)
