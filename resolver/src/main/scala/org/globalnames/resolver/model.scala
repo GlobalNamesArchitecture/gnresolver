@@ -9,6 +9,7 @@ package object model {
     case object ExactNameMatchByUUID extends MatchType
     case object ExactCanonicalNameMatchByUUID extends MatchType
     case object Fuzzy extends MatchType
+    case object UUIDLookup extends MatchType
   }
 
   type LocalId = Int
