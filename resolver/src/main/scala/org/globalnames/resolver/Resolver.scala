@@ -67,7 +67,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
             ns.canonicalUuid =!= NameStrings.emptyCanonicalUuid &&
               ns.canonicalUuid.inSetBind(candUuids)
           }
-          val params = parameters.copy(query = verbatim, perPage = fuzzyNameStringsMaxCount,
+          val params = parameters.copy(query = verbatim.some, perPage = fuzzyNameStringsMaxCount,
                                        matchType = MatchType.Fuzzy)
           (ns, params)
         })
@@ -121,7 +121,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
         val qry = snIds.map { case (sn, _) =>
           val canUuid: UUID = sn.canonizedUuid().map { _.id }.getOrElse(gen.generate(""))
           val ns = exactNamesQuery(sn.input.id, canUuid)
-          val pms = parameters.copy(query = sn.input.verbatim)
+          val pms = parameters.copy(query = sn.input.verbatim.some)
           (ns, pms)
         }
         nameStringsSequenceMatches(qry)

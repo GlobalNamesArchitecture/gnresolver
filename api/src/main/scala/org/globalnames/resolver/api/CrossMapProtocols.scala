@@ -5,7 +5,7 @@ package api
 import CrossMapSearcher.{Source, Result, Target}
 import spray.json.{DefaultJsonProtocol, _}
 
-trait CrossMapProtocols extends DefaultJsonProtocol with NullOptions {
+trait CrossMapProtocols extends DefaultJsonProtocol {
   case class CrossMapRequest(dbSinkIds: Seq[Int], localIds: Seq[String])
 
   implicit val crossMapRequestFormat = jsonFormat2(CrossMapRequest.apply)

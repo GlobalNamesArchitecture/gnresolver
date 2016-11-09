@@ -87,7 +87,7 @@ trait Service extends NamestringsProtocols with CrossMapProtocols {
               val search = QueryParser.result(searchTerm)
               logger.debug(s"$search")
               val params = Parameters(page, perPage, withSurrogates, withVernaculars,
-                                      query = searchTerm)
+                                      query = searchTerm.some)
               resolve(search, params).map { m => result(m, page, perPage) }
             }
           }

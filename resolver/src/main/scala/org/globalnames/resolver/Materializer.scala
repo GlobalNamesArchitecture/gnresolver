@@ -105,7 +105,7 @@ trait Materializer {
 object Materializer {
   case class Parameters(page: Int, perPage: Int,
                         withSurrogates: Boolean, withVernaculars: Boolean,
-                        query: String = "",
+                        query: Option[String] = None,
                         localId: Option[LocalId] = None, matchType: MatchType = MatchType.None) {
     val take: Int = perPage.min(1000).max(0)
     val drop: Int = (page * perPage).max(0)

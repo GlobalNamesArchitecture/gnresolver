@@ -9,7 +9,7 @@ import Resolver.NameRequest
 import model.{DataSource, MatchType, Matches, NameStringIndex, LocalId}
 import spray.json.{DefaultJsonProtocol, _}
 
-trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
+trait NamestringsProtocols extends DefaultJsonProtocol {
   implicit def uuidFormat: JsonFormat[UUID] = new JsonFormat[UUID] {
     def write(uuid: UUID) = JsString(uuid.toString)
 
@@ -25,7 +25,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol with NullOptions {
   case class VernacularResponse(dataSourceId: Int, values: Seq[VernacularResponseItem])
 
   case class Response(page: Int, perPage: Int, total: Long, localId: Option[LocalId],
-                      suppliedNameString: String, matches: Seq[ResponseItem])
+                      suppliedNameString: Option[String], matches: Seq[ResponseItem])
 
   case class ResponseItem(nameStringUuid: UUID, nameString: String,
                           canonicalNameUuid: Option[UUID], canonicalName: Option[String],

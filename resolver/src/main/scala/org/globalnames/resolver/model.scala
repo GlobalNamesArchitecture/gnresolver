@@ -1,6 +1,9 @@
 package org.globalnames
 package resolver
 
+import scalaz._
+import Scalaz._
+
 package object model {
 
   sealed trait MatchType
@@ -19,10 +22,11 @@ package object model {
                    matchType: MatchType = MatchType.None)
 
   case class Matches(total: Long, matches: Seq[Match],
-                     suppliedNameString: String = "", localId: Option[LocalId] = None)
+                     suppliedNameString: Option[String] = None, localId: Option[LocalId] = None)
+
   object Matches {
     def empty(suppliedNameString: String): Matches = {
-      Matches(0, Seq(), suppliedNameString)
+      Matches(0, Seq(), suppliedNameString.some)
     }
   }
 
