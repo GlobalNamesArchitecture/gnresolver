@@ -91,7 +91,7 @@ trait Materializer {
               portion.zip(vss).map { case ((ns, nsi, ds), vs) =>
                 Match(ns, ds, nsi, vs, parameters.matchType)
               },
-              localId = parameters.localId,
+              suppliedId = parameters.suppliedId,
               suppliedNameString = parameters.query)
           }
           l
@@ -106,7 +106,8 @@ object Materializer {
   case class Parameters(page: Int, perPage: Int,
                         withSurrogates: Boolean, withVernaculars: Boolean,
                         query: Option[String] = None,
-                        localId: Option[LocalId] = None, matchType: MatchType = MatchType.None) {
+                        suppliedId: Option[SuppliedId] = None,
+                        matchType: MatchType = MatchType.None) {
     val take: Int = perPage.min(1000).max(0)
     val drop: Int = (page * perPage).max(0)
   }

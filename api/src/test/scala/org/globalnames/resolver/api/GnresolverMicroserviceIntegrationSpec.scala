@@ -99,9 +99,9 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
       describe("access by 'names' parameter") {
         describe("GET method") {
           it("filters results by 'local_id' setting") {
-            val localId = 7
+            val suppliedId = 7
             val url = """/api/name_resolvers?""" +
-              s"""names=[{"value":"Favorinus+horridus","localId":$localId}]"""
+              s"""names=[{"value":"Favorinus+horridus","suppliedId":$suppliedId}]"""
 
             Get(url) ~> routes ~> check {
               pending
@@ -111,7 +111,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
 
               response(0).total shouldBe 1
               response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
-              response(0).localId shouldBe Some(localId) */
+              response(0).suppliedId shouldBe Some(suppliedId) */
             }
           }
 
@@ -134,10 +134,10 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
 
         describe("POST method") {
           it("filters results by 'local_id' setting") {
-            val localId = 7
+            val suppliedId = 7
 
             Post("/api/name_resolvers", HttpEntity(`application/json`,
-              s"""[{"value":"Favorinus horridus", "localId": $localId}]""")) ~>
+              s"""[{"value":"Favorinus horridus", "suppliedId": $suppliedId}]""")) ~>
               routes ~> check {
                 pending
               status shouldBe OK
@@ -147,7 +147,7 @@ class GnresolverMicroserviceIntegrationSpec extends SpecConfig with ApiSpecConfi
 
               response(0).total shouldBe 1
               response(0).matches(0).nameString.name.value shouldBe "Favorinus horridus"
-              response(0).localId shouldBe Some(localId)
+              response(0).suppliedId shouldBe Some(suppliedId)
               */
             }
           }

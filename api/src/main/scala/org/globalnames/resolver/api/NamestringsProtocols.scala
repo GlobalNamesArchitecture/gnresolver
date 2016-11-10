@@ -6,7 +6,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import Resolver.NameRequest
-import model.{DataSource, MatchType, Matches, NameStringIndex, LocalId}
+import model.{DataSource, MatchType, Matches, NameStringIndex, SuppliedId}
 import spray.json.{DefaultJsonProtocol, _}
 
 trait NamestringsProtocols extends DefaultJsonProtocol {
@@ -24,7 +24,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
 
   case class VernacularResponse(dataSourceId: Int, values: Seq[VernacularResponseItem])
 
-  case class Response(page: Int, perPage: Int, total: Long, localId: Option[LocalId],
+  case class Response(page: Int, perPage: Int, total: Long, suppliedId: Option[SuppliedId],
                       suppliedNameString: Option[String], matches: Seq[ResponseItem])
 
   case class ResponseItem(nameStringUuid: UUID, nameString: String,
@@ -55,7 +55,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
         vernaculars,
         m.matchType)
     }
-    Response(page, perPage, matches.total, matches.localId, matches.suppliedNameString, items)
+    Response(page, perPage, matches.total, matches.suppliedId, matches.suppliedNameString, items)
   }
 
   implicit val vernacularResponseItemFormat = jsonFormat4(VernacularResponseItem.apply)

@@ -95,13 +95,13 @@ class FacetedSearcherSpec extends SpecConfig {
       it("resolves no mathches when string request of length less than 4 is provided") {
         whenReady(searcher.resolve("Aaa", CanonicalModifier, true,
                                    parameters = parameters)) { res =>
-          res shouldBe Matches.empty("")
+          res shouldBe Matches.empty
         }
       }
 
       it("returns no wildcarded matches when empty string is provided") {
         whenReady(searcher.resolve("", CanonicalModifier, true, parameters = parameters)) { res =>
-          res shouldBe Matches.empty("")
+          res shouldBe Matches.empty
         }
       }
     }
@@ -284,7 +284,7 @@ class FacetedSearcherSpec extends SpecConfig {
 
       it("returns no wildcarded matches when empty string is provided") {
         whenReady(searcher.resolve("", NameStringModifier, true, parameters = parameters)) { res =>
-          res shouldBe Matches.empty("")
+          res shouldBe Matches.empty
         }
       }
 
@@ -316,7 +316,7 @@ class FacetedSearcherSpec extends SpecConfig {
       it("resolves no matches when string request of length less than 4 is provided") {
         whenReady(searcher.resolve("Aaa", NameStringModifier, true,
                                    parameters = parameters)) { res =>
-          res shouldBe Matches.empty("")
+          res shouldBe Matches.empty
         }
       }
     }

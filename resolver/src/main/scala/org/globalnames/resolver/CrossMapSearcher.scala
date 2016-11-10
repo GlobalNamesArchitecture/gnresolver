@@ -13,12 +13,12 @@ class CrossMapSearcher(db: Database) {
   import CrossMapSearcher._
 
   def execute(databaseSourceId: Int, databaseSinkIds: Seq[Int], databaseTargetId: Option[Int],
-              localIds: Seq[String]): Future[Seq[Result]] = {
+              suppliedIds: Seq[String]): Future[Seq[Result]] = {
     if (databaseSourceId < 0 || databaseSinkIds.exists { _ < 0 } ||
         databaseTargetId.exists { _ < 0 }) {
-      Future.successful(localIds.map { lid => Result(Source(databaseSourceId, lid), Seq()) })
+      Future.successful(suppliedIds.map { lid => Result(Source(databaseSourceId, lid), Seq()) })
     } else {
-      val localIdsSet = Set(localIds: _*)
+      val localIdsSet = Set(suppliedIds: _*)
       val query = for {
         mapping <- crossMaps.filter { cm =>
           cm.dataSourceIdCrossMap === databaseSourceId && cm.localId.inSetBind(localIdsSet)
@@ -37,7 +37,7 @@ class CrossMapSearcher(db: Database) {
         val m = mapped.foldLeft(Map.empty[String, Seq[CrossMap]]) { case (acc, (k, v)) =>
           acc.updated(k, v +: acc.getOrElse(k, Seq()))
         }
-        localIds.map { lid =>
+        suppliedIds.map { lid =>
           Result(Source(databaseSourceId, lid), m.getOrElse(lid, Seq()).map { t =>
             Target(t.dataSourceId, t.dataSourceIdCrossMap, t.localId)
           })

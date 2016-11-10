@@ -67,7 +67,7 @@ class ResolverIntegrationSpec extends SpecConfig {
       it("handles capitalization of request") {
         whenReady(resolver.resolveStrings(Seq("pteroplatus arrogaxx"), parameters)) { res =>
           res should have size 1
-          res.head.suppliedNameString shouldBe "Pteroplatus arrogaxx"
+          res.head.suppliedNameString.value shouldBe "Pteroplatus arrogaxx"
         }
       }
     }
