@@ -325,10 +325,8 @@ class FacetedSearcherSpec extends SpecConfig {
       it("resolves") {
         whenReady(searcher.resolve("Aalenirhynchia", ExactModifier,
                                    parameters = parameters)) { res =>
-          res.matches should have size 3
-          res.matches.map { _.nameString } should contain only (
-            ns05375e93f74c5bf488151cc363c1b98c,
-            ns14414d49b3215aa39da132ca0ba45614,
+          res.matches should have size 1
+          res.matches.map { _.nameString } should contain theSameElementsAs Seq(
             nsc96fd1c5c5cb50edafd163bd1368896b
           )
         }

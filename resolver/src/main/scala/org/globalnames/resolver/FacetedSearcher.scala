@@ -75,7 +75,8 @@ class FacetedSearcher(val db: Database) extends Materializer {
   }
 
   private[resolver] def resolveExact(exact: String) = {
-    nameStrings.filter { ns => ns.canonical === exact || ns.name === exact }
+    val exactUuid = gen.generate(exact)
+    nameStrings.filter { ns => ns.id === exactUuid }
   }
 
   def resolveDataSources(uuid: UUID): Future[Seq[(NameStringIndex, DataSource)]] = {
