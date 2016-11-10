@@ -35,7 +35,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
                           classificationPath: Option[String], classificationPathIds: Option[String],
                           classificationPathRanks: Option[String],
                           vernaculars: Seq[VernacularResponse],
-                          matchType: MatchType)
+                          matchType: MatchType, localId: Option[String])
 
   def result(matches: Matches, page: Int, perPage: Int): Response = {
     val items = matches.matches.map { m =>
@@ -53,14 +53,15 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
         m.nameStringIndex.classificationPath, m.nameStringIndex.classificationPathIds,
         m.nameStringIndex.classificationPathRanks,
         vernaculars,
-        m.matchType)
+        m.matchType,
+        m.nameStringIndex.localId)
     }
     Response(page, perPage, matches.total, matches.suppliedId, matches.suppliedNameString, items)
   }
 
   implicit val vernacularResponseItemFormat = jsonFormat4(VernacularResponseItem.apply)
   implicit val vernacularResponseFormat = jsonFormat2(VernacularResponse.apply)
-  implicit val responseItemFormat = jsonFormat14(ResponseItem.apply)
+  implicit val responseItemFormat = jsonFormat15(ResponseItem.apply)
   implicit val responseFormat = jsonFormat6(Response.apply)
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
     def write(x: UUID): JsString = JsString(x.toString)
