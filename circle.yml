@@ -25,7 +25,7 @@ dependencies:
         timeout: 360
         pwd:
           db-migration
-    - sbt test:scalastyle test:compile
+    - sbt test:scalastyle
 
 database:
   override:
@@ -38,7 +38,7 @@ database:
 
 test:
   override:
-    - sbt test
+    - echo 'We test it with https://github.com/GlobalNamesArchitecture/gnresolver_client for awhile'
   post:
     - sbt ";resolver/assembly;api/assembly"
     - cp resolver/target/scala-2.11/*.jar api/target/scala-2.11/*.jar $CIRCLE_ARTIFACTS/
