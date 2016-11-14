@@ -62,8 +62,8 @@ trait Service extends NamestringsProtocols with CrossMapProtocols {
           (getNameResolvers | postNameResolvers) {
             (names, dataSourceIds, perPage, page, withSurrogates, withVernaculars) => complete {
               val params = Parameters(page, perPage, withSurrogates, withVernaculars)
-              val matches = resolver.resolve(names.take(nameStringsMaxCount),
-                                             dataSourceIds.orZero, params)
+              val matches = resolver.resolveExact(names.take(nameStringsMaxCount),
+                                                  dataSourceIds.orZero, params)
               matches.map { ms => ms.map { m => result(m, page, perPage) } }
             }
           }

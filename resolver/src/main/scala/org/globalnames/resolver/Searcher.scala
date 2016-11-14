@@ -42,7 +42,7 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
               parameters: Parameters): Future[Matches] = {
     modifier match {
       case NoModifier =>
-        resolver.resolveString(valueCleaned(value, modifier), parameters)
+        resolver.resolveString(valueCleaned(value, modifier), parameters, wildcard)
       case _ =>
         val nameStrings = resolverFunction(modifier, wildcard)(valueCleaned(value, modifier))
         nameStringsMatches(nameStrings, parameters)

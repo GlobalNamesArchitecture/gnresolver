@@ -27,6 +27,10 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
     }
   }
 
+  private def exactNamesQueryWildcard(query: Rep[String]) = {
+    nameStrings.filter { ns => ns.name.like(query) || ns.canonical.like(query) }
+  }
+
   private def gnmatchCanonicals(
       canonicalNamePartsNonEmpty: Seq[(String, Array[String], Option[SuppliedId])]) = {
     val canonicalNamesFuzzy = canonicalNamePartsNonEmpty.map { case (name, parts, suppliedId) =>
@@ -95,20 +99,33 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
     }
   }
 
-  def resolveString(name: String, parameters: Parameters): Future[Matches] = {
-    resolveStrings(Seq(name), parameters).map { x =>
+  def resolveString(name: String, parameters: Parameters, wildcard: Boolean): Future[Matches] = {
+    resolveHelper(Seq((NameRequest(name, None), wildcard)), Vector(), parameters).map { x =>
       x.headOption.getOrElse(Matches.empty(name))
     }
   }
 
-  def resolveStrings(names: Seq[String], parameters: Parameters): Future[Seq[Matches]] = {
-    val nrs = names.map { n => NameRequest(n, None) }
-    resolve(nrs, Vector(), parameters)
+  private def resolveHelper(names: Seq[(NameRequest, Boolean)], dataSourceIds: Vector[Int],
+              parameters: Parameters): Future[Seq[Matches]] = {
+    val (namesWc, namesExact) = names.partition { case (_, wildcard) => wildcard }
+    for {
+      nwc <- resolveWildcard(namesWc.map { case (ns, _) => ns }, dataSourceIds, parameters)
+      nex <- resolveExact(namesExact.map { case (ns, _) => ns }, dataSourceIds, parameters)
+    } yield nwc ++ nex
   }
 
-  def resolve(names: Seq[NameRequest], dataSourceIds: Vector[Int],
-              parameters: Parameters): Future[Seq[Matches]] = {
-    val namesCapital = names.map { n => NameRequest(capitalize(n.value), n.suppliedId) }
+  private def resolveWildcard(names: Seq[NameRequest], dataSourceIds: Vector[SuppliedId],
+                              parameters: Parameters): Future[Seq[Matches]] = {
+    val qrys = names.map { name =>
+      val capName = capitalize(name.value) + "%"
+      (exactNamesQueryWildcard(capName), parameters)
+    }
+    nameStringsSequenceMatches(qrys)
+  }
+
+  def resolveExact(names: Seq[NameRequest], dataSourceIds: Vector[Int],
+                   parameters: Parameters): Future[Seq[Matches]] = {
+    val namesCapital = names.map { n => n.copy(value = capitalize(n.value)) }
 
     val nameStringsPerFuture = 200
     val scientificNamesFuture = Future.sequence(
