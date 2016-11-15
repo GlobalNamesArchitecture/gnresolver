@@ -34,7 +34,9 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
       case UninomialModifier =>
         if (wildcard) facetedSearcher.resolveUninomialWildcard
         else facetedSearcher.resolveUninomial
-      case GenusModifier => facetedSearcher.resolveGenus
+      case GenusModifier =>
+        if (wildcard) facetedSearcher.resolveGenusWildcard
+        else facetedSearcher.resolveGenus
       case SpeciesModifier => facetedSearcher.resolveSpecies
       case SubspeciesModifier => facetedSearcher.resolveSubspecies
       case AuthorModifier => facetedSearcher.resolveAuthor
