@@ -7,6 +7,7 @@ import resolver.model._
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Future
+import scala.util.{Success, Try}
 
 class FacetedSearcher(val db: Database) extends Materializer {
   import Materializer.Parameters
@@ -50,8 +51,13 @@ class FacetedSearcher(val db: Database) extends Materializer {
   }
 
   private[resolver] def resolveYear(year: String) = {
-    val query = yearWords.filter { x => x.yearWord === year }.map { _.nameStringUuid }
-    nameStrings.filter { ns => ns.id.in(query) }
+    Try(year.toInt) match {
+      case Success(yr) if yr < 1758 =>
+        nameStrings.take(0)
+      case _ =>
+        val query = yearWords.filter { x => x.yearWord === year }.map { _.nameStringUuid }
+        nameStrings.filter { ns => ns.id.in(query) }
+    }
   }
 
   private[resolver] def resolveUninomial(uninomial: String) = {
