@@ -16,7 +16,8 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
   private def valueCleaned(value: String, modifier: Modifier): String = {
     val trimmed = value.replaceAll("\\s{2,}", " ").replaceAll("\\%", " ").trim
     modifier match {
-      case UninomialModifier => capitalize(trimmed)
+      case CanonicalModifier if !trimmed.startsWith("x ") => capitalize(trimmed)
+      case NameStringModifier => capitalize(trimmed)
       case _ => trimmed
     }
   }

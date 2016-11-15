@@ -11,6 +11,8 @@ import scala.concurrent.Future
 class FacetedSearcher(val db: Database) extends Materializer {
   import Materializer.Parameters
 
+  private val unaccent = SimpleFunction.unary[String, String]("unaccent")
+
   private val gen = UuidGenerator()
 
   private[resolver] def resolveCanonical(canonicalName: String) = {
@@ -30,7 +32,8 @@ class FacetedSearcher(val db: Database) extends Materializer {
   }
 
   private[resolver] def resolveAuthor(authorName: String) = {
-    val query = authorWords.filter { x => x.authorWord === authorName }.map { _.nameStringUuid }
+    val query = authorWords.filter { aw => aw.authorWord === unaccent(authorName) }
+                           .map { _.nameStringUuid }
     nameStrings.filter { ns => ns.id.in(query) }
   }
 
@@ -40,29 +43,35 @@ class FacetedSearcher(val db: Database) extends Materializer {
   }
 
   private[resolver] def resolveUninomial(uninomial: String) = {
-    val query = uninomialWords.filter { x => x.uninomialWord === uninomial }
-                              .map { _.nameStringUuid }
+    val query = uninomialWords.filter { uw =>
+      uw.uninomialWord === unaccent(uninomial.toUpperCase)
+    }.map { _.nameStringUuid }
     nameStrings.filter { ns => ns.id.in(query) }
   }
 
   private[resolver] def resolveGenus(genus: String) = {
-    val query = genusWords.filter { x => x.genusWord === genus }.map { _.nameStringUuid }
+    val query = genusWords.filter { uw =>
+      uw.genusWord === unaccent(genus.toUpperCase)
+    }.map { _.nameStringUuid }
     nameStrings.filter { ns => ns.id.in(query) }
   }
 
   private[resolver] def resolveSpecies(species: String) = {
-    val query = speciesWords.filter { x => x.speciesWord === species }.map { _.nameStringUuid }
+    val query = speciesWords.filter { sw =>
+      sw.speciesWord === unaccent(species.toUpperCase)
+    }.map { _.nameStringUuid }
     nameStrings.filter { ns => ns.id.in(query) }
   }
 
   private[resolver] def resolveSubspecies(subspecies: String) = {
-    val query = subspeciesWords.filter { x => x.subspeciesWord === subspecies }
-                               .map { _.nameStringUuid }
+    val query = subspeciesWords.filter { ssw =>
+      ssw.subspeciesWord === unaccent(subspecies.toUpperCase)
+    }.map { _.nameStringUuid }
     nameStrings.filter { ns => ns.id.in(query) }
   }
 
   private[resolver] def resolveNameStrings(nameStringQuery: String) = {
-    nameStrings.filter { ns => ns.name === nameStringQuery }
+    nameStrings.filter { ns => unaccent(ns.name) === unaccent(nameStringQuery) }
   }
 
   private[resolver] def resolveNameStringsLike(nameStringQuery: String) = {
@@ -70,7 +79,7 @@ class FacetedSearcher(val db: Database) extends Materializer {
     if (nameStringQuery.length <= 3) {
       nameStrings.take(0)
     } else {
-      nameStrings.filter { ns => ns.name.like(nameStringQueryLike) }
+      nameStrings.filter { ns => unaccent(ns.name).like(unaccent(nameStringQueryLike)) }
     }
   }
 
