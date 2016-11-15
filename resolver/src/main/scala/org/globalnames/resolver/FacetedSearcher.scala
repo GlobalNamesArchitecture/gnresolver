@@ -37,6 +37,18 @@ class FacetedSearcher(val db: Database) extends Materializer {
     nameStrings.filter { ns => ns.id.in(query) }
   }
 
+  private[resolver] def resolveAuthorWildcard(authorName: String) = {
+    if (authorName.isEmpty) {
+      nameStrings.take(0)
+    } else {
+      val authorNameLike = authorName + "%"
+      val query = authorWords.filter { aw =>
+        aw.authorWord.like(unaccent(authorNameLike))
+      }.map { _.nameStringUuid }
+      nameStrings.filter { ns => ns.id.in(query) }
+    }
+  }
+
   private[resolver] def resolveYear(year: String) = {
     val query = yearWords.filter { x => x.yearWord === year }.map { _.nameStringUuid }
     nameStrings.filter { ns => ns.id.in(query) }
