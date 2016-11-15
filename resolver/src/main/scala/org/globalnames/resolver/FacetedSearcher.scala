@@ -23,10 +23,10 @@ class FacetedSearcher(val db: Database) extends Materializer {
   }
 
   private[resolver] def resolveCanonicalLike(canonicalName: String) = {
-    val canonicalNameLike = canonicalName + "%"
     if (canonicalName.length <= 3) {
       nameStrings.take(0)
     } else {
+      val canonicalNameLike = canonicalName + "%"
       nameStrings.filter { x => x.canonical.like(canonicalNameLike) }
     }
   }
@@ -75,10 +75,10 @@ class FacetedSearcher(val db: Database) extends Materializer {
   }
 
   private[resolver] def resolveNameStringsLike(nameStringQuery: String) = {
-    val nameStringQueryLike = nameStringQuery + "%"
     if (nameStringQuery.length <= 3) {
       nameStrings.take(0)
     } else {
+      val nameStringQueryLike = nameStringQuery + "%"
       nameStrings.filter { ns => unaccent(ns.name).like(unaccent(nameStringQueryLike)) }
     }
   }
