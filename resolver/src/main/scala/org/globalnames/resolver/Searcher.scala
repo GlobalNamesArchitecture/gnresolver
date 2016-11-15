@@ -40,7 +40,9 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
       case SpeciesModifier =>
         if (wildcard) facetedSearcher.resolveSpeciesWildcard
         else facetedSearcher.resolveSpecies
-      case SubspeciesModifier => facetedSearcher.resolveSubspecies
+      case SubspeciesModifier =>
+        if (wildcard) facetedSearcher.resolveSubspeciesWildcard
+        else facetedSearcher.resolveSubspecies
       case AuthorModifier => facetedSearcher.resolveAuthor
       case YearModifier => facetedSearcher.resolveYear
     }
