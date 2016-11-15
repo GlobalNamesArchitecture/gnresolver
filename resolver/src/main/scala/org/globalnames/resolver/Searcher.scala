@@ -46,7 +46,9 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
       case AuthorModifier =>
         if (wildcard) facetedSearcher.resolveAuthorWildcard
         else facetedSearcher.resolveAuthor
-      case YearModifier => facetedSearcher.resolveYear
+      case YearModifier =>
+        if (wildcard) facetedSearcher.resolveYearWildcard
+        else facetedSearcher.resolveYear
     }
 
   def resolve(value: String, modifier: Modifier, wildcard: Boolean = false,

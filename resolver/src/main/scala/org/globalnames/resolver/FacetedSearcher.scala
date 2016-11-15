@@ -60,6 +60,17 @@ class FacetedSearcher(val db: Database) extends Materializer {
     }
   }
 
+  private[resolver] def resolveYearWildcard(year: String) = {
+    if (year.isEmpty) {
+      nameStrings.take(0)
+    } else {
+      val yearLike = year + "%"
+      val query = yearWords.filter { yw => yw.yearWord.like(yearLike) }
+                           .map { _.nameStringUuid }
+      nameStrings.filter { ns => ns.id.in(query) }
+    }
+  }
+
   private[resolver] def resolveUninomial(uninomial: String) = {
     val query = uninomialWords.filter { uw =>
       uw.uninomialWord === unaccent(uninomial.toUpperCase)
