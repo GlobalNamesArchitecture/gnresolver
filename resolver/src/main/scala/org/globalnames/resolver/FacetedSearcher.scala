@@ -87,6 +87,18 @@ class FacetedSearcher(val db: Database) extends Materializer {
     nameStrings.filter { ns => ns.id.in(query) }
   }
 
+  private[resolver] def resolveSpeciesWildcard(species: String) = {
+    if (species.length <= 3) {
+      nameStrings.take(0)
+    } else {
+      val speciesLike = species + "%"
+      val query = speciesWords.filter { sw =>
+        sw.speciesWord.like(unaccent(speciesLike.toUpperCase))
+      }.map { _.nameStringUuid }
+      nameStrings.filter { ns => ns.id.in(query) }
+    }
+  }
+
   private[resolver] def resolveSubspecies(subspecies: String) = {
     val query = subspeciesWords.filter { ssw =>
       ssw.subspeciesWord === unaccent(subspecies.toUpperCase)
