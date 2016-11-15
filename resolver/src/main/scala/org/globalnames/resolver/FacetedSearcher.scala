@@ -49,6 +49,18 @@ class FacetedSearcher(val db: Database) extends Materializer {
     nameStrings.filter { ns => ns.id.in(query) }
   }
 
+  private[resolver] def resolveUninomialWildcard(uninomial: String) = {
+    if (uninomial.length <= 3) {
+      nameStrings.take(0)
+    } else {
+      val uninomialLike = uninomial + "%"
+      val query = uninomialWords.filter { uw =>
+        uw.uninomialWord.like(unaccent(uninomialLike.toUpperCase))
+      }.map { _.nameStringUuid }
+      nameStrings.filter { ns => ns.id.in(query) }
+    }
+  }
+
   private[resolver] def resolveGenus(genus: String) = {
     val query = genusWords.filter { uw =>
       uw.genusWord === unaccent(genus.toUpperCase)
