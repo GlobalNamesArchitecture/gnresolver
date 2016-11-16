@@ -2,5 +2,9 @@
 .gitignore
 .gitattributes
 .vim.custom
+.idea
 **/target
+.ensime_cache
+.ensime
+tags
 
