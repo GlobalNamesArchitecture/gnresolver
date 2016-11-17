@@ -33,7 +33,7 @@ class FacetedSearcher(val db: Database) extends Materializer {
   }
 
   private[resolver] def resolveAuthor(authorName: String) = {
-    val query = authorWords.filter { aw => aw.authorWord === unaccent(authorName) }
+    val query = authorWords.filter { aw => aw.authorWord === unaccent(authorName.toUpperCase) }
                            .map { _.nameStringUuid }
     nameStrings.filter { ns => ns.id.in(query) }
   }
@@ -44,7 +44,7 @@ class FacetedSearcher(val db: Database) extends Materializer {
     } else {
       val authorNameLike = authorName + "%"
       val query = authorWords.filter { aw =>
-        aw.authorWord.like(unaccent(authorNameLike))
+        aw.authorWord.like(unaccent(authorNameLike.toUpperCase))
       }.map { _.nameStringUuid }
       nameStrings.filter { ns => ns.id.in(query) }
     }
