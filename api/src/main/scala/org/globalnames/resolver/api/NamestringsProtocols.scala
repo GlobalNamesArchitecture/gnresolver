@@ -24,8 +24,10 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
 
   case class VernacularResponse(dataSourceId: Int, values: Seq[VernacularResponseItem])
 
-  case class Response(page: Int, perPage: Int, total: Long, suppliedId: Option[SuppliedId],
-                      suppliedNameString: Option[String], matches: Seq[ResponseItem])
+  case class Responses(page: Int, perPage: Int, data: Seq[Response])
+
+  case class Response(total: Long, suppliedId: Option[SuppliedId],
+                      suppliedNameString: Option[String], results: Seq[ResponseItem])
 
   case class ResponseItem(nameStringUuid: UUID, nameString: String,
                           canonicalNameUuid: Option[UUID], canonicalName: Option[String],
@@ -37,32 +39,35 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
                           vernaculars: Seq[VernacularResponse],
                           matchType: MatchType, localId: Option[String])
 
-  def result(matches: Matches, page: Int, perPage: Int): Response = {
-    val items = matches.matches.map { m =>
-      val vernaculars = m.vernacularStrings.groupBy { _._2.dataSourceId }.map { case (dsi, xs) =>
-        val vris = xs.map { case (vs, vsi) =>
-          VernacularResponseItem(vs.name, vsi.language, vsi.locality, vsi.countryCode) }
-        VernacularResponse(dsi, vris)
-      }.toSeq
+  def result(matchesCollection: Seq[Matches], page: Int, perPage: Int): Responses = {
+    val responses = matchesCollection.map { matches =>
+      val items = matches.matches.map { m =>
+        val vernaculars = m.vernacularStrings.groupBy { _._2.dataSourceId }.map { case (dsi, xs) =>
+          val vris = xs.map { case (vs, vsi) =>
+            VernacularResponseItem(vs.name, vsi.language, vsi.locality, vsi.countryCode)
+          }
+          VernacularResponse(dsi, vris)
+        }.toSeq
 
-      ResponseItem(m.nameString.name.id, m.nameString.name.value,
-        m.nameString.canonicalName.map { _.id }, m.nameString.canonicalName.map { _.value },
-        m.nameString.surrogate,
-        m.dataSource.id, m.dataSource.title,
-        m.nameStringIndex.taxonId, m.nameStringIndex.globalId,
-        m.nameStringIndex.classificationPath, m.nameStringIndex.classificationPathIds,
-        m.nameStringIndex.classificationPathRanks,
-        vernaculars,
-        m.matchType,
-        m.nameStringIndex.localId)
+        ResponseItem(m.nameString.name.id, m.nameString.name.value,
+          m.nameString.canonicalName.map { _.id }, m.nameString.canonicalName.map { _.value },
+          m.nameString.surrogate,
+          m.dataSource.id, m.dataSource.title,
+          m.nameStringIndex.taxonId, m.nameStringIndex.globalId,
+          m.nameStringIndex.classificationPath, m.nameStringIndex.classificationPathIds,
+          m.nameStringIndex.classificationPathRanks,
+          vernaculars, m.matchType, m.nameStringIndex.localId)
+      }
+      Response(matches.total, matches.suppliedId, matches.suppliedNameString, items)
     }
-    Response(page, perPage, matches.total, matches.suppliedId, matches.suppliedNameString, items)
+    Responses(page, perPage, responses)
   }
 
   implicit val vernacularResponseItemFormat = jsonFormat4(VernacularResponseItem.apply)
   implicit val vernacularResponseFormat = jsonFormat2(VernacularResponse.apply)
   implicit val responseItemFormat = jsonFormat15(ResponseItem.apply)
-  implicit val responseFormat = jsonFormat6(Response.apply)
+  implicit val responseFormat = jsonFormat4(Response.apply)
+  implicit val responsesFormat = jsonFormat3(Responses.apply)
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
     def write(x: UUID): JsString = JsString(x.toString)
     def read(value: JsValue): UUID = value match {

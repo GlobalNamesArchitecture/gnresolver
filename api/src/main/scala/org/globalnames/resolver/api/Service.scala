@@ -64,7 +64,7 @@ trait Service extends NamestringsProtocols with CrossMapProtocols {
               val params = Parameters(page, perPage, withSurrogates, withVernaculars)
               val matches = resolver.resolveExact(names.take(nameStringsMaxCount),
                                                   dataSourceIds.orZero, params)
-              matches.map { ms => ms.map { m => result(m, page, perPage) } }
+              matches.map { ms => result(ms, page, perPage) }
             }
           }
         } ~ path("name_strings" / JavaUUID) { uuid =>
@@ -72,13 +72,13 @@ trait Service extends NamestringsProtocols with CrossMapProtocols {
             (page, perPage, vernaculars) => complete {
               val params = Parameters(page, perPage, withSurrogates = false, vernaculars)
               facetedSearcher.findNameStringByUuid(uuid, params).map { m =>
-                result(m, page, perPage)
+                result(Seq(m), page, perPage)
               }
             }
           }
         } ~ path("name_strings" / Remaining) { remaining =>
           complete {
-            result(Matches.empty(remaining), 0, 0)
+            result(Seq(Matches.empty(remaining)), 0, 0)
           }
         } ~ path("name_strings") {
           (get & parameters('search_term, 'per_page ? nameStringsMaxCount, 'page ? 0,
@@ -88,7 +88,7 @@ trait Service extends NamestringsProtocols with CrossMapProtocols {
               logger.debug(s"$search")
               val params = Parameters(page, perPage, withSurrogates, withVernaculars,
                                       query = searchTerm.some)
-              resolve(search, params).map { m => result(m, page, perPage) }
+              resolve(search, params).map { m => result(Seq(m), page, perPage) }
             }
           }
         } ~ path("names_strings" / JavaUUID / "dataSources") { uuid =>
