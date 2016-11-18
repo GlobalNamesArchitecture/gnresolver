@@ -18,12 +18,17 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
     modifier match {
       case CanonicalModifier if !trimmed.startsWith("x ") => capitalize(trimmed)
       case NameStringModifier => capitalize(trimmed)
+      case NoModifier => capitalize(trimmed)
       case _ => trimmed
     }
   }
 
-  private def resolverFunction(modifier: Modifier, wildcard: Boolean):
-      (String) => Query[NameStrings, NameString, Seq] = modifier match {
+  def resolve(value: String, modifier: Modifier, wildcard: Boolean = false,
+              parameters: Parameters): Future[Matches] = {
+    val resolverFunction: (String) => Query[NameStrings, NameString, Seq] = modifier match {
+      case NoModifier =>
+        if (wildcard) facetedSearcher.resolveWildcard
+        else facetedSearcher.resolve
       case ExactModifier => facetedSearcher.resolveExact
       case NameStringModifier =>
         if (wildcard) facetedSearcher.resolveNameStringsLike
@@ -50,16 +55,8 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
         if (wildcard) facetedSearcher.resolveYearWildcard
         else facetedSearcher.resolveYear
     }
-
-  def resolve(value: String, modifier: Modifier, wildcard: Boolean = false,
-              parameters: Parameters): Future[Matches] = {
-    modifier match {
-      case NoModifier =>
-        resolver.resolveString(valueCleaned(value, modifier), parameters, wildcard)
-      case _ =>
-        val nameStrings = resolverFunction(modifier, wildcard)(valueCleaned(value, modifier))
-        nameStringsMatches(nameStrings, parameters)
-    }
+    val nameStrings = resolverFunction(valueCleaned(value, modifier))
+    nameStringsMatches(nameStrings, parameters)
   }
 }
 

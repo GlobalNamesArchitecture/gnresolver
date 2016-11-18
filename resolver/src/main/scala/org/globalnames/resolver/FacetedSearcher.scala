@@ -13,6 +13,7 @@ class FacetedSearcher(val db: Database) extends Materializer {
   import Materializer.Parameters
 
   private val unaccent = SimpleFunction.unary[String, String]("unaccent")
+  private val unaccentOpt = SimpleFunction.unary[Option[String], Option[String]]("unaccent")
 
   private val gen = UuidGenerator()
 
@@ -163,6 +164,25 @@ class FacetedSearcher(val db: Database) extends Materializer {
   private[resolver] def resolveExact(exact: String) = {
     val exactUuid = gen.generate(exact)
     nameStrings.filter { ns => ns.id === exactUuid }
+  }
+
+  private[resolver] def resolve(name: String) = {
+    nameStrings.filter { ns => unaccent(ns.name) === unaccent(name) ||
+      (ns.canonicalUuid =!= NameStrings.emptyCanonicalUuid &&
+        unaccentOpt(ns.canonical) === unaccent(name))
+    }
+  }
+
+  private[resolver] def resolveWildcard(name: String) = {
+    if (name.length <= 3) {
+      nameStrings.take(0)
+    } else {
+      val nameLike = name + "%"
+      nameStrings.filter { ns => unaccent(ns.name).like(unaccent(nameLike)) ||
+        (ns.canonicalUuid =!= NameStrings.emptyCanonicalUuid &&
+          unaccentOpt(ns.canonical).like(unaccent(nameLike)))
+      }
+    }
   }
 
   def resolveDataSources(uuid: UUID): Future[Seq[(NameStringIndex, DataSource)]] = {
