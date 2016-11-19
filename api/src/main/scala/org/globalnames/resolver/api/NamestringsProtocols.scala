@@ -80,7 +80,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
 
     def read(value: JsValue): MatchType = value match {
       case JsString(js) => js match {
-        case "None" => MatchType.None
+        case "Unknown" => MatchType.Unknown
         case "Fuzzy" => MatchType.Fuzzy
         case "ExactNameMatchByUUID" => MatchType.ExactNameMatchByUUID
         case "ExactCanonicalNameMatchByUUID" => MatchType.ExactCanonicalNameMatchByUUID

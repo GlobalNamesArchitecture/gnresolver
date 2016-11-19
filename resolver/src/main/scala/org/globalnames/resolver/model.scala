@@ -8,10 +8,11 @@ package object model {
 
   sealed trait MatchType
   object MatchType {
-    case object None extends MatchType
+    case object Unknown extends MatchType
     case object ExactNameMatchByUUID extends MatchType
     case object ExactCanonicalNameMatchByUUID extends MatchType
     case object Fuzzy extends MatchType
+    case object ExactMatchPartialByGenus extends MatchType
     case object UUIDLookup extends MatchType
   }
 
@@ -19,7 +20,7 @@ package object model {
 
   case class Match(nameString: NameString, dataSource: DataSource, nameStringIndex: NameStringIndex,
                    vernacularStrings: Seq[(VernacularString, VernacularStringIndex)],
-                   matchType: MatchType = MatchType.None)
+                   matchType: MatchType = MatchType.Unknown)
 
   case class Matches(total: Long, matches: Seq[Match],
                      suppliedNameString: Option[String] = None,

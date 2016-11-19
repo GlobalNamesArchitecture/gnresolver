@@ -107,7 +107,7 @@ object Materializer {
                         withSurrogates: Boolean, withVernaculars: Boolean,
                         query: Option[String] = None,
                         suppliedId: Option[SuppliedId] = None,
-                        matchType: MatchType = MatchType.None) {
+                        matchType: MatchType = MatchType.Unknown) {
     val take: Int = perPage.min(1000).max(0)
     val drop: Int = (page * perPage).max(0)
   }
