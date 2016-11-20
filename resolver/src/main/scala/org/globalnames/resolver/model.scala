@@ -10,7 +10,9 @@ package object model {
   object MatchType {
     case object Unknown extends MatchType
     case object ExactNameMatchByUUID extends MatchType
+    case object ExactNameMatchByString extends MatchType
     case object ExactCanonicalNameMatchByUUID extends MatchType
+    case object ExactCanonicalNameMatchByString extends MatchType
     case object Fuzzy extends MatchType
     case object ExactMatchPartialByGenus extends MatchType
     case object UUIDLookup extends MatchType

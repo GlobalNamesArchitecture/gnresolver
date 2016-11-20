@@ -25,17 +25,28 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
 
   def resolve(value: String, modifier: Modifier, wildcard: Boolean = false,
               parameters: Parameters): Future[Matches] = {
+    var paramsRes = parameters.copy(matchType = MatchType.ExactNameMatchByString)
     val resolverFunction: (String) => Query[NameStrings, NameString, Seq] = modifier match {
       case NoModifier =>
         if (wildcard) facetedSearcher.resolveWildcard
         else facetedSearcher.resolve
-      case ExactModifier => facetedSearcher.resolveExact
+      case ExactModifier =>
+        paramsRes = paramsRes.copy(matchType = MatchType.ExactNameMatchByUUID)
+        facetedSearcher.resolveExact
       case NameStringModifier =>
         if (wildcard) facetedSearcher.resolveNameStringsLike
-        else facetedSearcher.resolveNameStrings
+        else {
+          paramsRes = paramsRes.copy(matchType = MatchType.ExactNameMatchByString)
+          facetedSearcher.resolveNameStrings
+        }
       case CanonicalModifier =>
-        if (wildcard) facetedSearcher.resolveCanonicalLike
-        else facetedSearcher.resolveCanonical
+        if (wildcard) {
+          paramsRes = paramsRes.copy(matchType = MatchType.ExactCanonicalNameMatchByUUID)
+          facetedSearcher.resolveCanonicalLike
+        } else {
+          paramsRes = paramsRes.copy(matchType = MatchType.ExactCanonicalNameMatchByString)
+          facetedSearcher.resolveCanonical
+        }
       case UninomialModifier =>
         if (wildcard) facetedSearcher.resolveUninomialWildcard
         else facetedSearcher.resolveUninomial
@@ -56,7 +67,7 @@ case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSe
         else facetedSearcher.resolveYear
     }
     val nameStrings = resolverFunction(valueCleaned(value, modifier))
-    nameStringsMatches(nameStrings, parameters)
+    nameStringsMatches(nameStrings, paramsRes)
   }
 }
 
