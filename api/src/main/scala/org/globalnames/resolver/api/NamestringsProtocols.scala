@@ -29,6 +29,8 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
   case class Response(total: Long, suppliedId: Option[SuppliedId],
                       suppliedNameString: Option[String], results: Seq[ResponseItem])
 
+  case class PrescoreItem(matchType: MatchType)
+
   case class ResponseItem(nameStringUuid: UUID, nameString: String,
                           canonicalNameUuid: Option[UUID], canonicalName: Option[String],
                           surrogate: Option[Boolean],
@@ -37,7 +39,8 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
                           classificationPath: Option[String], classificationPathIds: Option[String],
                           classificationPathRanks: Option[String],
                           vernaculars: Seq[VernacularResponse],
-                          matchType: MatchType, localId: Option[String])
+                          matchType: MatchType, localId: Option[String],
+                          prescore: PrescoreItem)
 
   def result(matchesCollection: Seq[Matches], page: Int, perPage: Int): Responses = {
     val responses = matchesCollection.map { matches =>
@@ -49,6 +52,8 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
           VernacularResponse(dsi, vris)
         }.toSeq
 
+        val prescoreItem = PrescoreItem(m.matchType)
+
         ResponseItem(m.nameString.name.id, m.nameString.name.value,
           m.nameString.canonicalName.map { _.id }, m.nameString.canonicalName.map { _.value },
           m.nameString.surrogate,
@@ -56,16 +61,17 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
           m.nameStringIndex.taxonId, m.nameStringIndex.globalId,
           m.nameStringIndex.classificationPath, m.nameStringIndex.classificationPathIds,
           m.nameStringIndex.classificationPathRanks,
-          vernaculars, m.matchType, m.nameStringIndex.localId)
+          vernaculars, m.matchType, m.nameStringIndex.localId, prescoreItem)
       }
       Response(matches.total, matches.suppliedId, matches.suppliedNameString, items)
     }
     Responses(page, perPage, responses)
   }
 
+  implicit val prescoreItemFormat = jsonFormat1(PrescoreItem.apply)
   implicit val vernacularResponseItemFormat = jsonFormat4(VernacularResponseItem.apply)
   implicit val vernacularResponseFormat = jsonFormat2(VernacularResponse.apply)
-  implicit val responseItemFormat = jsonFormat15(ResponseItem.apply)
+  implicit val responseItemFormat = jsonFormat16(ResponseItem.apply)
   implicit val responseFormat = jsonFormat4(Response.apply)
   implicit val responsesFormat = jsonFormat3(Responses.apply)
   implicit object UuidJsonFormat extends RootJsonFormat[UUID] {
