@@ -17,8 +17,9 @@ import slick.driver.PostgresDriver.api._
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scalaz._
 import Scalaz.{get => _, _}
+import spray.json.NullOptions
 
-trait Service extends NamestringsProtocols with CrossMapProtocols {
+trait Service extends NamestringsProtocols with CrossMapProtocols with NullOptions {
   private val nameStringsMaxCount = 1000
 
   implicit val system: ActorSystem
