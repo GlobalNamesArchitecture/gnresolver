@@ -25,15 +25,13 @@ package object model {
                    nameType: Option[Int], matchType: MatchType = MatchType.Unknown)
 
   case class Matches(total: Long, matches: Seq[Match],
-                     suppliedNameString: Option[String] = None,
+                     suppliedInput: Option[String] = None,
                      suppliedId: Option[SuppliedId] = None)
 
   object Matches {
     def empty: Matches = Matches(0, Seq(), None)
 
-    def empty(suppliedNameString: String): Matches = {
-      Matches(0, Seq(), suppliedNameString.some)
-    }
+    def empty(suppliedInput: String): Matches = Matches(0, Seq(), suppliedInput.some)
   }
 
 }

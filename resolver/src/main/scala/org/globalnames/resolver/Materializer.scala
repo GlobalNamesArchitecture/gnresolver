@@ -72,7 +72,7 @@ trait Materializer {
           val nameType = ns.canonicalName.map { n => StringUtils.countMatches(n.value, " ") + 1 }
           Match(ns, ds, nsi, vs, nameType, parameters.matchType)
         },
-        suppliedNameString = parameters.query)
+        suppliedInput = parameters.query)
     }
   }
 
@@ -96,7 +96,7 @@ trait Materializer {
                 Match(ns, ds, nsi, vs, nameType, parameters.matchType)
               },
               suppliedId = parameters.suppliedId,
-              suppliedNameString = parameters.query)
+              suppliedInput = parameters.query)
           }
           l
       })

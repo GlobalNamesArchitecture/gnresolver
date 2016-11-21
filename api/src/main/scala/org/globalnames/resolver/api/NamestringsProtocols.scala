@@ -27,7 +27,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
   case class Responses(page: Int, perPage: Int, data: Seq[Response])
 
   case class Response(total: Long, suppliedId: Option[SuppliedId],
-                      suppliedNameString: Option[String], results: Seq[ResponseItem])
+                      suppliedInput: Option[String], results: Seq[ResponseItem])
 
   case class PrescoreItem(matchType: MatchType, nameType: Option[Int])
 
@@ -63,7 +63,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
           m.nameStringIndex.classificationPathRanks,
           vernaculars, m.matchType, m.nameStringIndex.localId, prescoreItem)
       }
-      Response(matches.total, matches.suppliedId, matches.suppliedNameString, items)
+      Response(matches.total, matches.suppliedId, matches.suppliedInput, items)
     }
     Responses(page, perPage, responses)
   }
