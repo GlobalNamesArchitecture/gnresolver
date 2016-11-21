@@ -22,7 +22,7 @@ package object model {
 
   case class Match(nameString: NameString, dataSource: DataSource, nameStringIndex: NameStringIndex,
                    vernacularStrings: Seq[(VernacularString, VernacularStringIndex)],
-                   matchType: MatchType = MatchType.Unknown)
+                   nameType: Option[Int], matchType: MatchType = MatchType.Unknown)
 
   case class Matches(total: Long, matches: Seq[Match],
                      suppliedNameString: Option[String] = None,

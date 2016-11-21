@@ -29,7 +29,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
   case class Response(total: Long, suppliedId: Option[SuppliedId],
                       suppliedNameString: Option[String], results: Seq[ResponseItem])
 
-  case class PrescoreItem(matchType: MatchType)
+  case class PrescoreItem(matchType: MatchType, nameType: Option[Int])
 
   case class ResponseItem(nameStringUuid: UUID, nameString: String,
                           canonicalNameUuid: Option[UUID], canonicalName: Option[String],
@@ -52,7 +52,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
           VernacularResponse(dsi, vris)
         }.toSeq
 
-        val prescoreItem = PrescoreItem(m.matchType)
+        val prescoreItem = PrescoreItem(m.matchType, m.nameType)
 
         ResponseItem(m.nameString.name.id, m.nameString.name.value,
           m.nameString.canonicalName.map { _.id }, m.nameString.canonicalName.map { _.value },
@@ -68,7 +68,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
     Responses(page, perPage, responses)
   }
 
-  implicit val prescoreItemFormat = jsonFormat1(PrescoreItem.apply)
+  implicit val prescoreItemFormat = jsonFormat2(PrescoreItem.apply)
   implicit val vernacularResponseItemFormat = jsonFormat4(VernacularResponseItem.apply)
   implicit val vernacularResponseFormat = jsonFormat2(VernacularResponse.apply)
   implicit val responseItemFormat = jsonFormat16(ResponseItem.apply)

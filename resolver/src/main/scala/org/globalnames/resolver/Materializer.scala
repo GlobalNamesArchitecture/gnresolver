@@ -1,6 +1,7 @@
 package org.globalnames
 package resolver
 
+import org.apache.commons.lang3.StringUtils
 import resolver.model._
 import slick.driver.PostgresDriver.api._
 
@@ -68,7 +69,8 @@ trait Materializer {
     } yield {
       Matches(count,
         portion.zip(vernaculars).map { case ((ns, nsi, ds), vs) =>
-          Match(ns, ds, nsi, vs, parameters.matchType)
+          val nameType = ns.canonicalName.map { n => StringUtils.countMatches(n.value, " ") + 1 }
+          Match(ns, ds, nsi, vs, nameType, parameters.matchType)
         },
         suppliedNameString = parameters.query)
     }
@@ -89,7 +91,9 @@ trait Materializer {
           val l = vernacularsGet(portion, parameters).map { vss =>
             Matches(count,
               portion.zip(vss).map { case ((ns, nsi, ds), vs) =>
-                Match(ns, ds, nsi, vs, parameters.matchType)
+                val nameType =
+                  ns.canonicalName.map { n => StringUtils.countMatches(n.value, " ") + 1}
+                Match(ns, ds, nsi, vs, nameType, parameters.matchType)
               },
               suppliedId = parameters.suppliedId,
               suppliedNameString = parameters.query)
