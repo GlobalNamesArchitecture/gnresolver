@@ -6,7 +6,7 @@ lazy val ItTest     = config("it").extend(Test)
 
 /////////////////////// DEPENDENCIES /////////////////////////
 
-val akkaV           = "2.4.8"
+val akkaV           = "2.4.11"
 
 val akkaActor       = "com.typesafe.akka"  %% "akka-actor"                          % akkaV
 val akkaHttp        = "com.typesafe.akka"  %% "akka-http-core"                      % akkaV
