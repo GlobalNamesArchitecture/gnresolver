@@ -37,9 +37,10 @@ ARG ASSEMBLY_PATH="https://github.com/GlobalNamesArchitecture/gnresolver/release
 ADD ${ASSEMBLY_PATH} /app/
 
 ADD application-prod.conf /app/
+# ADD logback.xml /app/
 
-CMD bash -c "java -jar -Dconfig=/app/application-prod.conf ${ASSEMBLY_JAR} \
-                  -server -Xms4g -Xmx8g -XX:PermSize=512m \
+CMD bash -c "java -cp '.' -jar -Dconfig=/app/application-prod.conf ${ASSEMBLY_JAR} \
+                  -server -Xms16g -Xmx32-XX:PermSize=512m \
                   -XX:MaxPermSize=512m -XX:+UseConcMarkSweepGC -XX:+CMSParallelRemarkEnabled \
                   -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction=70 \
                   -XX:+ScavengeBeforeFullGC -XX:+CMSScavengeBeforeRemark \
