@@ -55,7 +55,7 @@ object GnresolverMicroservice extends App with Service {
         database.run(TableQuery[NameStrings].map { _.canonical }.result.map { _.flatten }),
         5.seconds
       )
-      Matcher(nameStrings, maxDistance = 2)
+      Matcher(nameStrings, maxDistance = 1)
     }
     val matcher = (useDump, new File(dumpPath).exists()) match {
       case (true, true) => Matcher.restore(dumpPath)
