@@ -6,6 +6,7 @@ import java.util.UUID
 import org.apache.commons.lang3.StringUtils.capitalize
 import parser.ScientificNameParser.{instance => snp}
 import resolver.model._
+import org.slf4j.LoggerFactory
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -14,16 +15,16 @@ import scalaz._
 import Scalaz._
 
 class Resolver(val db: Database, matcher: Matcher) extends Materializer {
-  import Resolver.NameRequest
   import Materializer.Parameters
+  import Resolver.NameRequest
 
   private val gen = UuidGenerator()
+  private val emptyUuid = gen.generate("")
+  private val logger = LoggerFactory.getLogger(getClass)
 
   private def exactNamesQuery(nameUuid: Rep[UUID], canonicalNameUuid: Rep[UUID]) = {
     nameStrings.filter { ns =>
-      ns.id === nameUuid ||
-        (ns.canonicalUuid =!= NameStrings.emptyCanonicalUuid &&
-          ns.canonicalUuid === canonicalNameUuid)
+      ns.id === nameUuid || ns.canonicalUuid === canonicalNameUuid
     }
   }
 
@@ -64,12 +65,13 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
         fuzzyMatch(unfoundFuzzyCanonicalNameParts, dataSourceIds, parameters)
       }
 
-      val fuzzyNameStringsMaxCount = 50
-      val queryFoundFuzzy = {
+      val fuzzyNameStringsMaxCount = 5
+      val queryFoundFuzzy: Future[Seq[Matches]] = {
         val nameStringsQueries = foundFuzzyMatches.flatMap { case (verbatim, _, candUuids, _) =>
-          candUuids.map { case (uuid, matchType) =>
+          candUuids.filter { case (u, _) => u != NameStrings.emptyCanonicalUuid }
+                   .map { case (uuid, matchType) =>
             val ns = nameStrings.filter { ns =>
-              ns.canonicalUuid =!= NameStrings.emptyCanonicalUuid && ns.canonicalUuid === uuid
+              ns.canonicalUuid === uuid
             }
             val params = parameters.copy(query = verbatim.some, perPage = fuzzyNameStringsMaxCount,
                                          matchType = matchType)
@@ -126,14 +128,6 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
     nameStringsSequenceMatches(qrys)
   }
 
-  /**
-    * 5, 4, 3, 2 words -> ExactMatchPartial (in case of subspecies – drop middle words)
-    * If single word is a Genus then match it
-    * @param names
-    * @param dataSourceIds
-    * @param parameters
-    * @return
-    */
   def resolveExact(names: Seq[NameRequest], dataSourceIds: Vector[Int],
                    parameters: Parameters): Future[Seq[Matches]] = {
     val namesCapital = names.map { n => n.copy(value = capitalize(n.value)) }
@@ -145,11 +139,15 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
       }).map { x => x.flatten.toList }
 
     scientificNamesFuture.flatMap { scientificNamesIds =>
-      val exactMatches = scientificNamesIds.grouped(scientificNamesIds.size / 50 + 1).map { snIds =>
+      val exactMatches = scientificNamesIds.grouped(nameStringsPerFuture).map { snIds =>
         val qry = snIds.map { case (sn, _) =>
-          val canUuid: UUID = sn.canonizedUuid().map { _.id }.getOrElse(gen.generate(""))
-          val ns = exactNamesQuery(sn.input.id, canUuid)
-          val pms = parameters.copy(query = sn.input.verbatim.some)
+          val canUuid: UUID = sn.canonizedUuid().map { _.id }.getOrElse(emptyUuid)
+          val ns = if (canUuid == NameStrings.emptyCanonicalUuid) {
+            nameStrings.filter { ns => ns.id === sn.input.id }
+          } else {
+            exactNamesQuery(sn.input.id, canUuid)
+          }
+          val pms = parameters.copy(query = sn.input.verbatim.some, perPage = 5)
           (ns, pms)
         }
         nameStringsSequenceMatches(qry)
