@@ -53,7 +53,7 @@ object GnresolverMicroservice extends App with Service {
     def createMatcher = {
       val nameStrings = scala.concurrent.Await.result(
         database.run(TableQuery[NameStrings].map { _.canonical }.result.map { _.flatten }),
-        5.seconds
+        15.minutes
       )
       Matcher(nameStrings, maxDistance = 1)
     }
