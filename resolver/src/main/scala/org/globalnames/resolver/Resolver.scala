@@ -128,6 +128,20 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
     nameStringsSequenceMatches(qrys)
   }
 
+  /**
+    * Algorithm:
+    * parsedNames = parse in parallel with snp.fromString
+    * dbResult = query DB by parsedNames
+    *   if canonical is empty then by name only
+    *   else by name and canonical
+    * (matched, unmatched) = split dbResult: returned values are non-empty or empty
+    * fuzzyResult = make fuzzy match on unmatched
+    * return: matched ++ fuzzyResult
+    *
+    * TODO:
+    *   5, 4, 3, 2 words -> ExactMatchPartial (in case of subspecies - drop middle words)
+    *   If single word is a Genus then match it -> ExactMatchPartialByGenus
+    */
   def resolveExact(names: Seq[NameRequest], dataSourceIds: Vector[Int],
                    parameters: Parameters): Future[Seq[Matches]] = {
     val namesCapital = names.map { n => n.copy(value = capitalize(n.value)) }
