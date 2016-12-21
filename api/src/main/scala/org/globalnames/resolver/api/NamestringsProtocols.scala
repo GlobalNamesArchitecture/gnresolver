@@ -6,7 +6,7 @@ import java.util.UUID
 
 import akka.http.scaladsl.unmarshalling.Unmarshaller
 import Resolver.NameRequest
-import model.{DataSource, MatchType, Matches, NameStringIndex, SuppliedId}
+import model.{DataSource, MatchType, Matches, NameStringIndex, SuppliedId, Score, AuthorScore}
 import spray.json.{DefaultJsonProtocol, _}
 
 trait NamestringsProtocols extends DefaultJsonProtocol {
@@ -29,8 +29,6 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
   case class Response(total: Long, suppliedId: Option[SuppliedId],
                       suppliedInput: Option[String], results: Seq[ResponseItem])
 
-  case class PrescoreItem(matchType: MatchType, nameType: Option[Int])
-
   case class ResponseItem(nameStringUuid: UUID, nameString: String,
                           canonicalNameUuid: Option[UUID], canonicalName: Option[String],
                           surrogate: Option[Boolean],
@@ -40,19 +38,18 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
                           classificationPathRanks: Option[String],
                           vernaculars: Seq[VernacularResponse],
                           matchType: MatchType, localId: Option[String],
-                          prescore: PrescoreItem)
+                          prescore: Score)
 
   def result(matchesCollection: Seq[Matches], page: Int, perPage: Int): Responses = {
     val responses = matchesCollection.map { matches =>
-      val items = matches.matches.map { m =>
+      val scores = Scores.compute(matches)
+      val items = matches.matches.zip(scores).map { case (m, score) =>
         val vernaculars = m.vernacularStrings.groupBy { _._2.dataSourceId }.map { case (dsi, xs) =>
           val vris = xs.map { case (vs, vsi) =>
             VernacularResponseItem(vs.name, vsi.language, vsi.locality, vsi.countryCode)
           }
           VernacularResponse(dsi, vris)
         }.toSeq
-
-        val prescoreItem = PrescoreItem(m.matchType, m.nameType)
 
         ResponseItem(m.nameString.name.id, m.nameString.name.value,
           m.nameString.canonicalName.map { _.id }, m.nameString.canonicalName.map { _.value },
@@ -61,14 +58,15 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
           m.nameStringIndex.taxonId, m.nameStringIndex.globalId,
           m.nameStringIndex.classificationPath, m.nameStringIndex.classificationPathIds,
           m.nameStringIndex.classificationPathRanks,
-          vernaculars, m.matchType, m.nameStringIndex.localId, prescoreItem)
+          vernaculars, m.matchType, m.nameStringIndex.localId, score)
       }
       Response(matches.total, matches.suppliedId, matches.suppliedInput, items)
     }
     Responses(page, perPage, responses)
   }
 
-  implicit val prescoreItemFormat = jsonFormat2(PrescoreItem.apply)
+  implicit val authorscoreFormat = jsonFormat3(AuthorScore.apply)
+  implicit val scoreItemFormat = jsonFormat4(Score.apply)
   implicit val vernacularResponseItemFormat = jsonFormat4(VernacularResponseItem.apply)
   implicit val vernacularResponseFormat = jsonFormat2(VernacularResponse.apply)
   implicit val responseItemFormat = jsonFormat16(ResponseItem.apply)

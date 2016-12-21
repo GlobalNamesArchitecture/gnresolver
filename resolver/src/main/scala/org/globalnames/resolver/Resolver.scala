@@ -4,7 +4,7 @@ package resolver
 import java.util.UUID
 
 import org.apache.commons.lang3.StringUtils.capitalize
-import parser.ScientificNameParser.{instance => snp}
+import parser.ScientificNameParser.{Result => SNResult, instance => snp}
 import resolver.model._
 import org.slf4j.LoggerFactory
 import slick.driver.PostgresDriver.api._
@@ -33,7 +33,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
   }
 
   private def gnmatchCanonicals(
-      canonicalNamePartsNonEmpty: Seq[(String, Array[String], Option[SuppliedId])]) = {
+       canonicalNamePartsNonEmpty: Seq[(SNResult, Array[String], Option[SuppliedId])]) = {
     val canonicalNamesFuzzy = canonicalNamePartsNonEmpty.map { case (name, parts, suppliedId) =>
       val candsUuids: Seq[(UUID, MatchType)] = if (parts.length > 1) {
         val can = parts.mkString(" ")
@@ -49,7 +49,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
     }
   }
 
-  private def fuzzyMatch(canonicalNameParts: Seq[(String, Array[String], Option[SuppliedId])],
+  private def fuzzyMatch(canonicalNameParts: Seq[(SNResult, Array[String], Option[SuppliedId])],
                          dataSourceIds: Seq[Int], parameters: Parameters): Future[Seq[Matches]] = {
     val canonicalNamePartsNonEmpty = canonicalNameParts.filter {
       case (_, parts, _) => parts.nonEmpty
@@ -67,13 +67,14 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
 
       val fuzzyNameStringsMaxCount = 5
       val queryFoundFuzzy: Future[Seq[Matches]] = {
-        val nameStringsQueries = foundFuzzyMatches.flatMap { case (verbatim, _, candUuids, _) =>
+        val nameStringsQueries = foundFuzzyMatches.flatMap { case (sn, _, candUuids, _) =>
           candUuids.filter { case (u, _) => u != NameStrings.emptyCanonicalUuid }
                    .map { case (uuid, matchType) =>
             val ns = nameStrings.filter { ns =>
               ns.canonicalUuid === uuid
             }
-            val params = parameters.copy(query = verbatim.some, perPage = fuzzyNameStringsMaxCount,
+            val params = parameters.copy(query = sn.input.verbatim.some,
+                                         perPage = fuzzyNameStringsMaxCount,
                                          matchType = matchType)
             (ns, params)
           }
@@ -84,12 +85,13 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
       val foundFuzzyResult = queryFoundFuzzy.flatMap { fuzzyMatches =>
         val (matched, unmatched) =
           foundFuzzyMatches.zip(fuzzyMatches).partition { case (_, m) => m.matches.nonEmpty }
-        val matchedResult = matched.map { case ((name, _, _, suppliedId), m) =>
-          val matchesInDataSources = m.matches
+        val matchedResult = matched.map { case ((name, _, _, suppliedId), mtchs) =>
+          val matchesInDataSources = mtchs.matches
             .filter { m =>
               dataSourceIds.isEmpty || dataSourceIds.contains(m.nameStringIndex.dataSourceId)
             }
-          m.copy(matches = matchesInDataSources, suppliedId = suppliedId)
+          mtchs.copy(matches = matchesInDataSources, suppliedId = suppliedId,
+                     scientificName = name.some)
         }
         val matchedFuzzyResult = {
           val unmatchedParts = unmatched.map { case ((name, parts, _, suppliedId), _) =>
@@ -111,7 +113,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
   }
 
   private def resolveHelper(names: Seq[(NameRequest, Boolean)], dataSourceIds: Vector[Int],
-              parameters: Parameters): Future[Seq[Matches]] = {
+                            parameters: Parameters): Future[Seq[Matches]] = {
     val (namesWc, namesExact) = names.partition { case (_, wildcard) => wildcard }
     for {
       nwc <- resolveWildcard(namesWc.map { case (ns, _) => ns }, dataSourceIds, parameters)
@@ -175,7 +177,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
         }
 
         val parts = unmatched.map { case (_, (sn, localId)) =>
-          (sn.input.verbatim, sn.canonized().orZero.split(' '), localId)
+          (sn, sn.canonized().orZero.split(' '), localId)
         }
         val fuzzyMatches = fuzzyMatch(parts, dataSourceIds, parameters)
 
@@ -189,7 +191,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
                   else MatchType.ExactCanonicalNameMatchByUUID
                 m.copy(matchType = mt)
               }
-          mtch.copy(matches = ms, suppliedId = suppliedId)
+          mtch.copy(matches = ms, suppliedId = suppliedId, scientificName = sn.some)
         }
 
         fuzzyMatches.map { fm => fm ++ matchesResult }

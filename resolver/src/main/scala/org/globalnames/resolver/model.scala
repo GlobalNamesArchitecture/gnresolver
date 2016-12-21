@@ -1,6 +1,8 @@
 package org.globalnames
 package resolver
 
+import parser.ScientificNameParser.{Result => SNResult}
+
 import scalaz._
 import Scalaz._
 
@@ -26,7 +28,14 @@ package object model {
 
   case class Matches(total: Long, matches: Seq[Match],
                      suppliedInput: Option[String] = None,
-                     suppliedId: Option[SuppliedId] = None)
+                     suppliedId: Option[SuppliedId] = None,
+                     scientificName: Option[SNResult] = None)
+
+  case class AuthorScore(authorshipInput: String, authorshipMatch: String, value: Double)
+  case class Score(matchType: MatchType, nameType: Option[Int], authorScore: AuthorScore,
+                   parsingQuality: Int)
+
+  case class MatchScored(mtch: Match, score: Score)
 
   object Matches {
     def empty: Matches = Matches(0, Seq(), None)
