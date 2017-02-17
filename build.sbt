@@ -7,25 +7,30 @@ lazy val ItTest     = config("it").extend(Test)
 /////////////////////// DEPENDENCIES /////////////////////////
 
 val akkaV           = "2.4.11"
+val sangriaV        = "1.0.0"
 
-val akkaActor       = "com.typesafe.akka"  %% "akka-actor"                          % akkaV
-val akkaHttp        = "com.typesafe.akka"  %% "akka-http-core"                      % akkaV
-val akkaHttpCore    = "com.typesafe.akka"  %% "akka-http-experimental"              % akkaV
-val sprayJson       = "com.typesafe.akka"  %% "akka-http-spray-json-experimental"   % akkaV
-val slick           = "com.typesafe.slick" %% "slick"                               % "3.1.1"
-val logback         = "ch.qos.logback"     %  "logback-classic"                     % "1.1.7"
-val postgresql      = "postgresql"         %  "postgresql"                          % "9.1-901.jdbc4"
-val hikariSlick     = "com.typesafe.slick" %% "slick-hikaricp"                      % "3.1.1"
-val gnparser        = "org.globalnames"    %% "gnparser"                            % "0.3.3.1"
-val gnmatcher       = "org.globalnames"    %% "gnmatcher"                           % "0.1.1"
-val scalaz          = "org.scalaz"         %% "scalaz-core"                         % "7.1.7"
-val jodaTime        = "joda-time"          %  "joda-time"                           % "2.9.4"     % Test
-val jodaConvert     = "org.joda"           %  "joda-convert"                        % "1.8.1"     % Test
-val scalatest       = "org.scalatest"      %% "scalatest"                           % "2.2.6"     % Test
-val akkaHttpTestkit = "com.typesafe.akka"  %% "akka-http-testkit"                   % akkaV       % Test
-val pegdown         = "org.pegdown"        %  "pegdown"                             % "1.6.0"     % Test
-val commonsio       = "commons-io"         %  "commons-io"                          % "2.5"       % Test
-val mockito         = "org.mockito"        %  "mockito-core"                        % "2.2.5"     % Test
+val akkaActor       = "com.typesafe.akka"   %% "akka-actor"                          % akkaV
+val akkaHttp        = "com.typesafe.akka"   %% "akka-http-core"                      % akkaV
+val akkaHttpCore    = "com.typesafe.akka"   %% "akka-http-experimental"              % akkaV
+val sprayJson       = "com.typesafe.akka"   %% "akka-http-spray-json-experimental"   % akkaV
+val sangria         = "org.sangria-graphql" %% "sangria"                             % sangriaV excludeAll(
+                        ExclusionRule(organization = "org.parboiled"))
+val sangriaJson     = "org.sangria-graphql" %% "sangria-spray-json"                  % sangriaV excludeAll(
+                        ExclusionRule(organization = "org.parboiled"))
+val slick           = "com.typesafe.slick"  %% "slick"                               % "3.1.1"
+val logback         = "ch.qos.logback"      %  "logback-classic"                     % "1.1.7"
+val postgresql      = "postgresql"          %  "postgresql"                          % "9.1-901.jdbc4"
+val hikariSlick     = "com.typesafe.slick"  %% "slick-hikaricp"                      % "3.1.1"
+val gnparser        = "org.globalnames"     %% "gnparser"                            % "0.3.4-20170220_1130UTC-SNAPSHOT"
+val gnmatcher       = "org.globalnames"     %% "gnmatcher"                           % "0.1.1"
+val scalaz          = "org.scalaz"          %% "scalaz-core"                         % "7.1.7"
+val jodaTime        = "joda-time"           %  "joda-time"                           % "2.9.4"     % Test
+val jodaConvert     = "org.joda"            %  "joda-convert"                        % "1.8.1"     % Test
+val scalatest       = "org.scalatest"       %% "scalatest"                           % "2.2.6"     % Test
+val akkaHttpTestkit = "com.typesafe.akka"   %% "akka-http-testkit"                   % akkaV       % Test
+val pegdown         = "org.pegdown"         %  "pegdown"                             % "1.6.0"     % Test
+val commonsio       = "commons-io"          %  "commons-io"                          % "2.5"       % Test
+val mockito         = "org.mockito"         %  "mockito-core"                        % "2.2.5"     % Test
 
 //////////////////////////////////////////////////////////////
 
@@ -123,7 +128,7 @@ lazy val `gnresolver-root` = project.in(file("."))
   .aggregate(resolver, benchmark, api, front)
   .settings(noPublishingSettings: _*)
   .settings(
-    crossScalaVersions := Seq("2.10.6", "2.11.7")
+    crossScalaVersions := Seq("2.11.8", "2.12.1")
   )
 
 lazy val resolver = (project in file("./resolver"))
@@ -140,7 +145,7 @@ lazy val resolver = (project in file("./resolver"))
     test in assembly := {},
 
     libraryDependencies ++= Seq(slick, logback, postgresql, hikariSlick, gnparser, gnmatcher,
-                                scalatest, jodaTime, jodaConvert, mockito)
+                                sangria, sangriaJson, scalatest, jodaTime, jodaConvert, mockito)
   )
 
 lazy val benchmark = (project in file("./benchmark"))
