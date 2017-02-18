@@ -13,11 +13,16 @@ import QueryParser.SearchPart
 import model.Matches
 import Materializer.Parameters
 import slick.driver.PostgresDriver.api._
+import akka.http.scaladsl.model.StatusCodes
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
 import scalaz._
 import Scalaz.{get => _, _}
-import spray.json.NullOptions
+import spray.json._
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import sangria.parser.{QueryParser => QueryParserSangria}
+import sangria.execution.Executor
+import sangria.marshalling.sprayJson._
 
 trait Service extends NamestringsProtocols with CrossMapProtocols with NullOptions {
   private val nameStringsMaxCount = 1000
@@ -48,6 +53,22 @@ trait Service extends NamestringsProtocols with CrossMapProtocols with NullOptio
         path("version") {
           complete {
             Map("version" -> BuildInfo.version)
+          }
+        } ~ (post & path("graphql")) {
+          entity(as[JsValue]) { requestJson =>
+            val JsObject(fields) = requestJson
+            val JsString(query) = fields("query")
+            val vars = fields.get("variables") match {
+              case Some(obj: JsObject) => obj
+              case _ => JsObject.empty
+            }
+            QueryParserSangria.parse(query) match {
+              case util.Success(queryAst) =>
+                complete(Executor.execute(SchemaDefinition.schema, queryAst,
+                         GnRepo(facetedSearcher), variables = vars))
+              case util.Failure(error) =>
+                complete(StatusCodes.BadRequest, JsObject("error" -> JsString(error.getMessage)))
+            }
           }
         } ~ path("name_resolvers") {
           val getNameResolvers =
