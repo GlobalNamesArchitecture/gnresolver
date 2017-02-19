@@ -23,7 +23,7 @@ object SchemaDefinition {
 
   val Name = ObjectType(
     "Name", fields[Unit, model.Name](
-        Field("id", StringType, resolve = _.value.id.toString)
+        Field("id", IDType, resolve = _.value.id.toString)
       , Field("name", StringType, resolve = _.value.value)
     )
   )
@@ -31,14 +31,14 @@ object SchemaDefinition {
   val Classification = ObjectType(
     "Classification", fields[Unit, model.NameStringIndex](
         Field("path", OptionType(StringType), resolve = _.value.classificationPath)
-      , Field("pathIds", OptionType(StringType), resolve = _.value.classificationPathIds)
+      , Field("pathIds", OptionType(IDType), resolve = _.value.classificationPathIds)
       , Field("pathRanks", OptionType(StringType), resolve = _.value.classificationPathRanks)
     )
   )
 
   val Vernacular = ObjectType(
     "Vernacular", fields[Unit, (VernacularString, VernacularStringIndex)](
-        Field("id", StringType, resolve = _.value._1.id.toString)
+        Field("id", IDType, resolve = _.value._1.id.toString)
       , Field("name", StringType, resolve = _.value._1.name)
       , Field("dataSourceId", IntType, resolve = _.value._2.dataSourceId)
     )
@@ -50,9 +50,9 @@ object SchemaDefinition {
       , Field("canonicalName", OptionType(Name), resolve = _.value.nameString.canonicalName)
       , Field("surrogate", OptionType(BooleanType), resolve = _.value.nameString.surrogate)
       , Field("dataSource", OptionType(DataSource), resolve = _.value.dataSource)
-      , Field("taxonId", StringType, resolve = _.value.nameStringIndex.taxonId)
-      , Field("globalId", OptionType(StringType), resolve = _.value.nameStringIndex.globalId)
-      , Field("localId", OptionType(StringType), resolve = _.value.nameStringIndex.localId)
+      , Field("taxonId", IDType, resolve = _.value.nameStringIndex.taxonId)
+      , Field("globalId", OptionType(IDType), resolve = _.value.nameStringIndex.globalId)
+      , Field("localId", OptionType(IDType), resolve = _.value.nameStringIndex.localId)
       , Field("classification", OptionType(Classification), resolve = _.value.nameStringIndex)
       , Field("vernaculars", ListType(Vernacular), resolve = _.value.vernacularStrings)
       , Field("matchType", StringType, resolve = _.value.matchType.toString)
