@@ -101,12 +101,16 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
 
     val Sinks = Argument("sinks", InputObjectType[CrossMapRequest](
       "CrossMapSink", List(
-          InputField("dbSinkIds", ListInputType(IntType))
-        , InputField("localIds", ListInputType(StringType))
+          InputField("dbSinkIds", ListInputType(IntType),
+                     description = "Datasources to apply cross-map through")
+        , InputField("localIds", ListInputType(StringType),
+                     description = "Local IDs in `DBSourceId` to apply cross-map against")
       )
     ))
-    val DBSourceId = Argument("dataSourceId", IntType)
-    val DBTargetId = Argument("dataTargetId", OptionInputType(IntType))
+    val DBSourceId = Argument("dataSourceId", IntType,
+                              description = "The database to cross-map data from")
+    val DBTargetId = Argument("dataTargetId", OptionInputType(IntType),
+                              description = "The database to cross-map data to")
   }
 
   val Id = Argument("id", StringType)
