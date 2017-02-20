@@ -4,15 +4,22 @@ package api
 
 import model.{Matches, VernacularString, VernacularStringIndex}
 import Materializer.Parameters
-
 import sangria.schema._
+import sangria.marshalling.sprayJson._
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
+import spray.json.{DefaultJsonProtocol, _}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-
+import scalaz._
+import Scalaz._
 import java.util.UUID
 
-object SchemaDefinition {
+import org.globalnames.resolver.Resolver.NameRequest
+
+object SchemaDefinition extends DefaultJsonProtocol {
   val nameStringsMaxCount = 1000
+  implicit val nameRequestFormat: RootJsonFormat[NameRequest] =
+    jsonFormat2(Resolver.NameRequest.apply)
 
   val DataSource = ObjectType(
     "DataSource", fields[Unit, model.DataSource](
@@ -74,27 +81,51 @@ object SchemaDefinition {
   val PerPage = Argument("perPage", OptionInputType(IntType), nameStringsMaxCount)
   val WithSurrogates = Argument("withSurrogates", OptionInputType(BooleanType), false)
   val WithVernaculars = Argument("withVernaculars", OptionInputType(BooleanType), false)
+  val NameRequestObj: InputObjectType[NameRequest] = InputObjectType[NameRequest]("name", List(
+    InputField("value", StringType),
+    InputField("suppliedId", OptionInputType(IntType))
+  ))
+  val NamesRequest = Argument("names", ListInputType(NameRequestObj))
+  val DataSourceIds = Argument("dataSourceIds", OptionInputType(ListInputType(IntType)))
 
   val QueryType = ObjectType(
     "Query", fields[GnRepo, Unit](
-      Field("name_string", Response,
-        arguments = List(Id, Page, PerPage, WithSurrogates, WithVernaculars),
-        resolve = ctx => ctx.withArgs(Id, Page, PerPage, WithSurrogates, WithVernaculars) {
-          (id, page, perPage, withSurrogates, withVernaculars) =>
-            ctx.ctx.nameStringByUuid(id, page, perPage, withSurrogates, withVernaculars)
-        }
-      )
-    ))
+        Field("name_string", Response,
+          arguments = List(Id, Page, PerPage, WithSurrogates, WithVernaculars),
+          resolve = ctx => ctx.withArgs(Id, Page, PerPage, WithSurrogates, WithVernaculars) {
+            (id, page, perPage, withSurrogates, withVernaculars) =>
+              ctx.ctx.nameStringByUuid(id, page, perPage, withSurrogates, withVernaculars)
+          }
+        )
+      , Field("name_resolvers", ListType(Response),
+          arguments = List(NamesRequest, DataSourceIds, Page, PerPage, WithSurrogates,
+                           WithVernaculars),
+          resolve = ctx => ctx.withArgs(NamesRequest, DataSourceIds, Page, PerPage,
+                                        WithSurrogates, WithVernaculars) {
+            (names, dataSourceIds, page, perPage, withSurrogates, withVernaculars) =>
+              ctx.ctx.nameStrings(names.take(nameStringsMaxCount), dataSourceIds, page, perPage,
+                                  withSurrogates, withVernaculars)
+          }
+        )
+    )
+  )
 
   val schema = Schema(QueryType)
 }
 
-case class GnRepo(facetedSearcher: FacetedSearcher)
+case class GnRepo(facetedSearcher: FacetedSearcher, resolver: Resolver)
                  (implicit executor: ExecutionContextExecutor) {
   def nameStringByUuid(uuid: String, page: Int, perPage: Int,
                        withSurrogates: Boolean, withVernaculars: Boolean): Future[Matches] = {
     val uuidParsed = UUID.fromString(uuid)
     val params = Parameters(page, perPage, withSurrogates, withVernaculars)
     facetedSearcher.findNameStringByUuid(uuidParsed, params)
+  }
+
+  def nameStrings(names: Seq[NameRequest], dataSourceIds: Option[Seq[Int]],
+                  page: Int, perPage: Int,
+                  withSurrogates: Boolean, withVernaculars: Boolean): Future[Seq[Matches]] = {
+    val params = Parameters(page, perPage, withSurrogates, withVernaculars)
+    resolver.resolveExact(names, dataSourceIds.map { _.toVector }.orZero, params)
   }
 }
