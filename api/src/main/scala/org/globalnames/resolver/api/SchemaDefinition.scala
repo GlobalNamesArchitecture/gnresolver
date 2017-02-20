@@ -12,7 +12,7 @@ import scala.concurrent.{ExecutionContextExecutor, Future}
 import java.util.UUID
 
 object SchemaDefinition {
-  val ID = Argument("id", StringType)
+  val nameStringsMaxCount = 1000
 
   val DataSource = ObjectType(
     "DataSource", fields[Unit, model.DataSource](
@@ -69,11 +69,21 @@ object SchemaDefinition {
     )
   )
 
+  val Id = Argument("id", StringType)
+  val Page = Argument("page", OptionInputType(IntType), 0)
+  val PerPage = Argument("perPage", OptionInputType(IntType), nameStringsMaxCount)
+  val WithSurrogates = Argument("withSurrogates", OptionInputType(BooleanType), false)
+  val WithVernaculars = Argument("withVernaculars", OptionInputType(BooleanType), false)
+
   val QueryType = ObjectType(
     "Query", fields[GnRepo, Unit](
       Field("name_string", Response,
-        arguments = List(ID),
-        resolve = ctx => ctx.ctx.nameStringByUuid(ctx.arg(ID)))
+        arguments = List(Id, Page, PerPage, WithSurrogates, WithVernaculars),
+        resolve = ctx => ctx.withArgs(Id, Page, PerPage, WithSurrogates, WithVernaculars) {
+          (id, page, perPage, withSurrogates, withVernaculars) =>
+            ctx.ctx.nameStringByUuid(id, page, perPage, withSurrogates, withVernaculars)
+        }
+      )
     ))
 
   val schema = Schema(QueryType)
@@ -81,9 +91,10 @@ object SchemaDefinition {
 
 case class GnRepo(facetedSearcher: FacetedSearcher)
                  (implicit executor: ExecutionContextExecutor) {
-  def nameStringByUuid(id: String): Future[Matches] = {
-    val uuid = UUID.fromString(id)
-    facetedSearcher.findNameStringByUuid(uuid,
-      Parameters(0, 10, withSurrogates = false, withVernaculars = false))
+  def nameStringByUuid(uuid: String, page: Int, perPage: Int,
+                       withSurrogates: Boolean, withVernaculars: Boolean): Future[Matches] = {
+    val uuidParsed = UUID.fromString(uuid)
+    val params = Parameters(page, perPage, withSurrogates, withVernaculars)
+    facetedSearcher.findNameStringByUuid(uuidParsed, params)
   }
 }
