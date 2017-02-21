@@ -93,9 +93,9 @@ object SchemaDefinition extends DefaultJsonProtocol {
     "Query", fields[GnRepo, Unit](
         Field("name_string", Response,
           arguments = List(Id, Page, PerPage, WithSurrogates, WithVernaculars),
-          resolve = ctx => ctx.withArgs(Id, Page, PerPage, WithSurrogates, WithVernaculars) {
-            (id, page, perPage, withSurrogates, withVernaculars) =>
-              ctx.ctx.nameStringByUuid(id, page, perPage, withSurrogates, withVernaculars)
+          resolve = ctx => ctx.withArgs(Id, Page, PerPage, WithVernaculars) {
+            (id, page, perPage, withVernaculars) =>
+              ctx.ctx.nameStringByUuid(id, page, perPage, withVernaculars)
           }
         )
       , Field("name_resolvers", ListType(Response),
@@ -124,9 +124,9 @@ object SchemaDefinition extends DefaultJsonProtocol {
 case class GnRepo(facetedSearcher: FacetedSearcher, resolver: Resolver, searcher: Searcher)
                  (implicit executor: ExecutionContextExecutor) {
   def nameStringByUuid(uuid: String, page: Int, perPage: Int,
-                       withSurrogates: Boolean, withVernaculars: Boolean): Future[Matches] = {
+                       withVernaculars: Boolean): Future[Matches] = {
     val uuidParsed = UUID.fromString(uuid)
-    val params = Parameters(page, perPage, withSurrogates, withVernaculars)
+    val params = Parameters(page, perPage, withSurrogates = false, withVernaculars)
     facetedSearcher.findNameStringByUuid(uuidParsed, params)
   }
 
