@@ -87,6 +87,7 @@ object SchemaDefinition extends DefaultJsonProtocol {
   ))
   val NamesRequest = Argument("names", ListInputType(NameRequestObj))
   val DataSourceIds = Argument("dataSourceIds", OptionInputType(ListInputType(IntType)))
+  val SearchTerm = Argument("searchTerm", StringType)
 
   val QueryType = ObjectType(
     "Query", fields[GnRepo, Unit](
@@ -107,13 +108,20 @@ object SchemaDefinition extends DefaultJsonProtocol {
                                   withSurrogates, withVernaculars)
           }
         )
+      , Field("name_strings", Response,
+          arguments = List(SearchTerm, Page, PerPage, WithSurrogates, WithVernaculars),
+          resolve = ctx => ctx.withArgs(SearchTerm, Page, PerPage, WithSurrogates,
+                                        WithVernaculars) {
+            (searchTerm, page, perPage, withSurrogates, withVernaculars) =>
+              ctx.ctx.nameResolve(searchTerm, page, perPage, withSurrogates, withVernaculars)
+          })
     )
   )
 
   val schema = Schema(QueryType)
 }
 
-case class GnRepo(facetedSearcher: FacetedSearcher, resolver: Resolver)
+case class GnRepo(facetedSearcher: FacetedSearcher, resolver: Resolver, searcher: Searcher)
                  (implicit executor: ExecutionContextExecutor) {
   def nameStringByUuid(uuid: String, page: Int, perPage: Int,
                        withSurrogates: Boolean, withVernaculars: Boolean): Future[Matches] = {
@@ -127,5 +135,12 @@ case class GnRepo(facetedSearcher: FacetedSearcher, resolver: Resolver)
                   withSurrogates: Boolean, withVernaculars: Boolean): Future[Seq[Matches]] = {
     val params = Parameters(page, perPage, withSurrogates, withVernaculars)
     resolver.resolveExact(names, dataSourceIds.map { _.toVector }.orZero, params)
+  }
+
+  def nameResolve(searchTerm: String, page: Int, perPage: Int,
+                  withSurrogates: Boolean, withVernaculars: Boolean): Future[Matches] = {
+    val search = QueryParser.result(searchTerm)
+    val params = Parameters(page, perPage, withSurrogates, withVernaculars)
+    searcher.resolve(search.contents, search.modifier, search.wildcard, params)
   }
 }
