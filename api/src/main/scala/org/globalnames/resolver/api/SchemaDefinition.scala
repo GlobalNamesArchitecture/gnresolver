@@ -128,14 +128,14 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
 
   val QueryType = ObjectType(
     "Query", fields[GnRepo, Unit](
-        Field("name_string", Response,
+        Field("nameString", Response,
           arguments = List(Id, Page, PerPage, WithSurrogates, WithVernaculars),
           resolve = ctx => ctx.withArgs(Id, Page, PerPage, WithVernaculars) {
             (id, page, perPage, withVernaculars) =>
               ctx.ctx.nameStringByUuid(id, page, perPage, withVernaculars)
           }
         )
-      , Field("name_resolvers", ListType(Response),
+      , Field("nameResolvers", ListType(Response),
           arguments = List(NamesRequest, DataSourceIds, Page, PerPage, WithSurrogates,
                            WithVernaculars),
           resolve = ctx => ctx.withArgs(NamesRequest, DataSourceIds, Page, PerPage,
@@ -145,14 +145,14 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
                                   withSurrogates, withVernaculars)
           }
         )
-      , Field("name_strings", Response,
+      , Field("nameStrings", Response,
           arguments = List(SearchTerm, Page, PerPage, WithSurrogates, WithVernaculars),
           resolve = ctx => ctx.withArgs(SearchTerm, Page, PerPage, WithSurrogates,
                                         WithVernaculars) {
             (searchTerm, page, perPage, withSurrogates, withVernaculars) =>
               ctx.ctx.nameResolve(searchTerm, page, perPage, withSurrogates, withVernaculars)
           })
-      , Field("cross_map", ListType(CrossMap.Result),
+      , Field("crossMap", ListType(CrossMap.Result),
           arguments = List(CrossMap.DBSourceId, CrossMap.DBTargetId, CrossMap.Sinks),
           resolve = ctx => ctx.withArgs(CrossMap.DBSourceId, CrossMap.DBTargetId, CrossMap.Sinks) {
             ctx.ctx.crossMapResolve
