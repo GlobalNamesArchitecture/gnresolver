@@ -68,7 +68,7 @@ trait Service extends NamestringsProtocols with CrossMapProtocols with NullOptio
             QueryParserSangria.parse(query) match {
               case util.Success(queryAst) =>
                 complete(Executor.execute(SchemaDefinition.schema, queryAst,
-                         GnRepo(facetedSearcher, resolver, searcher),
+                         SchemaDefinition.GnRepo(facetedSearcher, resolver, searcher, crossMap),
                          variables = vars, operationName = operation)
                   .map(OK -> _)
                   .recover {

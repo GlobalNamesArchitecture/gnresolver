@@ -16,7 +16,7 @@ import java.util.UUID
 
 import org.globalnames.resolver.Resolver.NameRequest
 
-object SchemaDefinition extends DefaultJsonProtocol {
+object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
   val nameStringsMaxCount = 1000
   implicit val nameRequestFormat: RootJsonFormat[NameRequest] =
     jsonFormat2(Resolver.NameRequest.apply)
@@ -76,14 +76,47 @@ object SchemaDefinition extends DefaultJsonProtocol {
     )
   )
 
+  object CrossMap {
+    val Source = ObjectType(
+      "Source", fields[Unit, CrossMapSearcher.Source](
+          Field("dbId", IntType, resolve = _.value.dbId)
+        , Field("localId", StringType, resolve = _.value.localId)
+      )
+    )
+
+    val Target = ObjectType(
+      "Target", fields[Unit, CrossMapSearcher.Target](
+          Field("dbSinkId", IntType, resolve = _.value.dbSinkId)
+        , Field("dbTargetId", IntType, resolve = _.value.dbTargetId)
+        , Field("localId", StringType, resolve = _.value.localId)
+      )
+    )
+
+    val Result = ObjectType(
+      "Result", fields[Unit, CrossMapSearcher.Result](
+          Field("source", Source, resolve = _.value.source)
+        , Field("target", ListType(Target), resolve = _.value.target)
+      )
+    )
+
+    val Sinks = Argument("sinks", InputObjectType[CrossMapRequest](
+      "CrossMapSink", List(
+          InputField("dbSinkIds", ListInputType(IntType))
+        , InputField("localIds", ListInputType(StringType))
+      )
+    ))
+    val DBSourceId = Argument("dataSourceId", IntType)
+    val DBTargetId = Argument("dataTargetId", OptionInputType(IntType))
+  }
+
   val Id = Argument("id", StringType)
   val Page = Argument("page", OptionInputType(IntType), 0)
   val PerPage = Argument("perPage", OptionInputType(IntType), nameStringsMaxCount)
   val WithSurrogates = Argument("withSurrogates", OptionInputType(BooleanType), false)
   val WithVernaculars = Argument("withVernaculars", OptionInputType(BooleanType), false)
   val NameRequestObj: InputObjectType[NameRequest] = InputObjectType[NameRequest]("name", List(
-    InputField("value", StringType),
-    InputField("suppliedId", OptionInputType(IntType))
+      InputField("value", StringType)
+    , InputField("suppliedId", OptionInputType(IntType))
   ))
   val NamesRequest = Argument("names", ListInputType(NameRequestObj))
   val DataSourceIds = Argument("dataSourceIds", OptionInputType(ListInputType(IntType)))
@@ -115,32 +148,43 @@ object SchemaDefinition extends DefaultJsonProtocol {
             (searchTerm, page, perPage, withSurrogates, withVernaculars) =>
               ctx.ctx.nameResolve(searchTerm, page, perPage, withSurrogates, withVernaculars)
           })
+      , Field("cross_map", ListType(CrossMap.Result),
+          arguments = List(CrossMap.DBSourceId, CrossMap.DBTargetId, CrossMap.Sinks),
+          resolve = ctx => ctx.withArgs(CrossMap.DBSourceId, CrossMap.DBTargetId, CrossMap.Sinks) {
+            ctx.ctx.crossMapResolve
+          })
     )
   )
 
   val schema = Schema(QueryType)
-}
 
-case class GnRepo(facetedSearcher: FacetedSearcher, resolver: Resolver, searcher: Searcher)
-                 (implicit executor: ExecutionContextExecutor) {
-  def nameStringByUuid(uuid: String, page: Int, perPage: Int,
-                       withVernaculars: Boolean): Future[Matches] = {
-    val uuidParsed = UUID.fromString(uuid)
-    val params = Parameters(page, perPage, withSurrogates = false, withVernaculars)
-    facetedSearcher.findNameStringByUuid(uuidParsed, params)
-  }
+  case class GnRepo(facetedSearcher: FacetedSearcher, resolver: Resolver,
+                    searcher: Searcher, crossMap: CrossMapSearcher)
+                   (implicit executor: ExecutionContextExecutor) {
+    def nameStringByUuid(uuid: String, page: Int, perPage: Int,
+                         withVernaculars: Boolean): Future[Matches] = {
+      val uuidParsed = UUID.fromString(uuid)
+      val params = Parameters(page, perPage, withSurrogates = false, withVernaculars)
+      facetedSearcher.findNameStringByUuid(uuidParsed, params)
+    }
 
-  def nameStrings(names: Seq[NameRequest], dataSourceIds: Option[Seq[Int]],
-                  page: Int, perPage: Int,
-                  withSurrogates: Boolean, withVernaculars: Boolean): Future[Seq[Matches]] = {
-    val params = Parameters(page, perPage, withSurrogates, withVernaculars)
-    resolver.resolveExact(names, dataSourceIds.map { _.toVector }.orZero, params)
-  }
+    def nameStrings(names: Seq[NameRequest], dataSourceIds: Option[Seq[Int]],
+                    page: Int, perPage: Int,
+                    withSurrogates: Boolean, withVernaculars: Boolean): Future[Seq[Matches]] = {
+      val params = Parameters(page, perPage, withSurrogates, withVernaculars)
+      resolver.resolveExact(names, dataSourceIds.map { _.toVector }.orZero, params)
+    }
 
-  def nameResolve(searchTerm: String, page: Int, perPage: Int,
-                  withSurrogates: Boolean, withVernaculars: Boolean): Future[Matches] = {
-    val search = QueryParser.result(searchTerm)
-    val params = Parameters(page, perPage, withSurrogates, withVernaculars)
-    searcher.resolve(search.contents, search.modifier, search.wildcard, params)
+    def nameResolve(searchTerm: String, page: Int, perPage: Int,
+                    withSurrogates: Boolean, withVernaculars: Boolean): Future[Matches] = {
+      val search = QueryParser.result(searchTerm)
+      val params = Parameters(page, perPage, withSurrogates, withVernaculars)
+      searcher.resolve(search.contents, search.modifier, search.wildcard, params)
+    }
+
+    def crossMapResolve(dbSourceId: Int, dbTargetId: Option[Int],
+                        crossMapReq: CrossMapRequest): Future[Seq[CrossMapSearcher.Result]] = {
+      crossMap.execute(dbSourceId, crossMapReq.dbSinkIds, dbTargetId, crossMapReq.localIds)
+    }
   }
 }
