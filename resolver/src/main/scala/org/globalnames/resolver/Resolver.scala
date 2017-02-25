@@ -121,7 +121,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
     } yield nwc ++ nex
   }
 
-  private def resolveWildcard(names: Seq[NameRequest], dataSourceIds: Vector[SuppliedId],
+  private def resolveWildcard(names: Seq[NameRequest], dataSourceIds: Vector[Int],
                               parameters: Parameters): Future[Seq[Matches]] = {
     val qrys = names.map { name =>
       val capName = capitalize(name.value) + "%"

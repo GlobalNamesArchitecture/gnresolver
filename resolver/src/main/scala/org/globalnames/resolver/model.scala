@@ -20,7 +20,7 @@ package object model {
     case object UUIDLookup extends MatchType
   }
 
-  type SuppliedId = Int
+  type SuppliedId = String
 
   case class Match(nameString: NameString, dataSource: DataSource, nameStringIndex: NameStringIndex,
                    vernacularStrings: Seq[(VernacularString, VernacularStringIndex)],

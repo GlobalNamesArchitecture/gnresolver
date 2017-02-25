@@ -71,7 +71,7 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
     "Response", fields[GnRepo, model.Matches](
         Field("total", LongType, None, resolve = _.value.total)
       , Field("suppliedInput", OptionType(StringType), None, resolve = _.value.suppliedInput)
-      , Field("suppliedId", OptionType(IntType), None, resolve = _.value.suppliedId)
+      , Field("suppliedId", OptionType(StringType), None, resolve = _.value.suppliedId)
       , Field("results", ListType(ResponseItem), None, resolve = _.value.matches)
     )
   )
@@ -120,7 +120,7 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
   val WithVernaculars = Argument("withVernaculars", OptionInputType(BooleanType), false)
   val NameRequestObj: InputObjectType[NameRequest] = InputObjectType[NameRequest]("name", List(
       InputField("value", StringType)
-    , InputField("suppliedId", OptionInputType(IntType))
+    , InputField("suppliedId", OptionInputType(StringType))
   ))
   val NamesRequest = Argument("names", ListInputType(NameRequestObj))
   val DataSourceIds = Argument("dataSourceIds", OptionInputType(ListInputType(IntType)))
