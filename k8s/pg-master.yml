@@ -1,0 +1,98 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnresolver-db-master
+  labels:
+    app: gnresolver
+    tier: backend
+    type: master
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: gnresolver
+    tier: backend
+    type: master
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gnresolver-db-master
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: gresolver-db-master
+      labels:
+        app: gnresolver
+        tier: backend
+        type: master
+    spec:
+      volumes:
+        - name: gnresolver-db-master-vol
+          persistentVolumeClaim:
+            claimName: pvc-master
+      containers:
+        -
+          name: gnresolver-db-master
+          image: gnames/postgres-cluster-pgsql
+          env: # those variables are not secret as it's just initial state of DB
+            -
+              name: "NODE_ID"
+              value: "1"
+            -
+              name: "NODE_NAME"
+              value: "node1"
+            -
+              name: "CLUSTER_NODE_NETWORK_NAME"
+              value: "gnresolver-db-master"
+            -
+              name: "CONFIGS"
+              value: "wal_keep_segments:250,shared_buffers:500MB"
+
+            # Work DB
+            - name: "POSTGRES_DB"
+              valueFrom:
+                configMapKeyRef:
+                  name: gnresolver
+                  key: db.database
+            - name: "POSTGRES_USER"
+              valueFrom:
+                secretKeyRef:
+                  name: gnresolver
+                  key: db.user
+            - name: "POSTGRES_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: gnresolver
+                  key: db.user.password
+
+            # Cluster configs
+            - name: "CLUSTER_NAME"
+              valueFrom:
+                configMapKeyRef:
+                  name: gnresolver
+                  key: db.cluster.name
+            - name: "REPLICATION_DB"
+              valueFrom:
+                configMapKeyRef:
+                  name: gnresolver
+                  key: db.cluster.replication.db
+            - name: "REPLICATION_USER"
+              valueFrom:
+                secretKeyRef:
+                  name: gnresolver
+                  key: db.cluster.replication.user
+            - name: "REPLICATION_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: gnresolver
+                  key: db.cluster.replication.user.password
+          ports:
+            -
+              containerPort: 5432
+          volumeMounts:
+            - mountPath:  /var/lib/postgresql/data
+              name: gnresolver-db-master-vol

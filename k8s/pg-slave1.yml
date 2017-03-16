@@ -1,0 +1,83 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gnresolver-db-slave1
+  labels:
+    app: gnresolver
+    tier: backend
+    type: slave
+spec:
+  ports:
+    - port: 5432
+      targetPort: 5432
+  selector:
+    app: gnresolver
+    tier: backend
+    type: slave
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: gnresolver-db-slave1
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: gresolver-db-slave1
+      labels:
+        app: gnresolver
+        tier: backend
+        type: slave
+    spec:
+      volumes:
+        - name: gnresolver-db-slave-vol
+          emptyDir: {}
+      containers:
+        -
+          name: gnresolver-db-slave1
+          image: gnames/postgres-cluster-pgsql
+          env: # those variables are not secret as it's just initial state of DB
+            -
+              name: "REPLICATION_PRIMARY_HOST"
+              value: "gnresolver-db-master"
+            -
+              name: "NODE_ID"
+              value: "2"
+            -
+              name: "NODE_NAME"
+              value: "node2"
+            -
+              name: "CLUSTER_NODE_NETWORK_NAME"
+              value: "gnresolver-db-slave1"
+            -
+              name: "CONFIGS"
+              value: "wal_keep_segments:250,shared_buffers:500MB"
+
+            # Cluster configs
+            - name: "CLUSTER_NAME"
+              valueFrom:
+                configMapKeyRef:
+                  name: gnresolver
+                  key: db.cluster.name
+            - name: "REPLICATION_DB"
+              valueFrom:
+                configMapKeyRef:
+                  name: gnresolver
+                  key: db.cluster.replication.db
+            - name: "REPLICATION_USER"
+              valueFrom:
+                secretKeyRef:
+                  name: gnresolver
+                  key: db.cluster.replication.user
+            - name: "REPLICATION_PASSWORD"
+              valueFrom:
+                secretKeyRef:
+                  name: gnresolver
+                  key: db.cluster.replication.user.password
+          ports:
+            -
+              containerPort: 5432
+          volumeMounts:
+            - mountPath:  /var/lib/postgresql/data
+              name: gnresolver-db-slave-vol
