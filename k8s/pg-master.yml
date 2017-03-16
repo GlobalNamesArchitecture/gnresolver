@@ -3,10 +3,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: gnresolver-db-master
+  namespace: gn
   labels:
     app: gnresolver
     tier: backend
     type: master
+    node: "1"
 spec:
   ports:
     - port: 5432
@@ -15,11 +17,13 @@ spec:
     app: gnresolver
     tier: backend
     type: master
+    node: "1"
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: gnresolver-db-master
+  namespace: gn
 spec:
   replicas: 1
   template:
@@ -29,6 +33,7 @@ spec:
         app: gnresolver
         tier: backend
         type: master
+        node: "1"
     spec:
       volumes:
         - name: gnresolver-db-master-vol
@@ -68,6 +73,9 @@ spec:
                 secretKeyRef:
                   name: gnresolver
                   key: db.user.password
+            - name: "PGDATA"
+              value: pgsql
+
 
             # Cluster configs
             - name: "CLUSTER_NAME"

@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: gnresolver-db-slave1
+  name: gnresolver-db-slave2
   namespace: gn
   labels:
     app: gnresolver
     tier: backend
     type: slave
-    node: "2"
+    node: "3"
 spec:
   ports:
     - port: 5432
@@ -17,30 +17,30 @@ spec:
     app: gnresolver
     tier: backend
     type: slave
-    node: "2"
+    node: "3"
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: gnresolver-db-slave1
+  name: gnresolver-db-slave2
   namespace: gn
 spec:
   replicas: 1
   template:
     metadata:
-      name: gresolver-db-slave1
+      name: gresolver-db-slave2
       labels:
         app: gnresolver
         tier: backend
         type: slave
-        node: "2"
+        node: "3"
     spec:
       volumes:
         - name: gnresolver-db-slave-vol
           emptyDir: {}
       containers:
         -
-          name: gnresolver-db-slave1
+          name: gnresolver-db-slave2
           image: gnames/postgres-cluster-pgsql
           env: # those variables are not secret as it's just initial state of DB
             -
@@ -48,13 +48,13 @@ spec:
               value: "gnresolver-db-master"
             -
               name: "NODE_ID"
-              value: "2"
+              value: "3"
             -
               name: "NODE_NAME"
-              value: "node2"
+              value: "node3"
             -
               name: "CLUSTER_NODE_NETWORK_NAME"
-              value: "gnresolver-db-slave1"
+              value: "gnresolver-db-slave2"
             -
               name: "CONFIGS"
               value: "wal_keep_segments:250,shared_buffers:500MB"
@@ -81,7 +81,8 @@ spec:
                   name: gnresolver
                   key: db.cluster.replication.user.password
           ports:
-            - containerPort: 5432
+            -
+              containerPort: 5432
           volumeMounts:
             - mountPath:  /var/lib/postgresql/data
               name: gnresolver-db-slave-vol
