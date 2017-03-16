@@ -17,3 +17,5 @@ services:
       - pg
   pg:
     image: postgres:9.6
+    ports:
+      - "0.0.0.0:9002:5432"
