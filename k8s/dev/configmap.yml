@@ -6,6 +6,7 @@ metadata:
   labels:
     app: gnresolver
 data:
+  app.environment: production
   db.cluster.name: gnresolver_cluster
   db.cluster.replication.db: gnresolver_replica
   db.database: gnresolver
