@@ -8,11 +8,9 @@ metadata:
     app: gnresolver
     tier: frontend
 spec:
-  type: NodePort
   ports:
     - port: 9001
       targetPort: 9001
-      nodePort: 30222
   selector:
     app: gnresolver
     tier: frontend
