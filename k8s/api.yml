@@ -24,7 +24,7 @@ metadata:
   name: gnresolver-api
   namespace: gn
 spec:
-  replicas: 3
+  replicas: 2
   template:
     metadata:
       name: gnresolver-api
