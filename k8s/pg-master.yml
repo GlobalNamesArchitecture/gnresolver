@@ -10,6 +10,7 @@ metadata:
     type: master
     node: "1"
 spec:
+  type: NodePort
   ports:
     - port: 5432
       targetPort: 5432
@@ -38,7 +39,7 @@ spec:
       volumes:
         - name: gnresolver-db-master-vol
           persistentVolumeClaim:
-            claimName: pvc-master
+            claimName: gnresolver-pvc
       containers:
         -
           name: gnresolver-db-master
@@ -55,7 +56,10 @@ spec:
               value: "gnresolver-db-master"
             -
               name: "CONFIGS"
-              value: "wal_keep_segments:250,shared_buffers:500MB"
+              valueFrom:
+                configMapKeyRef:
+                  name: gnresolver
+                  key: db.configs
 
             # Work DB
             - name: "POSTGRES_DB"
@@ -74,7 +78,10 @@ spec:
                   name: gnresolver
                   key: db.user.password
             - name: "PGDATA"
-              value: pgsql
+              valueFrom:
+                configMapKeyRef:
+                  name: gnresolver
+                  key: db.pgdata
 
 
             # Cluster configs
@@ -99,8 +106,7 @@ spec:
                   name: gnresolver
                   key: db.cluster.replication.user.password
           ports:
-            -
-              containerPort: 5432
+            - containerPort: 5432
           volumeMounts:
             - mountPath:  /var/lib/postgresql/data
               name: gnresolver-db-master-vol

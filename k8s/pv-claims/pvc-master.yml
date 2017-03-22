@@ -1,7 +1,7 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: pvc-master
+  name: gnresolver-pvc
   namespace: gn
 spec:
   accessModes:
@@ -11,7 +11,7 @@ spec:
       storage: 300Gi
   selector:
     matchLabels:
-      app: gnresovler
+      app: gnresolver
       tier: backend
-      system: gnresolver-db
-      node: node1
+      type: master
+      node: "1"

@@ -55,9 +55,6 @@ spec:
             -
               name: "CLUSTER_NODE_NETWORK_NAME"
               value: "gnresolver-db-slave2"
-            -
-              name: "CONFIGS"
-              value: "wal_keep_segments:250,shared_buffers:500MB"
 
             # Cluster configs
             - name: "CLUSTER_NAME"
