@@ -6,28 +6,29 @@ lazy val ItTest     = config("it").extend(Test)
 
 /////////////////////// DEPENDENCIES /////////////////////////
 
-val akkaV           = "2.4.11"
+val akkaV           = "2.4.17"
+val akkaHttpV       = "10.0.5"
 val sangriaV        = "1.0.0"
 
 val akkaActor       = "com.typesafe.akka"   %% "akka-actor"                          % akkaV
-val akkaHttp        = "com.typesafe.akka"   %% "akka-http-core"                      % akkaV
-val akkaHttpCore    = "com.typesafe.akka"   %% "akka-http-experimental"              % akkaV
-val sprayJson       = "com.typesafe.akka"   %% "akka-http-spray-json-experimental"   % akkaV
+val akkaHttp        = "com.typesafe.akka"   %% "akka-http-core"                      % akkaHttpV
+val akkaHttpCore    = "com.typesafe.akka"   %% "akka-http"                           % akkaHttpV
+val sprayJson       = "com.typesafe.akka"   %% "akka-http-spray-json"                % akkaHttpV
 val sangria         = "org.sangria-graphql" %% "sangria"                             % sangriaV excludeAll(
                         ExclusionRule(organization = "org.parboiled"))
 val sangriaJson     = "org.sangria-graphql" %% "sangria-spray-json"                  % sangriaV excludeAll(
                         ExclusionRule(organization = "org.parboiled"))
-val slick           = "com.typesafe.slick"  %% "slick"                               % "3.1.1"
-val logback         = "ch.qos.logback"      %  "logback-classic"                     % "1.1.7"
+val slick           = "com.typesafe.slick"  %% "slick"                               % "3.2.0"
+val logback         = "ch.qos.logback"      %  "logback-classic"                     % "1.2.3"
 val postgresql      = "postgresql"          %  "postgresql"                          % "9.1-901.jdbc4"
-val hikariSlick     = "com.typesafe.slick"  %% "slick-hikaricp"                      % "3.1.1"
+val hikariSlick     = "com.typesafe.slick"  %% "slick-hikaricp"                      % "3.2.0"
 val gnparser        = "org.globalnames"     %% "gnparser"                            % "0.3.4-20170220_1130UTC-SNAPSHOT"
 val gnmatcher       = "org.globalnames"     %% "gnmatcher"                           % "0.1.1"
 val scalaz          = "org.scalaz"          %% "scalaz-core"                         % "7.1.7"
-val jodaTime        = "joda-time"           %  "joda-time"                           % "2.9.4"     % Test
+val jodaTime        = "joda-time"           %  "joda-time"                           % "2.9.9"     % Test
 val jodaConvert     = "org.joda"            %  "joda-convert"                        % "1.8.1"     % Test
 val scalatest       = "org.scalatest"       %% "scalatest"                           % "2.2.6"     % Test
-val akkaHttpTestkit = "com.typesafe.akka"   %% "akka-http-testkit"                   % akkaV       % Test
+val akkaHttpTestkit = "com.typesafe.akka"   %% "akka-http-testkit"                   % akkaHttpV   % Test
 val pegdown         = "org.pegdown"         %  "pegdown"                             % "1.6.0"     % Test
 val commonsio       = "commons-io"          %  "commons-io"                          % "2.5"       % Test
 val mockito         = "org.mockito"         %  "mockito-core"                        % "2.2.5"     % Test
