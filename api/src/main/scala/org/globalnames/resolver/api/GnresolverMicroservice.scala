@@ -39,7 +39,6 @@ object GnresolverMicroservice extends App with Service {
   }
   override val database = Database.forConfig("postgresql")
   override val matcher = {
-    logger.info("Matcher: restoring")
     val dumpPath = {
       val dumpFolder = {
         val folder = config.getString("gnresolver.gnmatcher-dump-folder")
@@ -49,7 +48,10 @@ object GnresolverMicroservice extends App with Service {
       Paths.get(dumpFolder, dumpFile).toString
     }
     val useDump = config.getBoolean("gnresolver.gnmatcher-use-dump")
-    logger.info(s"Matcher: using dump file '$dumpPath' -- $useDump")
+    val useFuzzyMatcher = config.getBoolean("gnresolver.gnmatcher-use-fuzzy-matcher")
+    logger.info(s"Matcher: dump file path -- '$dumpPath'")
+    logger.info(s"Matcher: use dump file -- $useDump")
+    logger.info(s"Matcher: use fuzzy matcher -- $useFuzzyMatcher")
     def createMatcher = {
       val nameStrings = scala.concurrent.Await.result(
         database.run(TableQuery[NameStrings].map { _.canonical }.result.map { _.flatten }),
@@ -57,13 +59,19 @@ object GnresolverMicroservice extends App with Service {
       )
       Matcher(nameStrings, maxDistance = 1)
     }
-    val matcher = (useDump, new File(dumpPath).exists()) match {
-      case (true, true) => Matcher.restore(dumpPath)
-      case (true, false) =>
+    val matcher = (useFuzzyMatcher, useDump, new File(dumpPath).exists()) match {
+      case (false, _, _) =>
+        logger.info("Matcher: using empty fuzzy matcher")
+        Matcher(Seq(), maxDistance = 0)
+      case (_, true, true) =>
+        logger.info("Matcher: dump file is found. Restoring from dump...")
+        Matcher.restore(dumpPath)
+      case (_, true, false) =>
+        logger.info("Matcher: dump file is not found. Creating dump...")
         val matcher = createMatcher
         matcher.dump(dumpPath)
         matcher
-      case (false, _) => createMatcher
+      case (_, false, _) => createMatcher
     }
     logger.info("Matcher: restored")
     matcher
