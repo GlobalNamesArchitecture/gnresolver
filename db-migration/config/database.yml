@@ -5,6 +5,7 @@ production:
   pool: 5
   timeout: 5000
   database: <%= ENV["DB_DATABASE"] %>
+  port: <%= ENV["DB_PORT"] || 5432 %>
   username: <%= ENV["DB_USER"] %>
   password: <%= ENV["DB_USER_PASS"] %>
 
@@ -15,6 +16,7 @@ development:
   pool: 5
   timeout: 5000
   database: <%= ENV["DB_DATABASE"] %>
+  port: <%= ENV["DB_PORT"] || 5432 %>
   username: <%= ENV["DB_USER"] %>
   password: <%= ENV["DB_USER_PASS"] %>
 
@@ -25,6 +27,7 @@ test_api:
   pool: 5
   timeout: 5000
   database: test_api
+  port: <%= ENV["DB_PORT"] || 5432 %>
   username: <%= ENV["DB_USER"] %>
   password: <%= ENV["DB_USER_PASS"] %>
 
@@ -35,5 +38,6 @@ test_resolver:
   pool: 5
   timeout: 5000
   database: test_resolver
+  port: <%= ENV["DB_PORT"] || 5432 %>
   username: <%= ENV["DB_USER"] %>
   password: <%= ENV["DB_USER_PASS"] %>
