@@ -28,8 +28,10 @@ package object model {
 
   case class Matches(total: Long, matches: Seq[Match],
                      suppliedInput: Option[String] = None,
-                     suppliedId: Option[SuppliedId] = None,
-                     scientificName: Option[SNResult] = None)
+                     private val suppliedIdProvided: Option[SuppliedId] = None,
+                     scientificName: Option[SNResult] = None) {
+    val suppliedId: Option[SuppliedId] = suppliedIdProvided.map { _.trim }
+  }
 
   case class AuthorScore(authorshipInput: String, authorshipMatch: String, value: Double)
   case class Score(matchType: MatchType, nameType: Option[Int], authorScore: AuthorScore,

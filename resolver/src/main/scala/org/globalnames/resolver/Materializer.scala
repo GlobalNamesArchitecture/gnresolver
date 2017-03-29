@@ -95,7 +95,7 @@ trait Materializer {
                   ns.canonicalName.map { n => StringUtils.countMatches(n.value, " ") + 1}
                 Match(ns, ds, nsi, vs, nameType, parameters.matchType)
               },
-              suppliedId = parameters.suppliedId,
+              suppliedIdProvided = parameters.suppliedId,
               suppliedInput = parameters.query)
           }
           l

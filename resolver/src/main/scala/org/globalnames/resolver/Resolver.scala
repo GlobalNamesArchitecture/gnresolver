@@ -90,7 +90,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
             .filter { m =>
               dataSourceIds.isEmpty || dataSourceIds.contains(m.nameStringIndex.dataSourceId)
             }
-          mtchs.copy(matches = matchesInDataSources, suppliedId = suppliedId,
+          mtchs.copy(matches = matchesInDataSources, suppliedIdProvided = suppliedId,
                      scientificName = name.some)
         }
         val matchedFuzzyResult = {
@@ -191,7 +191,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
                   else MatchType.ExactCanonicalNameMatchByUUID
                 m.copy(matchType = mt)
               }
-          mtch.copy(matches = ms, suppliedId = suppliedId, scientificName = sn.some)
+          mtch.copy(matches = ms, suppliedIdProvided = suppliedId, scientificName = sn.some)
         }
 
         fuzzyMatches.map { fm => fm ++ matchesResult }
