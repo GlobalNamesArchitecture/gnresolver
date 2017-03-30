@@ -172,8 +172,12 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
       Future.sequence(exactMatches).flatMap { exactMatchesChunks =>
         val exactMatches = exactMatchesChunks.flatten.toList
 
-        val (matched, unmatched) = exactMatches.zip(scientificNamesIds).partition {
+        val (matched, unmatchedAll) = exactMatches.zip(scientificNamesIds).partition {
           case (m, _) => m.matches.nonEmpty
+        }
+
+        val (unmatched, unmatchedNotParsed) = unmatchedAll.partition {
+          case (_, (sn, _)) => sn.canonized().isDefined
         }
 
         val parts = unmatched.map { case (_, (sn, localId)) =>
@@ -181,7 +185,7 @@ class Resolver(val db: Database, matcher: Matcher) extends Materializer {
         }
         val fuzzyMatches = fuzzyMatch(parts, dataSourceIds, parameters)
 
-        val matchesResult = matched.map { case (mtch, (sn, suppliedId)) =>
+        val matchesResult = (matched ++ unmatchedNotParsed).map { case (mtch, (sn, suppliedId)) =>
           val ms = mtch.matches
               .filter { m =>
                 dataSourceIds.isEmpty || dataSourceIds.contains(m.nameStringIndex.dataSourceId)
