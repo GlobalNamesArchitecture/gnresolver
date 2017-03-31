@@ -35,6 +35,13 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
     )
   )
 
+  val MatchType = ObjectType(
+    "MatchType", fields[Unit, model.MatchType](
+        Field("value", StringType, resolve = _.value.toString)
+      , Field("score", IntType, resolve = _.value.score)
+    )
+  )
+
   val Classification = ObjectType(
     "Classification", fields[Unit, model.NameStringIndex](
         Field("path", OptionType(StringType), resolve = _.value.classificationPath)
@@ -62,7 +69,7 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
       , Field("localId", OptionType(IDType), resolve = _.value.nameStringIndex.localId)
       , Field("classification", OptionType(Classification), resolve = _.value.nameStringIndex)
       , Field("vernaculars", ListType(Vernacular), resolve = _.value.vernacularStrings)
-      , Field("matchType", StringType, resolve = _.value.matchType.toString)
+      , Field("matchType", MatchType, resolve = _.value.matchType)
       // , Field("prescore", StringType, resolve = ???)
     )
   )
