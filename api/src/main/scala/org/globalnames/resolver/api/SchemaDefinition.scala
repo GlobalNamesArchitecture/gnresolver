@@ -2,7 +2,7 @@ package org.globalnames
 package resolver
 package api
 
-import model.{Matches, VernacularString, VernacularStringIndex}
+import model.{AuthorScore, Matches, Score, VernacularString, VernacularStringIndex}
 import Materializer.Parameters
 import sangria.schema._
 import sangria.marshalling.sprayJson._
@@ -58,19 +58,36 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
     )
   )
 
+  val AuthorScoreObj = ObjectType(
+    "AuthorScore", fields[Unit, AuthorScore](
+        Field("authorshipInput", StringType, resolve = _.value.authorshipInput)
+      , Field("authorshipMatch", StringType, resolve = _.value.authorshipMatch)
+      , Field("value", FloatType, resolve = _.value.value)
+    )
+  )
+
+  val ScoreObj = ObjectType(
+    "Score", fields[Unit, Score](
+        Field("matchType", MatchType, resolve = _.value.matchType)
+      , Field("nameType", OptionType(IntType), resolve = _.value.nameType)
+      , Field("authorScore", AuthorScoreObj, resolve = _.value.authorScore)
+      , Field("parsingQuality", IntType, resolve = _.value.parsingQuality)
+    )
+  )
+
   val ResponseItem = ObjectType(
-    "ResponseItem", fields[GnRepo, model.Match](
-        Field("name", Name, resolve = _.value.nameString.name)
-      , Field("canonicalName", OptionType(Name), resolve = _.value.nameString.canonicalName)
-      , Field("surrogate", OptionType(BooleanType), resolve = _.value.nameString.surrogate)
-      , Field("dataSource", OptionType(DataSource), resolve = _.value.dataSource)
-      , Field("taxonId", IDType, resolve = _.value.nameStringIndex.taxonId)
-      , Field("globalId", OptionType(IDType), resolve = _.value.nameStringIndex.globalId)
-      , Field("localId", OptionType(IDType), resolve = _.value.nameStringIndex.localId)
-      , Field("classification", OptionType(Classification), resolve = _.value.nameStringIndex)
-      , Field("vernaculars", ListType(Vernacular), resolve = _.value.vernacularStrings)
-      , Field("matchType", MatchType, resolve = _.value.matchType)
-      // , Field("prescore", StringType, resolve = ???)
+    "ResponseItem", fields[GnRepo, model.MatchScored](
+        Field("name", Name, resolve = _.value.mtch.nameString.name)
+      , Field("canonicalName", OptionType(Name), resolve = _.value.mtch.nameString.canonicalName)
+      , Field("surrogate", OptionType(BooleanType), resolve = _.value.mtch.nameString.surrogate)
+      , Field("dataSource", OptionType(DataSource), resolve = _.value.mtch.dataSource)
+      , Field("taxonId", IDType, resolve = _.value.mtch.nameStringIndex.taxonId)
+      , Field("globalId", OptionType(IDType), resolve = _.value.mtch.nameStringIndex.globalId)
+      , Field("localId", OptionType(IDType), resolve = _.value.mtch.nameStringIndex.localId)
+      , Field("classification", OptionType(Classification), resolve = _.value.mtch.nameStringIndex)
+      , Field("vernaculars", ListType(Vernacular), resolve = _.value.mtch.vernacularStrings)
+      , Field("matchType", MatchType, resolve = _.value.mtch.matchType)
+      , Field("preScore", ScoreObj, resolve = _.value.score)
     )
   )
 
@@ -79,7 +96,7 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
         Field("total", LongType, None, resolve = _.value.total)
       , Field("suppliedInput", OptionType(StringType), None, resolve = _.value.suppliedInput)
       , Field("suppliedId", OptionType(StringType), None, resolve = _.value.suppliedId)
-      , Field("results", ListType(ResponseItem), None, resolve = _.value.matches)
+      , Field("results", ListType(ResponseItem), None, resolve = ctx => Scores.compute(ctx.value))
     )
   )
 

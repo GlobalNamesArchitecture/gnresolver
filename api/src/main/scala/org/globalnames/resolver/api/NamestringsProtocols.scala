@@ -43,7 +43,7 @@ trait NamestringsProtocols extends DefaultJsonProtocol {
   def result(matchesCollection: Seq[Matches], page: Int, perPage: Int): Responses = {
     val responses = matchesCollection.map { matches =>
       val scores = Scores.compute(matches)
-      val items = matches.matches.zip(scores).map { case (m, score) =>
+      val items = scores.map { case model.MatchScored(m, score) =>
         val vernaculars = m.vernacularStrings.groupBy { _._2.dataSourceId }.map { case (dsi, xs) =>
           val vris = xs.map { case (vs, vsi) =>
             VernacularResponseItem(vs.name, vsi.language, vsi.locality, vsi.countryCode)
