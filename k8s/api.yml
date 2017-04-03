@@ -24,7 +24,7 @@ metadata:
   name: gnresolver-api
   namespace: gn
 spec:
-  replicas: 2
+  replicas: 1
   template:
     metadata:
       name: gnresolver-api
@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
         - name: gnresolver
-          image: gnames/gnresolver
+          image: gnames/gnresolver:0.1.0-582b0dce-20170403_1256-SNAPSHOT
           env:
             - name: RUN_MODE
               valueFrom:
