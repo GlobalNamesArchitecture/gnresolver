@@ -81,6 +81,7 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
         Field("name", Name, resolve = _.value.mtch.nameString.name)
       , Field("canonicalName", OptionType(Name), resolve = _.value.mtch.nameString.canonicalName)
       , Field("surrogate", OptionType(BooleanType), resolve = _.value.mtch.nameString.surrogate)
+      , Field("synonym", OptionType(BooleanType), resolve = _.value.mtch.synonym)
       , Field("dataSource", OptionType(DataSource), resolve = _.value.mtch.dataSource)
       , Field("taxonId", IDType, resolve = _.value.mtch.nameStringIndex.taxonId)
       , Field("globalId", OptionType(IDType), resolve = _.value.mtch.nameStringIndex.globalId)
