@@ -39,6 +39,7 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
     "MatchType", fields[Unit, model.MatchType](
         Field("value", StringType, resolve = _.value.toString)
       , Field("score", IntType, resolve = _.value.score)
+      , Field("editDistance", IntType, resolve = ctx => model.MatchType.editDistance(ctx.value))
     )
   )
 

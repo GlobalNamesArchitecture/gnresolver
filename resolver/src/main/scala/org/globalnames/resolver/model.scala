@@ -36,6 +36,11 @@ package object model {
     case object Unknown extends MatchType {
       val score: Int = 8
     }
+
+    def editDistance(matchType: MatchType): Int = matchType match {
+      case Fuzzy => 1
+      case _ => 0
+    }
   }
 
   type SuppliedId = String
