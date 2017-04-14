@@ -174,10 +174,7 @@ object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
       , Field("nameStrings", Response,
           arguments = List(SearchTerm, Page, PerPage, WithSurrogates, WithVernaculars),
           resolve = ctx => ctx.withArgs(SearchTerm, Page, PerPage, WithSurrogates,
-                                        WithVernaculars) {
-            (searchTerm, page, perPage, withSurrogates, withVernaculars) =>
-              ctx.ctx.nameResolve(searchTerm, page, perPage, withSurrogates, withVernaculars)
-          })
+                                        WithVernaculars) { ctx.ctx.nameResolve })
       , Field("crossMap", ListType(CrossMap.Result),
           arguments = List(CrossMap.DBSourceId, CrossMap.DBTargetId, CrossMap.Sinks),
           resolve = ctx => ctx.withArgs(CrossMap.DBSourceId, CrossMap.DBTargetId, CrossMap.Sinks) {
