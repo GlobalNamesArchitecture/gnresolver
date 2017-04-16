@@ -1,6 +1,6 @@
 package org.globalnames.resolver.model.db
 
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.lifted.ProvenShape
 
 case class DataSource(id: Int, title: String, description: String)

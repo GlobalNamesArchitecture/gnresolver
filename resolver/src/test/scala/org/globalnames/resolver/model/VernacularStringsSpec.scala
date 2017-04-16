@@ -5,7 +5,7 @@ package db
 
 import java.util.UUID
 
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 
 class VernacularStringsSpec extends SpecConfig {
   val conn = Database.forConfig("postgresql-test")

@@ -5,7 +5,7 @@ import org.apache.commons.lang3.StringUtils.capitalize
 import model._
 import Searcher._
 import model.db.{NameString, NameStrings}
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.Future
 

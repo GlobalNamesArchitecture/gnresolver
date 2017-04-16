@@ -3,7 +3,7 @@ package resolver
 package model
 package db
 
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 
 class DataSourcesSpec extends SpecConfig {
   val conn = Database.forConfig("postgresql-test")

@@ -12,7 +12,7 @@ import Resolver.NameRequest
 import QueryParser.SearchPart
 import model.Matches
 import Materializer.Parameters
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 import akka.http.scaladsl.model.StatusCodes._
 
 import scala.concurrent.{ExecutionContextExecutor, Future}

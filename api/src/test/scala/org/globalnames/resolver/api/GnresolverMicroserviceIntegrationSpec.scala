@@ -16,7 +16,7 @@ import akka.http.scaladsl.testkit.ScalatestRouteTest
 import org.apache.commons.io.FileUtils
 import model.Matches
 import CrossMapSearcher.{Result, Source, Target}
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 
 import scala.collection.JavaConversions._
 import com.typesafe.config.{Config, ConfigFactory, ConfigRenderOptions, ConfigValueType}

@@ -5,7 +5,7 @@ import java.util.UUID
 
 import model.{MatchType, Matches}
 import model.db.NameStrings
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.Future
 import scala.util.{Success, Try}

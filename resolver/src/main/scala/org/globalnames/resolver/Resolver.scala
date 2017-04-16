@@ -8,7 +8,7 @@ import model.db.NameStrings
 import parser.ScientificNameParser.{Result => SNResult, instance => snp}
 import resolver.model._
 import org.slf4j.LoggerFactory
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

@@ -4,7 +4,7 @@ package resolver
 import org.apache.commons.lang3.StringUtils
 import model._
 import model.db._
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global

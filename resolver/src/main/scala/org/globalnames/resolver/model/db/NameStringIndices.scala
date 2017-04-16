@@ -2,7 +2,7 @@ package org.globalnames.resolver.model.db
 
 import java.util.UUID
 
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 import slick.lifted.ProvenShape
 
 case class NameStringIndex(dataSourceId: Int, nameStringId: UUID, url: Option[String],

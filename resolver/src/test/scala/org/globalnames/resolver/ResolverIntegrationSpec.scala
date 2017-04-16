@@ -2,12 +2,11 @@ package org.globalnames
 package resolver
 
 import model.db.NameStrings
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 import Materializer.Parameters
-import slick.driver.PostgresDriver
 
 class ResolverIntegrationSpec extends SpecConfig {
   val conn: PostgresDriver.backend.Database = Database.forConfig("postgresql-test")

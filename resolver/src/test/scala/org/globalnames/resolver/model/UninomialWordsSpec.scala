@@ -3,7 +3,7 @@ package resolver
 package model
 package db
 
-import slick.driver.PostgresDriver.api._
+import slick.jdbc.PostgresProfile.api._
 import java.util.UUID
 
 class UninomialWordsSpec extends SpecConfig {
