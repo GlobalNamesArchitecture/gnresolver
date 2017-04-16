@@ -1,4 +1,4 @@
-package org.globalnames.resolver.model
+package org.globalnames.resolver.model.db
 
 import java.util.UUID
 

@@ -2,7 +2,8 @@ package org.globalnames
 package resolver
 
 import org.apache.commons.lang3.StringUtils
-import resolver.model._
+import model._
+import model.db._
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Future
@@ -11,18 +12,19 @@ import scala.concurrent.ExecutionContext.Implicits.global
 trait Materializer {
   import Materializer.Parameters
 
-  protected val db: Database
-  protected val nameStringIndicies = TableQuery[NameStringIndices]
-  protected val dataSources = TableQuery[DataSources]
-  protected val nameStrings = TableQuery[NameStrings]
-  protected val authorWords = TableQuery[AuthorWords]
-  protected val uninomialWords = TableQuery[UninomialWords]
-  protected val genusWords = TableQuery[GenusWords]
-  protected val speciesWords = TableQuery[SpeciesWords]
-  protected val subspeciesWords = TableQuery[SubspeciesWords]
-  protected val yearWords = TableQuery[YearWords]
-  protected val vernacularStrings = TableQuery[VernacularStrings]
-  protected val vernacularStringIndices = TableQuery[VernacularStringIndices]
+  protected val database: Database
+  protected val nameStringIndicies: TableQuery[NameStringIndices] = TableQuery[NameStringIndices]
+  protected val dataSources: TableQuery[DataSources] = TableQuery[DataSources]
+  protected val nameStrings: TableQuery[NameStrings] = TableQuery[NameStrings]
+  protected val authorWords: TableQuery[AuthorWords] = TableQuery[AuthorWords]
+  protected val uninomialWords: TableQuery[UninomialWords] = TableQuery[UninomialWords]
+  protected val genusWords: TableQuery[GenusWords] = TableQuery[GenusWords]
+  protected val speciesWords: TableQuery[SpeciesWords] = TableQuery[SpeciesWords]
+  protected val subspeciesWords: TableQuery[SubspeciesWords] = TableQuery[SubspeciesWords]
+  protected val yearWords: TableQuery[YearWords] = TableQuery[YearWords]
+  protected val vernacularStrings: TableQuery[VernacularStrings] = TableQuery[VernacularStrings]
+  protected val vernacularStringIndices: TableQuery[VernacularStringIndices] =
+    TableQuery[VernacularStringIndices]
 
   private def wrapNameStringQuery(nameStringsQuery: Query[NameStrings, NameString, Seq],
                                   parameters: Parameters) = {
@@ -51,7 +53,7 @@ trait Materializer {
           } yield (vs, vsi)
           qry.result
         }
-        db.run(DBIO.sequence(qrys))
+        database.run(DBIO.sequence(qrys))
       } else {
         Future.successful(Seq.fill(portion.size)(Seq()))
       }
@@ -63,8 +65,8 @@ trait Materializer {
         parameters: Parameters): Future[Matches] = {
     val (query, queryCount) = wrapNameStringQuery(nameStringsQuery, parameters)
     for {
-      portion <- db.run(query.result)
-      count <- db.run(queryCount.result)
+      portion <- database.run(query.result)
+      count <- database.run(queryCount.result)
       vernaculars <- vernacularsGet(portion, parameters)
     } yield {
       Matches(count,
@@ -84,8 +86,8 @@ trait Materializer {
       (count.result, res.drop(parameters.drop).take(parameters.take).result)
     }.unzip
     for {
-      portions <- db.run(DBIO.sequence(query))
-      counts <- db.run(DBIO.sequence(queryCount))
+      portions <- database.run(DBIO.sequence(query))
+      counts <- database.run(DBIO.sequence(queryCount))
       vernacular <- Future.sequence((portions, counts, nameStringsQueries.map { _._2 }).zipped.map {
         case (portion, count, parameters) =>
           val l = vernacularsGet(portion, parameters).map { vss =>

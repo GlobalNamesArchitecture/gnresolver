@@ -3,7 +3,8 @@ package resolver
 
 import java.util.UUID
 
-import model.{Matches, NameStrings}
+import model.Matches
+import model.db.NameStrings
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Await
@@ -333,6 +334,7 @@ class FacetedSearcherSpec extends SpecConfig {
       }
     }
 
+    /*
     describe(".resolveDataSources") {
       it("resolves") {
         whenReady(faceted.resolveDataSources(
@@ -345,6 +347,7 @@ class FacetedSearcherSpec extends SpecConfig {
         }
       }
     }
+    */
 
     describe(".findNameStringByUuid") {
       it("resolves") {

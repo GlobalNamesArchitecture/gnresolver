@@ -1,6 +1,7 @@
 package org.globalnames
 package resolver
 package model
+package db
 
 import java.util.UUID
 

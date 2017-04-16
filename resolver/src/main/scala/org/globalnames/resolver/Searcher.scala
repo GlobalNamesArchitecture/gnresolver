@@ -4,12 +4,12 @@ package resolver
 import org.apache.commons.lang3.StringUtils.capitalize
 import model._
 import Searcher._
-
+import model.db.{NameString, NameStrings}
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Future
 
-case class Searcher(db: Database, resolver: Resolver, facetedSearcher: FacetedSearcher)
+case class Searcher(database: Database, resolver: Resolver, facetedSearcher: FacetedSearcher)
   extends Materializer {
   import Materializer.Parameters
 

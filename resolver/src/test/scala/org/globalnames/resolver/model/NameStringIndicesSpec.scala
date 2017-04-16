@@ -1,9 +1,9 @@
 package org.globalnames
 package resolver
 package model
+package db
 
 import slick.driver.PostgresDriver.api._
-
 import java.util.UUID
 
 class NameStringIndicesSpec extends SpecConfig {

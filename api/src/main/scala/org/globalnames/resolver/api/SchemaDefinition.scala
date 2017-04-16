@@ -2,7 +2,8 @@ package org.globalnames
 package resolver
 package api
 
-import model.{AuthorScore, Matches, Score, VernacularString, VernacularStringIndex}
+import model.{AuthorScore, Matches, Score}
+import model.db.{DataSource, Name, NameStringIndex, VernacularString, VernacularStringIndex}
 import Materializer.Parameters
 import sangria.schema._
 import sangria.marshalling.sprayJson._
@@ -10,7 +11,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import spray.json.{DefaultJsonProtocol, _}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import scalaz._
+import scalaz.{Name => _, _}
 import Scalaz._
 import java.util.UUID
 
@@ -22,14 +23,14 @@ trait SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
     jsonFormat2(Resolver.NameRequest.apply)
 
   val DataSource = ObjectType(
-    "DataSource", fields[Unit, model.DataSource](
+    "DataSource", fields[Unit, DataSource](
         Field("id", IntType, resolve = _.value.id)
       , Field("title", StringType, resolve = _.value.title)
     )
   )
 
   val Name = ObjectType(
-    "Name", fields[Unit, model.Name](
+    "Name", fields[Unit, Name](
         Field("id", IDType, resolve = _.value.id.toString)
       , Field("name", StringType, resolve = _.value.value)
     )
@@ -44,7 +45,7 @@ trait SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
   )
 
   val Classification = ObjectType(
-    "Classification", fields[Unit, model.NameStringIndex](
+    "Classification", fields[Unit, NameStringIndex](
         Field("path", OptionType(StringType), resolve = _.value.classificationPath)
       , Field("pathIds", OptionType(IDType), resolve = _.value.classificationPathIds)
       , Field("pathRanks", OptionType(StringType), resolve = _.value.classificationPathRanks)

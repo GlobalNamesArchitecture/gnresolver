@@ -1,6 +1,7 @@
 package org.globalnames
 package resolver
 package model
+package db
 
 import slick.driver.PostgresDriver.api._
 

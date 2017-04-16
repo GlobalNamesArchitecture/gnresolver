@@ -4,6 +4,7 @@ package resolver
 import java.util.UUID
 
 import org.apache.commons.lang3.StringUtils.capitalize
+import model.db.NameStrings
 import parser.ScientificNameParser.{Result => SNResult, instance => snp}
 import resolver.model._
 import org.slf4j.LoggerFactory
@@ -14,7 +15,7 @@ import scala.concurrent.Future
 import scalaz._
 import Scalaz._
 
-class Resolver(val db: Database, matcher: Matcher) extends Materializer {
+class Resolver(val database: Database, matcher: Matcher) extends Materializer {
   import Materializer.Parameters
   import Resolver.NameRequest
 

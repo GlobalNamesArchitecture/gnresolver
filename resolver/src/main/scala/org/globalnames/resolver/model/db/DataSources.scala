@@ -1,4 +1,4 @@
-package org.globalnames.resolver.model
+package org.globalnames.resolver.model.db
 
 import slick.driver.PostgresDriver.api._
 import slick.lifted.ProvenShape

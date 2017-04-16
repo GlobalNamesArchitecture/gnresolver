@@ -3,13 +3,14 @@ package resolver
 
 import java.util.UUID
 
-import resolver.model._
+import model.{MatchType, Matches}
+import model.db.NameStrings
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.Future
 import scala.util.{Success, Try}
 
-class FacetedSearcher(val db: Database) extends Materializer {
+class FacetedSearcher(val database: Database) extends Materializer {
   import Materializer.Parameters
 
   private val unaccent = SimpleFunction.unary[String, String]("unaccent")

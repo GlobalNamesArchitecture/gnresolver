@@ -10,7 +10,7 @@ import akka.event.Logging
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
-import model.NameStrings
+import model.db.NameStrings
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.duration._

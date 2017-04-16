@@ -1,7 +1,7 @@
 package org.globalnames
 package resolver
 
-import model.NameStrings
+import model.db.NameStrings
 import slick.driver.PostgresDriver.api._
 
 import scalaz._

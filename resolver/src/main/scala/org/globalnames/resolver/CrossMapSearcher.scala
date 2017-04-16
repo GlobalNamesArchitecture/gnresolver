@@ -1,7 +1,7 @@
 package org.globalnames
 package resolver
 
-import model.{CrossMap, CrossMaps}
+import model.db.{CrossMap, CrossMaps}
 import slick.driver.PostgresDriver.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global
