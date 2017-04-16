@@ -16,7 +16,7 @@ import java.util.UUID
 
 import org.globalnames.resolver.Resolver.NameRequest
 
-object SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
+trait SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
   val nameStringsMaxCount = 1000
   implicit val nameRequestFormat: RootJsonFormat[NameRequest] =
     jsonFormat2(Resolver.NameRequest.apply)

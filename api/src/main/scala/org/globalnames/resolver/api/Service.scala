@@ -24,9 +24,7 @@ import sangria.parser.{QueryParser => QueryParserSangria}
 import sangria.execution.{ErrorWithResolver, Executor, QueryAnalysisError}
 import sangria.marshalling.sprayJson._
 
-trait Service extends NamestringsProtocols with CrossMapProtocols with NullOptions {
-  import SchemaDefinition.nameStringsMaxCount
-
+trait Service extends SchemaDefinition with NullOptions {
   implicit val system: ActorSystem
 
   implicit def executor: ExecutionContextExecutor
@@ -67,8 +65,8 @@ trait Service extends NamestringsProtocols with CrossMapProtocols with NullOptio
             }
             QueryParserSangria.parse(query) match {
               case util.Success(queryAst) =>
-                complete(Executor.execute(SchemaDefinition.schema, queryAst,
-                         SchemaDefinition.GnRepo(facetedSearcher, resolver, searcher, crossMap),
+                complete(Executor.execute(schema, queryAst,
+                         GnRepo(facetedSearcher, resolver, searcher, crossMap),
                          variables = vars, operationName = operation)
                   .map(OK -> _)
                   .recover {
@@ -77,63 +75,6 @@ trait Service extends NamestringsProtocols with CrossMapProtocols with NullOptio
                   })
               case util.Failure(error) =>
                 complete(BadRequest, JsObject("error" -> JsString(error.getMessage)))
-            }
-          }
-        } ~ path("name_resolvers") {
-          val getNameResolvers =
-            get & parameters('names.as[Seq[NameRequest]], 'dataSourceIds.as[Vector[Int]].?,
-                             'per_page ? nameStringsMaxCount, 'page ? 0,
-                             'surrogates ? false, 'vernaculars ? false)
-          val postNameResolvers =
-            post & entity(as[Seq[NameRequest]]) &
-              parameters('dataSourceIds.as[Vector[Int]].?,
-                         'per_page ? nameStringsMaxCount, 'page ? 0, 'surrogates ? false,
-                         'vernaculars ? false)
-
-          (getNameResolvers | postNameResolvers) {
-            (names, dataSourceIds, perPage, page, withSurrogates, withVernaculars) => complete {
-              val params = Parameters(page, perPage, withSurrogates, withVernaculars)
-              val matches = resolver.resolveExact(names.take(nameStringsMaxCount),
-                                                  dataSourceIds.orZero, params)
-              matches.map { ms => result(ms, page, perPage) }
-            }
-          }
-        } ~ path("name_strings" / JavaUUID) { uuid =>
-          (get & parameters('page ? 0, 'per_page ? 50, 'vernaculars ? false)) {
-            (page, perPage, vernaculars) => complete {
-              val params = Parameters(page, perPage, withSurrogates = false, vernaculars)
-              facetedSearcher.findNameStringByUuid(uuid, params).map { m =>
-                result(Seq(m), page, perPage)
-              }
-            }
-          }
-        } ~ path("name_strings" / Remaining) { remaining =>
-          complete {
-            result(Seq(Matches.empty(remaining)), 0, 0)
-          }
-        } ~ path("name_strings") {
-          (get & parameters('search_term, 'per_page ? nameStringsMaxCount, 'page ? 0,
-                            'surrogates ? false, 'vernaculars ? false)) {
-            (searchTerm, perPage, page, withSurrogates, withVernaculars) => complete {
-              val search = QueryParser.result(searchTerm)
-              logger.debug(s"$search")
-              val params = Parameters(page, perPage, withSurrogates, withVernaculars,
-                                      query = searchTerm.some)
-              resolve(search, params).map { m => result(Seq(m), page, perPage) }
-            }
-          }
-        } ~ path("names_strings" / JavaUUID / "dataSources") { uuid =>
-          get {
-            complete {
-              facetedSearcher.resolveDataSources(uuid)
-            }
-          }
-        } ~ pathPrefix("crossmap") {
-          (post & entity(as[CrossMapRequest]) &
-            parameters('dbSourceId.as[Int], 'dbTargetId.as[Int].?)) {
-            (crossMapReq, dbSourceId, dbTargetId) => complete {
-              crossMap.execute(dbSourceId, crossMapReq.dbSinkIds, dbTargetId,
-                crossMapReq.localIds)
             }
           }
         }

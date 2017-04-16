@@ -185,15 +185,6 @@ class FacetedSearcher(val db: Database) extends Materializer {
     }
   }
 
-  def resolveDataSources(uuid: UUID): Future[Seq[(NameStringIndex, DataSource)]] = {
-    val query = for {
-      nsi <- nameStringIndicies
-      ds <- dataSources
-      if nsi.nameStringId === uuid && nsi.dataSourceId === ds.id
-    } yield (nsi, ds)
-
-    db.run(query.result)
-  }
 
   def findNameStringByUuid(uuid: UUID, parameters: Parameters): Future[Matches] = {
     val params = parameters.copy(query = None, matchType = MatchType.UUIDLookup)
