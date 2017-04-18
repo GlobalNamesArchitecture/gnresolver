@@ -41,5 +41,7 @@ object QueryParser extends RegexParsers {
 
   def result(text: String): SearchPart = parse(searchPart, text) match {
     case Success(sp, _) => sp
+    case Failure(msg, _) => throw new Exception("Unknown modifier: " + msg)
+    case Error(msg, _) => throw new Exception("Unknown modifier: " + msg)
   }
 }
