@@ -74,7 +74,7 @@ trait Service extends SchemaDefinition with NullOptions {
                     case error: ErrorWithResolver => InternalServerError -> error.resolveError
                   })
               case util.Failure(error) =>
-                complete(BadRequest, JsObject("error" -> JsString(error.getMessage)))
+                complete((BadRequest, JsObject("error" -> JsString(error.getMessage))))
             }
           }
         }
