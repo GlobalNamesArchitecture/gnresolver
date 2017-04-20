@@ -167,7 +167,8 @@ trait SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
                            WithVernaculars),
           resolve = ctx => ctx.withArgs(NamesRequest, DataSourceIds, Page, PerPage,
                                         WithSurrogates, WithVernaculars) {
-            (names, dataSourceIds, page, perPage, withSurrogates, withVernaculars) =>
+            (names, dataSourceIdsOpt, page, perPage, withSurrogates, withVernaculars) =>
+              val dataSourceIds = dataSourceIdsOpt.map { _.toVector }.getOrElse(Vector())
               ctx.ctx.nameStrings(names.take(nameStringsMaxCount), dataSourceIds, page, perPage,
                                   withSurrogates, withVernaculars)
           }
@@ -196,11 +197,12 @@ trait SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
       facetedSearcher.findNameStringByUuid(uuidParsed, params)
     }
 
-    def nameStrings(names: Seq[NameRequest], dataSourceIds: Option[Seq[Int]],
+    def nameStrings(names: Seq[NameRequest], dataSourceIds: Vector[Int],
                     page: Int, perPage: Int,
                     withSurrogates: Boolean, withVernaculars: Boolean): Future[Seq[Matches]] = {
-      val params = Parameters(page, perPage, withSurrogates, withVernaculars)
-      resolver.resolveExact(names, dataSourceIds.map { _.toVector }.orZero, params)
+      val params = Parameters(page, perPage, withSurrogates, withVernaculars,
+                              dataSourceIds = dataSourceIds)
+      resolver.resolveExact(names, params)
     }
 
     def nameResolve(searchTerm: String, page: Int, perPage: Int,

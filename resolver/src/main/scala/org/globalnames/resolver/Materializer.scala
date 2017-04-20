@@ -6,6 +6,9 @@ import model._
 import model.db._
 import slick.jdbc.PostgresProfile.api._
 
+import scalaz._
+import Scalaz._
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -34,7 +37,11 @@ trait Materializer {
     val query = for {
       ns <- nameStringsQuerySurrogates
       nsi <- nameStringIndicies.filter { nsi => nsi.nameStringId === ns.id }
-      ds <- dataSources.filter { ds => ds.id === nsi.dataSourceId }
+      ds <- {
+        val ds = dataSources.filter { ds => ds.id === nsi.dataSourceId }
+        parameters.dataSourceIds.isEmpty ? ds |
+          ds.filter { ds => ds.id.inSetBind(parameters.dataSourceIds) }
+      }
     } yield (ns, nsi, ds)
     val queryCount = query.size
     (query.drop(parameters.drop).take(parameters.take), queryCount)
@@ -60,8 +67,7 @@ trait Materializer {
     vernaculars
   }
 
-  protected def nameStringsMatches(
-        nameStringsQuery: Query[NameStrings, NameString, Seq],
+  protected def nameStringsMatches(nameStringsQuery: Query[NameStrings, NameString, Seq],
         parameters: Parameters): Future[Matches] = {
     val (query, queryCount) = wrapNameStringQuery(nameStringsQuery, parameters)
     for {
@@ -113,7 +119,8 @@ object Materializer {
                         withSurrogates: Boolean, withVernaculars: Boolean,
                         query: Option[String] = None,
                         suppliedId: Option[SuppliedId] = None,
-                        matchType: MatchType = MatchType.Unknown) {
+                        matchType: MatchType = MatchType.Unknown,
+                        dataSourceIds: Vector[Int] = Vector()) {
     val take: Int = perPage.min(1000).max(0)
     val drop: Int = (page * perPage).max(0)
   }

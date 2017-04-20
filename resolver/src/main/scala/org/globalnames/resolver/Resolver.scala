@@ -51,7 +51,7 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
   }
 
   private def fuzzyMatch(canonicalNameParts: Seq[(SNResult, Array[String], Option[SuppliedId])],
-                         dataSourceIds: Seq[Int], parameters: Parameters): Future[Seq[Matches]] = {
+                         parameters: Parameters): Future[Seq[Matches]] = {
     val canonicalNamePartsNonEmpty = canonicalNameParts.filter {
       case (_, parts, _) => parts.nonEmpty
     }
@@ -63,7 +63,7 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
         val unfoundFuzzyCanonicalNameParts = unfoundFuzzyMatches.map {
           case (name, parts, _, suppliedId) => (name, parts.dropRight(1), suppliedId)
         }
-        fuzzyMatch(unfoundFuzzyCanonicalNameParts, dataSourceIds, parameters)
+        fuzzyMatch(unfoundFuzzyCanonicalNameParts, parameters)
       }
 
       val fuzzyNameStringsMaxCount = 5
@@ -87,18 +87,14 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
         val (matched, unmatched) =
           foundFuzzyMatches.zip(fuzzyMatches).partition { case (_, m) => m.matches.nonEmpty }
         val matchedResult = matched.map { case ((name, _, _, suppliedId), mtchs) =>
-          val matchesInDataSources = mtchs.matches
-            .filter { m =>
-              dataSourceIds.isEmpty || dataSourceIds.contains(m.nameStringIndex.dataSourceId)
-            }
-          mtchs.copy(matches = matchesInDataSources, suppliedIdProvided = suppliedId,
+          mtchs.copy(matches = mtchs.matches, suppliedIdProvided = suppliedId,
                      scientificName = name.some)
         }
         val matchedFuzzyResult = {
           val unmatchedParts = unmatched.map { case ((name, parts, _, suppliedId), _) =>
             (name, parts.dropRight(1), suppliedId)
           }
-          fuzzyMatch(unmatchedParts, dataSourceIds, parameters)
+          fuzzyMatch(unmatchedParts, parameters)
         }
         matchedFuzzyResult.map { mfr => matchedResult ++ mfr }
       }
@@ -117,12 +113,12 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
                             parameters: Parameters): Future[Seq[Matches]] = {
     val (namesWc, namesExact) = names.partition { case (_, wildcard) => wildcard }
     for {
-      nwc <- resolveWildcard(namesWc.map { case (ns, _) => ns }, dataSourceIds, parameters)
-      nex <- resolveExact(namesExact.map { case (ns, _) => ns }, dataSourceIds, parameters)
+      nwc <- resolveWildcard(namesWc.map { case (ns, _) => ns }, parameters)
+      nex <- resolveExact(namesExact.map { case (ns, _) => ns }, parameters)
     } yield nwc ++ nex
   }
 
-  private def resolveWildcard(names: Seq[NameRequest], dataSourceIds: Vector[Int],
+  private def resolveWildcard(names: Seq[NameRequest],
                               parameters: Parameters): Future[Seq[Matches]] = {
     val qrys = names.map { name =>
       val capName = capitalize(name.value) + "%"
@@ -145,8 +141,7 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
     *   5, 4, 3, 2 words -> ExactMatchPartial (in case of subspecies - drop middle words)
     *   If single word is a Genus then match it -> ExactMatchPartialByGenus
     */
-  def resolveExact(names: Seq[NameRequest], dataSourceIds: Vector[Int],
-                   parameters: Parameters): Future[Seq[Matches]] = {
+  def resolveExact(names: Seq[NameRequest], parameters: Parameters): Future[Seq[Matches]] = {
     val namesCapital = names.map { n => n.copy(value = capitalize(n.value)) }
 
     val nameStringsPerFuture = 200
@@ -184,18 +179,15 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
         val parts = unmatched.map { case (_, (sn, localId)) =>
           (sn, sn.canonized().orZero.split(' '), localId)
         }
-        val fuzzyMatches = fuzzyMatch(parts, dataSourceIds, parameters)
+        val fuzzyMatches = fuzzyMatch(parts, parameters)
 
         val matchesResult = (matched ++ unmatchedNotParsed).map { case (mtch, (sn, suppliedId)) =>
-          val ms = mtch.matches
-              .filter { m =>
-                dataSourceIds.isEmpty || dataSourceIds.contains(m.nameStringIndex.dataSourceId)
-              }.map { m =>
-                val mt: MatchType =
-                  if (m.nameString.name.id == sn.input.id) MatchType.ExactNameMatchByUUID
-                  else MatchType.ExactCanonicalNameMatchByUUID
-                m.copy(matchType = mt)
-              }
+          val ms = mtch.matches.map { m =>
+            val mt: MatchType =
+              if (m.nameString.name.id == sn.input.id) MatchType.ExactNameMatchByUUID
+              else MatchType.ExactCanonicalNameMatchByUUID
+            m.copy(matchType = mt)
+          }
           mtch.copy(matches = ms, suppliedIdProvided = suppliedId, scientificName = sn.some)
         }
 

@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 import Materializer.Parameters
 
 class ResolverIntegrationSpec extends SpecConfig {
-  val conn: PostgresDriver.backend.Database = Database.forConfig("postgresql-test")
+  val conn = Database.forConfig("postgresql-test")
   val nameStrings: TableQuery[NameStrings] = TableQuery[NameStrings]
   var matcher: Matcher = _
   var resolver: Resolver = _
