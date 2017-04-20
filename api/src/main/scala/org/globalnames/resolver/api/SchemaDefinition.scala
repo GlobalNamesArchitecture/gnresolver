@@ -11,8 +11,6 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import spray.json.{DefaultJsonProtocol, _}
 
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import scalaz.{Name => _, _}
-import Scalaz._
 import java.util.UUID
 
 import org.globalnames.resolver.Resolver.NameRequest
@@ -39,7 +37,7 @@ trait SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
   val MatchType = ObjectType(
     "MatchType", fields[Unit, model.MatchType](
         Field("value", StringType, resolve = _.value.toString)
-      , Field("score", IntType, resolve = _.value.score)
+      , Field("score", IntType, resolve = ctx => model.MatchType.score(ctx.value))
       , Field("editDistance", IntType, resolve = ctx => model.MatchType.editDistance(ctx.value))
     )
   )
