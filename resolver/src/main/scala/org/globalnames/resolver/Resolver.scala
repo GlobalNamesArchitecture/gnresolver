@@ -38,7 +38,11 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
     val canonicalNamesFuzzy = canonicalNamePartsNonEmpty.map { case (name, parts, suppliedId) =>
       val candsUuids: Seq[(UUID, MatchType)] = if (parts.length > 1) {
         val can = parts.mkString(" ")
-        matcher.transduce(can).map { c => (gen.generate(c.term), MatchType.Fuzzy) }
+        matcher.transduce(can).map { c =>
+          val matchType: MatchType = if (c.distance == 0) MatchType.ExactMatchPartialByGenus
+                                     else MatchType.Fuzzy
+          (gen.generate(c.term), matchType)
+        }
       } else {
         parts.map { p => (gen.generate(p), MatchType.ExactMatchPartialByGenus) }
       }
