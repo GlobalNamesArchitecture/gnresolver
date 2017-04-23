@@ -33,34 +33,39 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
     nameStrings.filter { ns => ns.name.like(query) || ns.canonical.like(query) }
   }
 
-  private def gnmatchCanonicals(
-       canonicalNamePartsNonEmpty: Seq[(SNResult, Array[String], Option[SuppliedId])]) = {
-    val canonicalNamesFuzzy = canonicalNamePartsNonEmpty.map { case (name, parts, suppliedId) =>
-      val candsUuids: Seq[(UUID, MatchType)] = if (parts.length > 1) {
-        val can = parts.mkString(" ")
-        matcher.transduce(can).map { c =>
-          val matchType: MatchType = if (c.distance == 0) MatchType.ExactMatchPartialByGenus
-                                     else MatchType.Fuzzy
-          (gen.generate(c.term), matchType)
+  private case class CanonicalNameSplit(result: SNResult,
+                                        parts: List[String],
+                                        suppliedId: Option[SuppliedId])
+
+  private def gnmatchCanonicals(canonicalNamePartsNonEmpty: Seq[CanonicalNameSplit]) = {
+    val canonicalNamesFuzzy = canonicalNamePartsNonEmpty.map { cnp =>
+      val candsUuids: Seq[(UUID, MatchType)] =
+        if (cnp.parts.length > 1) {
+          val can = cnp.parts.mkString(" ")
+          matcher.transduce(can).map { c =>
+            val matchType: MatchType =
+              if (c.distance == 0) MatchType.ExactPartialMatch
+              else MatchType.Fuzzy
+            (gen.generate(c.term), matchType)
+          }
+        } else {
+          cnp.parts.map { p => (gen.generate(p), MatchType.ExactMatchPartialByGenus) }
         }
-      } else {
-        parts.map { p => (gen.generate(p), MatchType.ExactMatchPartialByGenus) }
-      }
-      (name, parts, candsUuids, suppliedId)
+      (cnp, candsUuids)
     }
     val fuzzyMatchLimit = 5
-    canonicalNamesFuzzy.partition { case (_, _, cands, _) =>
+    canonicalNamesFuzzy.partition { case (cnp, cands) =>
       cands.nonEmpty && cands.size <= fuzzyMatchLimit
     }
   }
 
-  private def fuzzyMatch(canonicalNameParts: Seq[(SNResult, Array[String], Option[SuppliedId])],
+  private def fuzzyMatch(canonicalNameParts: Seq[CanonicalNameSplit],
                          parameters: Parameters): Future[Seq[Matches]] = {
     val (canonicalNamePartsNonEmpty, canonicalNamePartsEmpty) = canonicalNameParts.partition {
-      case (_, parts, _) => parts.nonEmpty
+      cnp => cnp.parts.nonEmpty
     }
-    val emptyMatches = canonicalNamePartsEmpty.map { case (res, _, supplId) =>
-      Matches.empty(res.input.verbatim, supplId)
+    val emptyMatches = canonicalNamePartsEmpty.map { cnp =>
+      Matches.empty(cnp.result.input.verbatim, cnp.suppliedId)
     }
     if (canonicalNamePartsNonEmpty.isEmpty) {
       Future.successful(emptyMatches)
@@ -68,24 +73,22 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
       val (foundFuzzyMatches, unfoundFuzzyMatches) = gnmatchCanonicals(canonicalNamePartsNonEmpty)
       val unfoundFuzzyResult = {
         val unfoundFuzzyCanonicalNameParts = unfoundFuzzyMatches.map {
-          case (name, parts, _, suppliedId) => (name, parts.dropRight(1), suppliedId)
+          case (cnp, _) => cnp.copy(parts = cnp.parts.dropRight(1))
         }
         fuzzyMatch(unfoundFuzzyCanonicalNameParts, parameters)
       }
 
       val fuzzyNameStringsMaxCount = 5
       val queryFoundFuzzy: Future[Seq[Matches]] = {
-        val nameStringsQueries = foundFuzzyMatches.flatMap { case (sn, _, candUuids, _) =>
-          candUuids.filter { case (u, _) => u != NameStrings.emptyCanonicalUuid }
-                   .map { case (uuid, matchType) =>
-            val ns = nameStrings.filter { ns =>
-              ns.canonicalUuid === uuid
-            }
-            val params = parameters.copy(query = sn.input.verbatim.some,
-                                         perPage = fuzzyNameStringsMaxCount,
-                                         matchType = matchType)
-            (ns, params)
-          }
+        val nameStringsQueries = foundFuzzyMatches.flatMap { case (cnp, cands) =>
+          cands.filter { case (u, _) => u != NameStrings.emptyCanonicalUuid }
+               .map { case (uuid, matchType) =>
+                  val ns = nameStrings.filter { ns => ns.canonicalUuid === uuid }
+                  val params = parameters.copy(query = cnp.result.input.verbatim.some,
+                                               perPage = fuzzyNameStringsMaxCount,
+                                               matchType = matchType)
+                  (ns, params)
+               }
         }
         nameStringsSequenceMatches(nameStringsQueries)
       }
@@ -93,13 +96,13 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
       val foundFuzzyResult = queryFoundFuzzy.flatMap { fuzzyMatches =>
         val (matched, unmatched) =
           foundFuzzyMatches.zip(fuzzyMatches).partition { case (_, m) => m.matches.nonEmpty }
-        val matchedResult = matched.map { case ((name, _, _, suppliedId), mtchs) =>
-          mtchs.copy(matches = mtchs.matches, suppliedIdProvided = suppliedId,
-                     scientificName = name.some)
+        val matchedResult = matched.map { case ((cnp, cands), mtchs) =>
+          mtchs.copy(matches = mtchs.matches, suppliedIdProvided = cnp.suppliedId,
+                     scientificName = cnp.result.some)
         }
         val matchedFuzzyResult = {
-          val unmatchedParts = unmatched.map { case ((name, parts, _, suppliedId), _) =>
-            (name, parts.dropRight(1), suppliedId)
+          val unmatchedParts = unmatched.map { case ((cnp, _), _) =>
+             cnp.copy(parts = cnp.parts.dropRight(1))
           }
           fuzzyMatch(unmatchedParts, parameters)
         }
@@ -174,19 +177,18 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
 
       Future.sequence(exactMatches).flatMap { exactMatchesChunks =>
         val exactMatches = exactMatchesChunks.flatten.toList
-
         val (matched, unmatchedAll) = exactMatches.zip(scientificNamesIds).partition {
           case (m, _) => m.matches.nonEmpty
         }
-
         val (unmatched, unmatchedNotParsed) = unmatchedAll.partition {
           case (_, (sn, _)) => sn.canonized().isDefined
         }
-
-        val parts = unmatched.map { case (_, (sn, localId)) =>
-          (sn, sn.canonized().orZero.split(' '), localId)
+        val fuzzyMatches = {
+          val parts = unmatched.map { case (_, (sn, localId)) =>
+            CanonicalNameSplit(sn, sn.canonized().orZero.split(' ').toList, localId)
+          }
+          fuzzyMatch(parts, parameters)
         }
-        val fuzzyMatches = fuzzyMatch(parts, parameters)
 
         val matchesResult = (matched ++ unmatchedNotParsed).map { case (mtch, (sn, suppliedId)) =>
           val ms = mtch.matches.map { m =>
