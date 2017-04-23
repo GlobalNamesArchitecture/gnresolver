@@ -33,5 +33,6 @@ case class Matches(total: Long, matches: Seq[Match],
 object Matches {
   def empty: Matches = Matches(0, Seq(), None)
 
-  def empty(suppliedInput: String): Matches = Matches(0, Seq(), suppliedInput.some)
+  def empty(suppliedInput: String, suppliedId: Option[SuppliedId] = None): Matches =
+    Matches(0, Seq(), suppliedInput.some, suppliedIdProvided = suppliedId)
 }

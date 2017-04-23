@@ -56,11 +56,14 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
 
   private def fuzzyMatch(canonicalNameParts: Seq[(SNResult, Array[String], Option[SuppliedId])],
                          parameters: Parameters): Future[Seq[Matches]] = {
-    val canonicalNamePartsNonEmpty = canonicalNameParts.filter {
+    val (canonicalNamePartsNonEmpty, canonicalNamePartsEmpty) = canonicalNameParts.partition {
       case (_, parts, _) => parts.nonEmpty
     }
+    val emptyMatches = canonicalNamePartsEmpty.map { case (res, _, supplId) =>
+      Matches.empty(res.input.verbatim, supplId)
+    }
     if (canonicalNamePartsNonEmpty.isEmpty) {
-      Future.successful(Seq())
+      Future.successful(emptyMatches)
     } else {
       val (foundFuzzyMatches, unfoundFuzzyMatches) = gnmatchCanonicals(canonicalNamePartsNonEmpty)
       val unfoundFuzzyResult = {
@@ -103,7 +106,7 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
         matchedFuzzyResult.map { mfr => matchedResult ++ mfr }
       }
 
-      for (ufr <- unfoundFuzzyResult; ffr <- foundFuzzyResult) yield ufr ++ ffr
+      for (ufr <- unfoundFuzzyResult; ffr <- foundFuzzyResult) yield ufr ++ ffr ++ emptyMatches
     }
   }
 
