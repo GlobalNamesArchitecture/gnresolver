@@ -10,12 +10,14 @@ object MatchType {
   case object ExactNameMatchByString extends MatchType
   case object ExactCanonicalNameMatchByUUID extends MatchType
   case object ExactCanonicalNameMatchByString extends MatchType
-  case object Fuzzy extends MatchType
+  case object FuzzyCanonicalMatch extends MatchType
+  case object FuzzyPartialMatch extends MatchType
   case object ExactMatchPartialByGenus extends MatchType
+  case object ExactPartialMatch extends MatchType
   case object Unknown extends MatchType
 
   def editDistance(matchType: MatchType): Int = matchType match {
-    case Fuzzy => 1
+    case FuzzyPartialMatch => 1
     case _ => 0
   }
 
@@ -25,8 +27,10 @@ object MatchType {
     case ExactNameMatchByString => 3
     case ExactCanonicalNameMatchByUUID => 4
     case ExactCanonicalNameMatchByString => 5
-    case Fuzzy => 6
-    case ExactMatchPartialByGenus => 7
-    case Unknown => 8
+    case FuzzyCanonicalMatch => 6
+    case ExactPartialMatch => 7
+    case FuzzyPartialMatch => 8
+    case ExactMatchPartialByGenus => 9
+    case Unknown => 10
   }
 }
