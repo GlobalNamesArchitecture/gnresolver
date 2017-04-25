@@ -72,6 +72,8 @@ trait SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
       , Field("nameType", OptionType(IntType), resolve = _.value.nameType)
       , Field("authorScore", AuthorScoreOT, resolve = _.value.authorScore)
       , Field("parsingQuality", IntType, resolve = _.value.parsingQuality)
+      , Field("value", OptionType(FloatType), resolve = _.value.value)
+      , Field("message", OptionType(StringType), resolve = _.value.message)
     )
   )
 
@@ -89,7 +91,7 @@ trait SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
               resolve = _.value.mtch.nameStringIndex)
       , Field("vernaculars", ListType(VernacularOT), resolve = _.value.mtch.vernacularStrings)
       , Field("matchType", MatchTypeOT, resolve = _.value.mtch.matchType)
-      , Field("preScore", ScoreOT, resolve = _.value.score)
+      , Field("score", ScoreOT, resolve = _.value.score)
     )
   )
 
