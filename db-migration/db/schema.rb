@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20161115103721) do
+ActiveRecord::Schema.define(version: 20170425163635) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -55,6 +55,8 @@ ActiveRecord::Schema.define(version: 20161115103721) do
     t.text    "classification_path"
     t.text    "classification_path_ids"
     t.text    "classification_path_ranks"
+    t.uuid    "accepted_name_uuid"
+    t.string  "accepted_name",             limit: 255
   end
 
   add_index "name_string_indices", ["data_source_id"], name: "index_name_string_indices_on_data_source_id", using: :btree
