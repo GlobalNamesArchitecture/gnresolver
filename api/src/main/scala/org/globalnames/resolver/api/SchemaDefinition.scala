@@ -89,6 +89,10 @@ trait SchemaDefinition extends DefaultJsonProtocol with CrossMapProtocols {
       , Field("localId", OptionType(IDType), resolve = _.value.mtch.nameStringIndex.localId)
       , Field("classification", OptionType(ClassificationOT),
               resolve = _.value.mtch.nameStringIndex)
+      , Field("acceptedTaxonId", OptionType(StringType),
+              resolve = _.value.mtch.nameStringIndex.acceptedTaxonId)
+      , Field("acceptedName", OptionType(NameOT),
+              resolve = _.value.mtch.nameStringIndex.acceptedName)
       , Field("vernaculars", ListType(VernacularOT), resolve = _.value.mtch.vernacularStrings)
       , Field("matchType", MatchTypeOT, resolve = _.value.mtch.matchType)
       , Field("score", ScoreOT, resolve = _.value.score)
