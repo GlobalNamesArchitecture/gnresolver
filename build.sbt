@@ -72,7 +72,7 @@ val testSettings = Seq(
   libraryDependencies += pegdown,
   parallelExecution in ItTest := false,
 
-  test in Test <<= (test in ItTest).dependsOn(test in UnitTest),
+  test in Test := (test in ItTest).dependsOn(test in UnitTest).value,
 
   testOptions in UnitTest := Seq(
     Tests.Argument("-h", "target/test-html"),
@@ -96,10 +96,10 @@ val testSettings = Seq(
 val publishingSettings = Seq(
   publishMavenStyle := true,
   useGpg := true,
-  publishTo <<= version { v: String =>
+  publishTo := {
     val nexus = "https://oss.sonatype.org/"
-    if (v.trim.endsWith("SNAPSHOT")) Some("snapshots" at nexus + "content/repositories/snapshots")
-    else                             Some("releases" at nexus + "service/local/staging/deploy/maven2")
+    if (isSnapshot.value) Some("snapshots" at nexus + "content/repositories/snapshots")
+    else                  Some("releases" at nexus + "service/local/staging/deploy/maven2")
   },
   pomIncludeRepository := { _ => false },
   pomExtra :=
