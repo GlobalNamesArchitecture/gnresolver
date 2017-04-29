@@ -91,26 +91,30 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
       }
 
       val fuzzyNameStringsMaxCount = 5
-      val queryFoundFuzzy: Future[Seq[Matches]] = {
-        val nameStringsQueries = foundFuzzyMatches.flatMap { case (cnp, cands) =>
-          cands.filter { case (u, _) => u != NameStrings.emptyCanonicalUuid }
-               .map { case (uuid, matchType) =>
-                  val ns = nameStrings.filter { ns => ns.canonicalUuid === uuid }
-                  val params = parameters.copy(query = cnp.result.input.verbatim.some,
-                                               perPage = fuzzyNameStringsMaxCount,
-                                               matchType = matchType)
-                  (ns, params)
-               }
+      val queryFoundFuzzy = {
+        foundFuzzyMatches.map { case (cnp, cands) =>
+         val nameStringsQueries =
+           cands.filter { case (u, _) => u != NameStrings.emptyCanonicalUuid }
+                .map { case (uuid, matchType) =>
+                   val ns = nameStrings.filter { ns => ns.canonicalUuid === uuid }
+                   val params = parameters.copy(query = cnp.result.input.verbatim.some,
+                                                perPage = fuzzyNameStringsMaxCount,
+                                                matchType = matchType)
+                   (ns, params)
+                }
+          nameStringsSequenceMatches(nameStringsQueries)
         }
-        nameStringsSequenceMatches(nameStringsQueries)
       }
 
-      val foundFuzzyResult = queryFoundFuzzy.flatMap { fuzzyMatches =>
+      val foundFuzzyResult = Future.sequence(queryFoundFuzzy).flatMap { fuzzyMatches =>
         val (matched, unmatched) =
-          foundFuzzyMatches.zip(fuzzyMatches).partition { case (_, m) => m.matches.nonEmpty }
-        val matchedResult = matched.map { case ((cnp, cands), mtchs) =>
-          mtchs.copy(matches = mtchs.matches, suppliedIdProvided = cnp.suppliedId,
-                     scientificName = cnp.result.some)
+          foundFuzzyMatches.zip(fuzzyMatches).map { case (fmm, fm) =>
+            (fmm, fm.filter { _.matches.nonEmpty })
+          }.partition { case (_, mtchs) => mtchs.nonEmpty }
+        val matchedResult = matched.flatMap { case ((cnp, cands), mtchs) =>
+          mtchs.map { mt =>
+            mt.copy(suppliedIdProvided = cnp.suppliedId, scientificName = cnp.result.some)
+          }
         }
         val matchedFuzzyResult = {
           val unmatchedParts = unmatched.map { case ((cnp, _), _) => cnp.dropPart }
