@@ -17,7 +17,7 @@ object MatchType {
   case object Unknown extends MatchType
 
   def editDistance(matchType: MatchType): Int = matchType match {
-    case FuzzyPartialMatch => 1
+    case FuzzyPartialMatch | FuzzyCanonicalMatch => 1
     case _ => 0
   }
 
