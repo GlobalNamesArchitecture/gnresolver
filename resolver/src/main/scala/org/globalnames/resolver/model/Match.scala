@@ -16,10 +16,10 @@ case class Match(nameString: NameString, dataSource: DataSource, nameStringIndex
       nameStringIndex.classificationPathIds.map { cpids => cpids.split('|').toList }
         .getOrElse(List())
     if (classificationPathIdsSeq.nonEmpty) {
-      nameStringIndex.taxonId == classificationPathIdsSeq.last
+      nameStringIndex.taxonId != classificationPathIdsSeq.last
     } else if (nameStringIndex.acceptedTaxonId.isDefined) {
-      nameStringIndex.taxonId == nameStringIndex.acceptedTaxonId.get
-    } else false
+      nameStringIndex.taxonId != nameStringIndex.acceptedTaxonId.get
+    } else true
   }
 }
 
