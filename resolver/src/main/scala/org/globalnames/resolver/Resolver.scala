@@ -55,11 +55,14 @@ class Resolver(val database: Database, matcher: Matcher) extends Materializer {
           }
         } else if (cnp.parts.length > 1) {
           val can = cnp.mkString
-          matcher.transduce(can).map { c =>
+          val allCandidates = matcher.transduce(can)
+          val exactCandidates = allCandidates.filter { _.distance == 0 }
+          val candidates = exactCandidates.nonEmpty ? exactCandidates | allCandidates
+          candidates.map { cand =>
             val matchType =
-              if (c.distance == 0) MatchType.ExactPartialMatch
+              if (cand.distance == 0) MatchType.ExactPartialMatch
               else MatchType.FuzzyPartialMatch
-            (gen.generate(c.term), matchType)
+            (gen.generate(cand.term), matchType)
           }
         } else {
           cnp.parts.map { p => (gen.generate(p), MatchType.ExactMatchPartialByGenus) }
