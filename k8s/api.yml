@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
         - name: gnresolver
-          image: gnames/gnresolver:0.1.0-582b0dce-20170403_1256-SNAPSHOT
+          image: gnames/gnresolver:0.1.0-7285f16_20170413_1300-SNAPSHOT
           env:
             - name: RUN_MODE
               valueFrom:
