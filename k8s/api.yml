@@ -48,7 +48,7 @@ spec:
                   name: gnresolver
                   key: app.environment
             - name: DB_HOST
-              value: gnresolver-pgpool
+              value: gnresolver-db-master
             - name: DB_DATABASE
               valueFrom:
                 configMapKeyRef:
