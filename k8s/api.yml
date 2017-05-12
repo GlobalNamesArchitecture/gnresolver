@@ -35,7 +35,7 @@ spec:
     spec:
       containers:
         - name: gnresolver
-          image: gnames/gnresolver:0.1.0-7285f16_20170413_1300-SNAPSHOT
+          image: gnames/gnresolver:0.1.0-734b4ba_20170512_1200-SNAPSHOT
           env:
             - name: RUN_MODE
               valueFrom:
@@ -49,6 +49,8 @@ spec:
                   key: app.environment
             - name: DB_HOST
               value: gnresolver-db-master
+            - name: DB_PORT
+              value: "5432"
             - name: DB_DATABASE
               valueFrom:
                 configMapKeyRef:
