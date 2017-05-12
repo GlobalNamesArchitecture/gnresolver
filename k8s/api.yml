@@ -50,7 +50,14 @@ spec:
             - name: DB_HOST
               value: gnresolver-db-master
             - name: DB_PORT
+<<<<<<< Updated upstream
               value: "5432"
+=======
+              valueFrom:
+                configMapKeyRef:
+                  name: gnresolver
+                  key: db.port
+>>>>>>> Stashed changes
             - name: DB_DATABASE
               valueFrom:
                 configMapKeyRef:
