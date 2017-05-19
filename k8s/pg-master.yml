@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: gnresolver-db-master
+  name: gnresolver-db-master-service
   namespace: gn
   labels:
     app: gnresolver
@@ -10,7 +10,7 @@ metadata:
     type: master
     node: "1"
 spec:
-  type: NodePort
+  clusterIP: None
   ports:
     - port: 5432
       targetPort: 5432
@@ -43,7 +43,7 @@ spec:
       containers:
         -
           name: gnresolver-db-master
-          image: gnames/postgres-cluster-pgsql
+          image: paunin/postgresql-cluster-pgsql
           env: # those variables are not secret as it's just initial state of DB
             -
               name: "NODE_ID"
@@ -53,7 +53,7 @@ spec:
               value: "node1"
             -
               name: "CLUSTER_NODE_NETWORK_NAME"
-              value: "gnresolver-db-master"
+              value: "gnresolver-db-master-service"
             -
               name: "CONFIGS"
               valueFrom:

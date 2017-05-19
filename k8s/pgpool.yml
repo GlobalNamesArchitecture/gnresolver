@@ -40,7 +40,7 @@ spec:
     spec:
       containers:
       - name: database-pgpool
-        image: gnames/postgres-cluster-pgpool
+        image: paunin/postgresql-cluster-pgpool
         ports:
           - containerPort: 5432
         env:
