@@ -56,6 +56,12 @@ spec:
             -
               name: "CLUSTER_NODE_NETWORK_NAME"
               value: "gnresolver-db-slave1-service"
+            -
+              name: "REPMGR_WAIT_POSTGRES_START_TIMEOUT"
+              valueFrom:
+                configMapKeyRef:
+                  name: gnresolver
+                  key: db.repmgr.timeout
 
             # Cluster configs
             - name: "CLUSTER_NAME"

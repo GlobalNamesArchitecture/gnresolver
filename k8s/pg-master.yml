@@ -60,6 +60,12 @@ spec:
                 configMapKeyRef:
                   name: gnresolver
                   key: db.configs
+            -
+              name: "REPMGR_WAIT_POSTGRES_START_TIMEOUT"
+              valueFrom:
+                configMapKeyRef:
+                  name: gnresolver
+                  key: db.repmgr.timeout
 
             # Work DB
             - name: "POSTGRES_DB"
